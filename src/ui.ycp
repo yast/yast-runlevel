@@ -109,6 +109,36 @@
 			  StartedText (started));
     }
     /**
+     * Helper function for fetching service status in run-time.
+     * @param service_name which line
+     * @param service @ref service
+     * @param started status or -1 (unknown yet)
+     */
+    define void updateStatusInTable (string service_name, map service,
+				     integer started) ``{
+	// just translate the arguments. the callback is generic
+	// because of the future simple UI, bug #13789
+	updateStatusColumn (service_name, started);
+    }
+
+    /**
+     * Changes values of runlevel checkboxes.
+     * Get the status if not known yet.
+     */
+    define void changeService1 (map service) ``{
+	if (lookup (service, "started", -1) < 0)
+	{
+	    integer started = Runlevel::RunInitScript (current_service,
+						       "status");
+	    service = add (service, "started", started);
+	    RunlevelEd::services = add (RunlevelEd::services, current_service, service);
+	    updateStatusColumn (current_service, started);
+	}
+	updateRlCheckBoxes (service);
+	updateDescription (service);
+    }
+
+    /**
      * Reads data from checkboxes and updates service
      * and RunlevelEd::services maps.
      * @param service_name which service
@@ -850,37 +880,6 @@ Select runlevels in which to run the currently selected service.<ul>
 	// currently selected service we are working with
 	map service = $[];
 
-	/**
-	 * Local function to allInOne.
-	 * Changes values of runlevel checkboxes.
-	 * Get the status if not known yet.
-	 */
-	define void changeService1 () ``{
-	    if (lookup (service, "started", -1) < 0)
-	    {
-		integer started = Runlevel::RunInitScript (current_service,
-							   "status");
-		service = add (service, "started", started);
-		RunlevelEd::services = add (RunlevelEd::services, current_service, service);
-		updateStatusColumn (current_service, started);
-	    }
-	    updateRlCheckBoxes (service);
-	    updateDescription (service);
-	}
-
-	/**
-	 * Helper function for fetching service status in run-time.
-	 * @param service_name which line
-	 * @param service @ref service
-	 * @param started status or -1 (unknown yet)
-	 */
-	define void updateStatusInTable (string service_name, map service,
-					 integer started) ``{
-	    // just translate the arguments. the callback is generic
-	    // because of the future simple UI, bug #13789
-	    updateStatusColumn (service_name, started);
-	}
-
 	// --- body of allInOne ---
 
 	term header = `header (
@@ -946,7 +945,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	Wizard::SetContents (_("Runlevel editor: details"), contents, getHelpComplex (), true, true);
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = lookup (RunlevelEd::services, current_service, $[]);
-	changeService1 ();
+	changeService1 (service);
 	any ret = nil;
 	while (`next != ret && `back != ret && `abort != ret)
 	    {
@@ -1015,7 +1014,7 @@ both of them?")))
 		{
 		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 		    service = RunlevelEd::services[current_service]:$[];
-		    changeService1 ();
+		    changeService1 (service);
 		}
 		else if (nil != ret && is (ret, string))
 		{
@@ -1035,14 +1034,14 @@ both of them?")))
 		    list(string) default = RunlevelEd::services[current_service, "defstart"]:[];
 		    EnableDisableServiceDep (current_service, default, true);
 		    service = RunlevelEd::services[current_service]:$[];
-		    changeService1 ();
+		    changeService1 (service);
 		}
 		else if (`to_disable == ret)
 		{
 		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 		    EnableDisableServiceDep (current_service, nil, false);
 		    service = RunlevelEd::services[current_service]:$[];
-		    changeService1 ();
+		    changeService1 (service);
 		}
 		else if (`to_all_enable == ret)
 		{
