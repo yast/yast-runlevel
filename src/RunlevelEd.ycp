@@ -588,6 +588,8 @@ Further dependency checking will be disabled."));
 		services = add (services, k, v);
 	    });
 	}
+	else
+		services = $[];
 	// default
 	if (haskey (s, "default"))
 	{
