@@ -22,15 +22,15 @@
      * Get current runlevel into global current_runlevel.
      */
     global define readCurrentRunlevel () ``{
-        current_runlevel = SCR (`Read (.init.scripts.current_runlevel));
+	current_runlevel = SCR::Read (.init.scripts.current_runlevel);
     }
 
     /**
      * Get default runlevel from /etc/inittab
      */
     global define readDefaultRunlevel () ``{
-        default_runlevel = SCR (`Read (.init.scripts.default_runlevel));
-        default_runlevel_orig = default_runlevel;
+	default_runlevel = SCR::Read (.init.scripts.default_runlevel);
+	default_runlevel_orig = default_runlevel;
     }
 
     /**
@@ -39,7 +39,7 @@
      * @return integer 0 for success, -1 otherwise
      */
     global define saveDefaultRunlevel (string new_default) ``{
-        return SCR (`Write (.init.scripts.default_runlevel, new_default));
+	return SCR::Write (.init.scripts.default_runlevel, new_default);
     }
 
     /**
@@ -49,7 +49,7 @@
      * @return map map from .target.bash_output
      */
     global define runInitScript (string script, string action) ``{
-        return SCR (`Execute (.target.bash_output, sformat ("TERM=raw /etc/init.d/%1 %2", script, action)));
+	return SCR::Execute (.target.bash_output, sformat ("TERM=raw /etc/init.d/%1 %2", script, action));
     }
 
     /**
@@ -58,8 +58,8 @@
      * @return string exit status
      */
     global define serviceStatus (string service) ``{
-        integer ret = SCR (`Execute (.target.bash, sformat ("TERM=raw /etc/init.d/%1 status", service)));
-        return sformat ("%1", ret);
+	integer ret = SCR::Execute (.target.bash, sformat ("TERM=raw /etc/init.d/%1 status", service));
+	return sformat ("%1", ret);
     }
 
     /**
@@ -74,25 +74,25 @@
      * Also START_ variables presence is patched into services. 
      */
     global define getScripts () ``{
-        map details = SCR (`Read (.init.scripts.runlevels));
-        services = SCR (`Read (.init.scripts.comments));
-        services = mapmap (`k, `v, services, ``{
-            // play tennis
-            map second_service = lookup (details, k, $[]);
-            if (haskey (start_variables_all, k))
-                {
-                    string start_val = SCR (`Read (add (.rc.system, lookup (start_variables_all, k))));
-                    v = add (v, "START", "yes" == start_val ? true : false);
-                }
-            else
-                {
-                    v = add (v, "START", true);
-                }
-            service_list = add (service_list, k);
-            v = add (v, "start", lookup (second_service, "start", []));
-            v = add (v, "stop" , lookup (second_service, "stop",  []));
-            return [ k, v ];
-        });
+	map details = SCR::Read (.init.scripts.runlevels);
+	services = SCR::Read (.init.scripts.comments);
+	services = mapmap (`k, `v, services, ``{
+	    // play tennis
+	    map second_service = lookup (details, k, $[]);
+	    if (haskey (start_variables_all, k))
+		{
+		    string start_val = SCR::Read (add (.rc.system, lookup (start_variables_all, k)));
+		    v = add (v, "START", "yes" == start_val ? true : false);
+		}
+	    else
+		{
+		    v = add (v, "START", true);
+		}
+	    service_list = add (service_list, k);
+	    v = add (v, "start", lookup (second_service, "start", []));
+	    v = add (v, "stop" , lookup (second_service, "stop",  []));
+	    return [ k, v ];
+	});
     }
 
     /**
@@ -100,47 +100,47 @@
      * Changes global runlevels.
      */
     global define readRunlevelList () ``{
-        runlevels= SCR (`Read (.init.scripts.runlevel_list));
-        if (0 == size (runlevels))
-            {
-                runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
-            }
-        integer id = 2;
-        foreach (`i, runlevels, ``{
-            runlevel2tableindex = add (runlevel2tableindex, i, id);
-            id = id + 1;
-        });
+	runlevels= SCR::Read (.init.scripts.runlevel_list);
+	if (0 == size (runlevels))
+	    {
+		runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+	    }
+	integer id = 2;
+	foreach (`i, runlevels, ``{
+	    runlevel2tableindex = add (runlevel2tableindex, i, id);
+	    id = id + 1;
+	});
     }
 
     /**
      * Save changed services into proper runlevels.
      */
     global define saveServices () ``{
-        foreach (`k, `v, services, ``{
-            if (lookup (v, "dirty", false))
-                {
-                    // save!
-                    boolean disabled = isDisabled (v); //cache
-                    string commandline = sformat ("/sbin/insserv %1,start=", k);
-                    string add_comma = "";
-                    list start = disabled ? [] : lookup (v, "start", []);
-                    if (contains (lookup (v, "defstart", []), "B"))
-                        {
-                            start = union (start, [ "B" ]);
-                        }
-                    foreach (`i, start, ``{
-                        commandline = commandline + add_comma + i;
-                        add_comma = ",";
-                    });
-                    y2milestone ("%1 ===> Running %2", k, commandline);
-                    SCR (`Execute (.target.bash, commandline));
-                    if (!disabled && haskey (start_variables_all, k))
-                        { // set its START variable
-                            SCR (`Write (add (.rc.system, lookup (start_variables_all, k)), "yes"));
-                            y2milestone ("%1 ===> Settings START_ variable %2 to yes", k, lookup (start_variables_all, k));
-                        }
-                }
-        });
+	foreach (`k, `v, services, ``{
+	    if (lookup (v, "dirty", false))
+		{
+		    // save!
+		    boolean disabled = isDisabled (v); //cache
+		    string commandline = sformat ("/sbin/insserv %1,start=", k);
+		    string add_comma = "";
+		    list start = disabled ? [] : lookup (v, "start", []);
+		    if (contains (lookup (v, "defstart", []), "B"))
+			{
+			    start = union (start, [ "B" ]);
+			}
+		    foreach (`i, start, ``{
+			commandline = commandline + add_comma + i;
+			add_comma = ",";
+		    });
+		    y2milestone ("%1 ===> Running %2", k, commandline);
+		    SCR::Execute (.target.bash, commandline);
+		    if (!disabled && haskey (start_variables_all, k))
+			{ // set its START variable
+			    SCR::Write (add (.rc.system, lookup (start_variables_all, k)), "yes");
+			    y2milestone ("%1 ===> Settings START_ variable %2 to yes", k, lookup (start_variables_all, k));
+			}
+		}
+	});
     }
 
     /**
@@ -150,15 +150,15 @@
      * @return boolean true if service is disabled
      */
     global define isDisabled (map service) ``{
-        if (!lookup (service, "START", true))
-            {
-                return true;
-            }
-        if (0 == size (lookup (service, "start", [])) && lookup (service, "start") != lookup (service, "defstart"))
-            {
-                return true;
-            }
-        return false;
+	if (!lookup (service, "START", true))
+	    {
+		return true;
+	    }
+	if (0 == size (lookup (service, "start", [])) && lookup (service, "start") != lookup (service, "defstart"))
+	    {
+		return true;
+	    }
+	return false;
     }
 
     /**
@@ -166,17 +166,17 @@
      * @return boolean true if services are dirty.
      */
     global define dirtyServices () ``{
-        boolean dirty = false;
-        foreach (`k, `v, services, ``{
-            if (dirty)
-                {
-                    return ;
-                }
-            if (lookup (v, "dirty", false))
-                {
-                    dirty = true;
-                }
-        });
-        return dirty;
+	boolean dirty = false;
+	foreach (`k, `v, services, ``{
+	    if (dirty)
+		{
+		    return ;
+		}
+	    if (lookup (v, "dirty", false))
+		{
+		    dirty = true;
+		}
+	});
+	return dirty;
     }
 }

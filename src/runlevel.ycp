@@ -57,25 +57,25 @@
     // there is "service" : map
     // map will be described later
     /***
-        Main structure containing all settings in runlevel editor is map with following tuples:<br>
-        <pre>
+	Main structure containing all settings in runlevel editor is map with following tuples:<br>
+	<pre>
       "servicename" : $[
-        "defstart" : [ "2", "3", "5", ], // Default-Start comment
-        "defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
-        
-        "reqstart" : [ "$network", "portmap" ], // Required-Start comment
-        "reqstop"  : [ "$network", "portmap" ], // Required-Stop  comment
+	"defstart" : [ "2", "3", "5", ], // Default-Start comment
+	"defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
+	
+	"reqstart" : [ "$network", "portmap" ], // Required-Start comment
+	"reqstop"  : [ "$network", "portmap" ], // Required-Stop  comment
 
-        "description" : "text...",       // Description comment
+	"description" : "text...",       // Description comment
 
-        "start" : [ "3", "5", ], // which runlevels service is really started/stopped in
-        "stop"  : [ "3", "5", ], // read from /etc/init.d/rc?.d/* links
+	"start" : [ "3", "5", ], // which runlevels service is really started/stopped in
+	"stop"  : [ "3", "5", ], // read from /etc/init.d/rc?.d/* links
 
-        "started" : "0", // return from rcservice status
+	"started" : "0", // return from rcservice status
 
-        "START" : true, // enabled(true)/disabled(false) by START_VARIABLE?
+	"START" : true, // enabled(true)/disabled(false) by START_VARIABLE?
 
-        "dirty" : false, // was the entry changed?
+	"dirty" : false, // was the entry changed?
       ]
       </pre>
      */
@@ -93,16 +93,16 @@
     string current_runlevel = "?";
 
     UI (``{
-        CreateWizardDialog ();
-        DisableWizardAbortButton ();
+	CreateWizardDialog ();
+	DisableWizardAbortButton ();
     });
 
     ProgressSetup (_("Initializing runlevel editor. Please wait."),
-                   "",
-                   11,
-                   [],
-                   // help text
-                   getHelpProgress ());
+		   "",
+		   11,
+		   [],
+		   // help text
+		   getHelpProgress ());
 
     // read list of runlevels
     readRunlevelList ();
@@ -122,16 +122,16 @@
     // maps for sequencer
     //
     map aliases = $[
-        "start" :            ``(runMain ()),
-        "complex" :          ``(allInOne ()),
-        ];
+	"start" :            ``(runMain ()),
+	"complex" :          ``(allInOne ()),
+	];
 
     map main_sequence = $[
-        "ws_start" : "start",
-        "start" : $[ `next : `finish , `abort : `abort, `edit : "complex", ],
-        "complex" : $[ `next : `finish, `abort : `abort ],
-        ];
+	"ws_start" : "start",
+	"start" : $[ `next : `finish , `abort : `abort, `edit : "complex", ],
+	"complex" : $[ `next : `finish, `abort : `abort ],
+	];
 
     WizardSequencer (aliases, main_sequence);
-    UI (`CloseDialog ());
+    UI::CloseDialog ();
 }

@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Aug 13 13:06:43 CEST 2001 - pblahos@suse.cz
+
+- Replaced spaces by tabs.
+- Replaced: SCR (` by SCR:: and UI (` by UI::
+- hotplug replaced usbmgr in starts.ycp lists.
+
+-------------------------------------------------------------------
 Wed Aug  8 08:12:21 CEST 2001 - pblahos@suse.cz
 
 - runlevel_adjust: new module for adjusting service startup.

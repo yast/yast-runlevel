@@ -58,11 +58,11 @@
     integer len = size (Args ());
 
     if (len < 2)
-        {
-            // bad usage
-            y2error ("Usage: CallModule (\"runlevel_adjust\", [ \"servicename\", \"action\"[, \"action\", ...] ])");
-            return -1;
-        }
+	{
+	    // bad usage
+	    y2error ("Usage: CallModule (\"runlevel_adjust\", [ \"servicename\", \"action\"[, \"action\", ...] ])");
+	    return -1;
+	}
 
     /**
      * Is service disabled?
@@ -71,11 +71,11 @@
      * @return boolean true if disabled
      */
     define isDisabled (map service) ``{
-        if (!lookup (service, "START", true))
-            {
-                return true;
-            }
-        return 0 == size (lookup (service, "start", []));
+	if (!lookup (service, "START", true))
+	    {
+		return true;
+	    }
+	return 0 == size (lookup (service, "start", []));
     }
 
     /**
@@ -85,24 +85,24 @@
      * @param service service map
      */
     define setDefault (string service_name, map service) ``{
-        if (!lookup (service, "START") && haskey (start_variables_all, service_name))
-            {
-                y2milestone ("%1 ===> Settings START_ variable %2 to yes", service_name, lookup (start_variables_all, service_name));
-                SCR (`Write (add (.rc.system, lookup (start_variables_all, service_name)), "yes"));                
-            }
-        if (lookup (service, "start") == lookup (service, "defstart"))
-            {   // already default
-                return ;
-            }
-        string commandline = sformat ("/sbin/insserv %1,start=", service_name);
-        string add_comma = "";
-        list start = lookup (service, "defstart", []);
-        foreach (`i, start, ``{
-            commandline = commandline + add_comma + i;
-            add_comma = ",";
-        });
-        y2milestone ("%1 ===> Running %2", service_name, commandline);
-        SCR (`Execute (.target.bash, commandline));
+	if (!lookup (service, "START") && haskey (start_variables_all, service_name))
+	    {
+		y2milestone ("%1 ===> Settings START_ variable %2 to yes", service_name, lookup (start_variables_all, service_name));
+		SCR::Write (add (.rc.system, lookup (start_variables_all, service_name)), "yes");
+	    }
+	if (lookup (service, "start") == lookup (service, "defstart"))
+	    {   // already default
+		return ;
+	    }
+	string commandline = sformat ("/sbin/insserv %1,start=", service_name);
+	string add_comma = "";
+	list start = lookup (service, "defstart", []);
+	foreach (`i, start, ``{
+	    commandline = commandline + add_comma + i;
+	    add_comma = ",";
+	});
+	y2milestone ("%1 ===> Running %2", service_name, commandline);
+	SCR::Execute (.target.bash, commandline);
     }
 
     /**
@@ -112,17 +112,17 @@
      * @param service service map
      */
     define setDisabled (string service_name, map service) ``{
-        if (!lookup (service, "START"))
-            {   // is already disabled
-                return ;
-            }
-        if (0 == size (lookup (service, "start", [])))
-            {   // is already disabled
-                return ;
-            }
-        string commandline = sformat ("/sbin/insserv %1,start=", service_name);
-        y2milestone ("%1 ===> Running %2", service_name, commandline);
-        SCR (`Execute (.target.bash, commandline));
+	if (!lookup (service, "START"))
+	    {   // is already disabled
+		return ;
+	    }
+	if (0 == size (lookup (service, "start", [])))
+	    {   // is already disabled
+		return ;
+	    }
+	string commandline = sformat ("/sbin/insserv %1,start=", service_name);
+	y2milestone ("%1 ===> Running %2", service_name, commandline);
+	SCR::Execute (.target.bash, commandline);
     }
     /* end of defines */
 
@@ -131,60 +131,60 @@
     include "runlevel/starts.ycp";
 
     string service_name = Args (0);
-    if (!SCR (`Read (.init.scripts.exists, service_name)))
-        {
-            y2milestone ("Service %1 does not exit. Giving up.", service_name);
-            return -1;
-        }
+    if (!SCR::Read (.init.scripts.exists, service_name))
+	{
+	    y2milestone ("Service %1 does not exit. Giving up.", service_name);
+	    return -1;
+	}
     y2milestone ("Working with service %1", service_name);
 
-    map detail =  lookup (SCR (`Read (.init.scripts.runlevel, service_name)), service_name, $[]);
-    map service = lookup (SCR (`Read (.init.scripts.comment, service_name)), service_name, $[]);
+    map detail =  lookup (SCR::Read (.init.scripts.runlevel, service_name), service_name, $[]);
+    map service = lookup (SCR::Read (.init.scripts.comment,  service_name), service_name, $[]);
     change (service, "start", lookup (detail, "start", []));
     change (service, "stop", lookup (detail, "stop", []));
     // service is almost complete
     if (haskey (start_variables_all, service_name))
-        {
-            string start_val = SCR (`Read (add (.rc.system, lookup (start_variables_all, service_name))));
-            change (service, "START", "yes" == start_val ? true : false);
-        }
+	{
+	    string start_val = SCR::Read (add (.rc.system, lookup (start_variables_all, service_name)));
+	    change (service, "START", "yes" == start_val ? true : false);
+	}
     else
-        {
-            change (service, "START", true);
-        }
+	{
+	    change (service, "START", true);
+	}
     y2milestone ("Service %1 current state: %2", service_name, service);
 
     integer i = 1;
     while (i < len)
-        {
-            y2milestone ("%1 %2", service_name, Args (i));
+	{
+	    y2milestone ("%1 %2", service_name, Args (i));
 
-            if ("enable" == Args (i))
-                {
-                    if (isDisabled (service))
-                        {
-                            setDefault (service_name, service);
-                        }
-                    // else it is already enabled
-                }
-            else if ("disable" == Args (i))
-                {
-                    setDisabled (service_name, service);
-                }
-            else if ("default" == Args (i))
-                {
-                    setDefault (service_name, service);
-                }
+	    if ("enable" == Args (i))
+		{
+		    if (isDisabled (service))
+			{
+			    setDefault (service_name, service);
+			}
+		    // else it is already enabled
+		}
+	    else if ("disable" == Args (i))
+		{
+		    setDisabled (service_name, service);
+		}
+	    else if ("default" == Args (i))
+		{
+		    setDefault (service_name, service);
+		}
 
-            else if ("start" == Args (i) || "stop" == Args (i) || "restart" == Args (i))
-                {
-                    SCR (`Execute (.target.bash, sformat ("TERM=raw /etc/init.d/%1 %2", service_name, Args (i))));
-                }
-            else
-                {
-                    y2error ("Unknown action to runlevel_adjust (%1)", Args (i));
-                }
-            i = i + 1;
-        }
+	    else if ("start" == Args (i) || "stop" == Args (i) || "restart" == Args (i))
+		{
+		    SCR::Execute (.target.bash, sformat ("TERM=raw /etc/init.d/%1 %2", service_name, Args (i)));
+		}
+	    else
+		{
+		    y2error ("Unknown action to runlevel_adjust (%1)", Args (i));
+		}
+	    i = i + 1;
+	}
     return 0;
 }
