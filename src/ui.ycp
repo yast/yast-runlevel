@@ -35,8 +35,15 @@
     define map<string, boolean> tomap_true (list<string> l);
 
     string current_service = "";
+    boolean do_abort_now = false;
 
-
+    // We read service status when dialog with services is shown.
+    // We read status for services taken from list of services (service_list)
+    // and then update map services.
+    integer fetching_service_index = 0;
+    // when fetching_service_status becomes false, we stop fetching services
+    boolean fetching_service_status = false;
+
     // UI "slots"
     // update parts of the UI
 
@@ -638,7 +645,7 @@ Please wait.</P>")
 		 enable,
 		 init_time? "+init": "-init",
 		 run_time? "+run": "-run");
-	boolean one = size (rls) == 1;
+	boolean one = (rls != nil) ? (size (rls) == 1) : false;
 	string command = enable? "start": "stop";
 
 	// get dependent services
@@ -1547,7 +1554,7 @@ name or the name specified is already in use."));
 	service = lookup (RunlevelEd::services, current_service, $[]);
 	updateRlCheckBoxes (service);
 	any ret = nil;
-	while (nil != UI::PollInput ()) {}
+	while (nil != UI::PollInput ()) {sleep(50);}
 	while (`next != ret && `back != ret && `abort != ret)
 	    {
 		// Kludge, because a `Table still does not have a shortcut.
@@ -1590,7 +1597,7 @@ both of them?")))
 			current_service = "portmap";
 			service = lookup (RunlevelEd::services, "portmap", $[]);
 			updateRlCheckBoxes (service);
-			while (nil != UI::PollInput ()) {}
+			while (nil != UI::PollInput ()) {sleep(50);}
 			// yes-no popup
 			if (!Popup::YesNo (sformat (_("Service portmap, which is required by
 %1, is disabled. Enable
@@ -1617,7 +1624,7 @@ disabled?\n"), nfs_adj)))
 			// one of them sends notification after changewidget
 			// and the other does not.
 			// So eat it.
-			while (nil != UI::PollInput ()) {}
+			while (nil != UI::PollInput ()) {sleep(50);}
 			ret = `table;
 		    }
 		}
@@ -1658,7 +1665,7 @@ disabled?\n"), nfs_adj)))
 		    current_service = (string) UI::QueryWidget (`id (`table), `CurrentItem);
 		    service = lookup (RunlevelEd::services, current_service, $[]);
 		    updateRlCheckBoxes (service);
-		    while (nil != UI::PollInput ()) {}
+		    while (nil != UI::PollInput ()) {sleep(50);}
 		}
 	    }
 	Wizard::RestoreScreenShotName ();

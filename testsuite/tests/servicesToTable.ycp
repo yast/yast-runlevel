@@ -4,7 +4,6 @@
     import "RunlevelEd";
     include "runlevel/ui.ycp";
 
-    string current_service = "a";
     RunlevelEd::runlevels = [ "S", "0", "1", "2", "3", "5", "6" ];
     RunlevelEd::services = $[];
 
