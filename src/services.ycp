@@ -1,7 +1,31 @@
 /**
+ * File:
+ *   services.ycp
  *
+ * Module:
+ *   Runlevel Editor
+ *
+ * Summary:
+ *   Service maintanance
+ *
+ * Authors:
+ *   Petr Blahos <pblahos@suse.cz>
+ *
+ * $Id$
+ *
+ * This include file contains functions for reading runlevels, services,
+ * starting/stopping services ...
  */
 {
+    /**
+     * Get current runlevel into global current_runlevel.
+     */
+    global define readCurrentRunlevel () ``{
+        map out = SCR (`Execute (.target.bash_output, "/sbin/runlevel"));
+        list l = splitstring (lookup (out, "stdout", ""), " \t\n");
+        current_runlevel = ((size (l) < 2) ? "?" : select (l, 1));
+    }
+
     /**
      * Get default runlevel from /etc/inittab
      */
@@ -12,8 +36,11 @@
         default_runlevel = sformat ("%1", tointeger (lookup (out, "stdout", "5")));
     }
 
+    /**
+     * Writes default runlevel into /etc/inittab
+     * FIXME:...
+     */
     global define setDefaultRunlevel () ``{
-        
     }
 
     /**
@@ -156,6 +183,9 @@
         return info;
     }
 
+    /**
+     * read service names from /etc/init.d/. For each service adds tuple "servicename" : $[] to global services.
+     */
     global define readServiceList () ``{
         map out = SCR (`Execute (.target.bash_output, "cd /etc/init.d; for i in * ; do if test -f $i; then echo $i ; fi  ; done;"));
         // fixme check exit 
@@ -220,6 +250,7 @@
 
     /**
      * Run getScriptInfo for each script taken from map.
+     * Modifies global services.
      */
     global define getScriptsInfo () ``{
         services = mapmap (`k, `v, services, ``{
@@ -227,7 +258,11 @@
         });
     }
 
-
+    /**
+     * Get list of services that are run in given runlevel.
+     * Modifies global services.
+     * @param runlevel runlevel to get list of services from
+     */
     global define readServicesRL (string runlevel) ``{
         map out = SCR (`Execute (
             .target.bash_output,
@@ -264,18 +299,30 @@
         });
     }
 
+    /**
+     * Run service status and return exit status.
+     * @param servicename Name of service to query.
+     * @param integer Exit status.
+     */
     global define doesServiceRun (string servicename) ``{
         return SCR (`Execute (.target.bash, sformat ("/etc/init.d/%1 status", servicename)));
     }
 
     /**
-     * Reads directories /etc/init.d/rc?.d
+     * Reads directories /etc/init.d/rc?.d.
+     * Changes global runlevels.
      */
     global define readRunlevelList () ``{
-        map out = SCR (`Execute (.target.bash_output,"ls /etc/init.d/ | grep 'rc.\.d' | cut -c 3"));
+//        map out = SCR (`Execute (.target.bash_output,"ls /etc/init.d/ | grep 'rc.\.d' | cut -c 3"));
+        map out = SCR (`Execute (.target.bash_output,"/usr/bin/awk '/^[^#]..*\\/etc\\/init\\.d\\/rc / { print $2 }' /etc/inittab"));
         // fixme check exit 
         runlevels = filter (`j, splitstring (lookup (out, "stdout", ""), "\n"), ``{
             return j != "";
+        });
+        integer id = 2;
+        foreach (`i, runlevels, ``{
+            runlevel2tableindex = add (runlevel2tableindex, i, id);
+            id = id + 1;
         });
     }
 }

@@ -33,6 +33,9 @@
     // taken from ls /etc/init.d/rc?.d
     list runlevels = [];
 
+    // index into table column for each runlevel
+    map runlevel2tableindex = $[];
+
     string default_runlevel = "";
     
     // all services detected in /etc/init.d
@@ -67,27 +70,31 @@
     // currently selected service
     string current_service = "";
 
-    readRunlevelList ();
+    // current runlevel
+    string current_runlevel = "?";
 
     UI (``{
         CreateWizardDialog ();
         DisableWizardAbortButton ();
-        ProgressSetupUI (_("Initializing runlevel editor. Please wait."),
-                         "",
-                         size (runlevels) + 3,
-                         [],
-                         // help text
-                         "");
     });
 
+    readRunlevelList ();
+
+    ProgressSetup (_("Initializing runlevel editor. Please wait."),
+                     "",
+                     size (runlevels) + 3,
+                     [],
+                     // help text
+                     getHelpProgress ());
+
     integer current_step = 0;
+    readCurrentRunlevel ();
     readServiceList ();
     current_step = current_step + 1;
     ProgressStep (current_step);
     getScriptsInfo ();
     current_step = current_step + 1;
     ProgressStep (current_step);
-    // fixme...
     getStartedInfo ();
     current_step = current_step + 1;
     ProgressStep (current_step);
@@ -105,15 +112,13 @@
     //
     map aliases = $[
         "start" :            ``(runMain ()),
-        "complex" :          ``(runServices ()),
-        "edit" :             ``(runEditService ()),
+        "complex" :          ``(allInOne ()),
         ];
 
     map main_sequence = $[
         "ws_start" : "start",
         "start" : $[ `next : `finish , `abort : `abort, `edit : "complex", ],
-        "complex" : $[ `next : `finish, `abort : `abort, `edit : "edit" ],
-        "edit" : $[ `next : "complex", `abort : `abort , ],
+        "complex" : $[ `next : `finish, `abort : `abort ],
         ];
 
     if (`finish == WizardSequencer (aliases, main_sequence))

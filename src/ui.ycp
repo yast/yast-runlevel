@@ -1,38 +1,117 @@
-
+/**
+ * File:
+ *   ui.ycp
+ *
+ * Module:
+ *   Runlevel Editor
+ *
+ * Summary:
+ *   Runlevel Editor user interface.
+ *
+ * Authors:
+ *   Petr Blahos <pblahos@suse.cz>
+ *
+ * $Id$
+ *
+ * Runlevel editor user interface functions.
+ */
 {
+    textdomain "runlevel";
+
     include "ui/common_popups.ycp";
-    
-    global define getHelp ()``{
-        return "<P><BIG><B>Dummy runlevel editor</B></BIG><BR>It works over test data.</P>";
+
+    global define getHelpProgress () ``{
+        return
+            // help text
+            _("<P><BIG><B>Runlevel editor</B></BIG><BR>
+You may change default runlevel and edit runlevel contents.</P>")
+            +
+            // warning in help text
+            _("<P><font color=red>This is an expert tool. Please make sure that you know what you are doing.</font></P>")
+            ;
     }
-    
+
+    global define getHelpMain () ``{
+        return
+            // help text
+            _("<P><BIG><B>Runlevel editor</B></BIG><BR>
+You may change default runlevel here.
+If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
+            +
+            // warning in help text
+            _("<P><font color=red>This is an expert tool. Please make sure that you know what you are doing.</font></P>")
+            ;
+        
+    }
+
+    global define getHelpComplex () ``{
+        // help text
+        return
+            // help text
+            _("<P><BIG><B>Runlevel editor</B></BIG><BR>By clicking checkboxes
+ you may select in what runlevels service will run.</P>")
+            +
+            // help text
+            _("<P><BIG><B>Set/Reset:</B></BIG><ul>
+<li><B>Reset to default</B><BR>will reset service to the state after fresh installation.</li>
+<li><B>Reset all to default</B><BR>will do the same for all services.</li>
+<li><B>Enable the service</B><BR>In case that service is disabled, this enables it
+ and sets it to run in runlevels common for it.</li>
+</ul>The changes will take in effect when after you press <B>Finish</B></P>")
+            +
+            // help text
+            _("<P><BIG><B>Start/Stop now:</B></BIG><br> you will find options to start
+ or stop service, or query its state here.
+ These actions have immediate effect.</P>")
+            +
+            // warning in help text
+            _("<P><font color=red>This is an expert tool. Please make sure that you know what you are doing.</font></P>")
+            ;
+    }
+
+    global define getRunlevelRich () ``{
+        // goes into help-text. %1 is replaced by one of S 0 1 2 3 5 6
+        return sformat (_("<P>Current runlevel is %1</P><HR>"), current_runlevel);
+    }
+
+    global define getServiceDescription (string service) ``{
+        return "<P><BIG><B>" + service + "</B></BIG><BR>"+ lookup (lookup (services, service), "description") + "</P><HR>";
+    }
 
     /**
      * Create table items from services.
+     * @return list List of items for table.
      */
     global define servicesToTable () ``{
         list items = [];
+        boolean first = true;
         foreach (`k, `v, services, ``{
-            term item = `item (`id (k));
+            term item = `item (`id (k), k);
             // started?
             string started = lookup (v, "started");
-            string started_text = "???";
+            // we do not know what is the service state
+            string started_text = _("???");
             if ("0" == started)
                 {
-                    started_text = "Yes";
+                    // yes, service runs
+                    started_text = _("Yes");
                 }
             else if (nil != started)
                 {
-                    started_text = "No";
+                    // no, service does not run
+                    started_text = _("No");
                 }
             item = add (item, started_text);
-            // service name
-            item = add (item, k);
-            // runlevels
             list rl = lookup (v, "start", []);
             foreach (`i, runlevels, ``{
                 item = add (item, (contains (rl, i)? "#" : ""));
             });
+            if (first)
+                {
+                    first = false;
+                    current_service = k;
+                }
+            item = add (item, lookup (v, "description", ""));
             items = add (items, item);
         });
         return items;
@@ -46,164 +125,105 @@
                     levels = add (levels, `item (`id (i), i, default_runlevel == i));
                 }
         });
+        term contents = `VBox (
+            `VSpacing (2),
+            // label in dialog
+            `Label (`opt (`hstretch),_("Current runlevel is:")),
+            `Label (`opt (`outputField, `hstretch), getRunlevelDescr (current_runlevel)),
+            `VSpacing (2),
+            // combo box label
+            `ComboBox (`id (`default), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker ()),
+            `VStretch (),
+            // pushbutton
+            `PushButton (`id (`edit), _("Edit &runlevels...")),
+            `VStretch ()
+            );
+        // window label
+        UI (`SetWizardContents (_("Runlevel editor"), contents, getRunlevelRich () + getHelpMain (), true, true));
+        UI (`ReplaceWizardNextButton (`PushButton (`id (`next), FinishButtonLabel())));
         return UI (``{
-            term contents = `VBox (
-                `VSpacing (1),
-                `Label (`opt (`hstretch), _("Current runlevel:\n5")),
-                `VSpacing (1),
-                `HBox (`ComboBox (_("Default runlevel: "), levels), `HStretch ()),
-                `VStretch (),
-                `PushButton (`id (`edit), _("Edit &runlevels...")),
-                `PushButton (`id (`overview), _("Services &overview...")),
-                `PushButton (`id (`rcconfig), _("&RC-config editor...")),
-                `VStretch ()
-                );
-            SetWizardContents (_("Runlevel editor"), contents, getHelp (), true, true);
-            ReplaceWizardNextButton (`PushButton (`id (`next), "&Finish"));
             return UserInput ();
         });
     }
+    global define getRunlevelDescr (string rl) ``{
+        return lookup ($[
+            // descriptions of runlevels. there must be number: description
+            // number is runlevel name
+            "0" : _("0: System halt"),
+            "1" : _("1: Single user mode"),
+            "2" : _("2: Local multiuser without remote network"),
+            "3" : _("3: Full multiuser with network"),
+            "5" : _("5: Full multiuser with network and xdm"),
+            "6" : _("6: System reboot"),
+            ], rl, rl);
+    }
 
-    global define runServices () ``{
-        term header = `header ("Started", "Service");
+    global define getDefaultPicker () ``{
+        list items = [];
         foreach (`i, runlevels, ``{
-            header = add (header, i);
+            if ("0" != i && "6" != i && "S" != i)
+                {
+                    items = add (items, `item (`id (i), getRunlevelDescr (i), i == default_runlevel));
+                }
         });
-        UI (``{
-            term contents = `VBox (
-                `Table (`id (`table),
-                        header,
-                        servicesToTable ()
-                    ),
-                `HBox (
-                    `PushButton (`id (`edit), "&Edit"),
-                    `HStretch (),
-                    `PushButton (`id (`start), "&Start"),
-                    `PushButton (`id (`start), "S&top")
-//                    `PushButton (`id (`switch), "Show &runlevels")
-                    )
-                );
-            SetWizardContents (_("Runlevel editor"), contents, getHelp (), true, true);
-        });
-        any ret = nil;
-        while (`next != ret && `back != ret && `abort != ret && `edit != ret)
+        return items;
+    }
+
+    /**
+     * Is service disabled? Check "disabled" key which reflects whether service is disabled by some START_-like variable.
+     * Otherwise it checks if it is disabled by unchecking all checkboxes...
+     * @param service service to check
+     * @return boolean true if service is disabled
+     */
+    global define isDisabled (map service) ``{
+        if (lookup (service, "disabled", false))
             {
-                ret = UI (`UserInput ());
-                if (`edit == ret)
-                    {
-                        current_service = UI (`QueryWidget (`id (`table), `CurrentItem));
-                        if (haskey (services, current_service))
-                            {
-                                break;
-                            }
-                    }
+                return true;
             }
-        return ret;
+        if (0 == size (lookup (service, "start", [])) && lookup (service, "start") != lookup (service, "defstart"))
+            {
+                return true;
+            }
+        return false;
     }
 
-    global define runRunlevels () ``{
-        UI (``{
-            term contents = `VBox (
-                `RadioButtonGroup (`id (`runlevel),
-                                   `HBox(
-                                       `Label ("Runlevel:"),
-                                       `HStretch (),
-                                       `RadioButton ("0"),
-                                       `RadioButton ("1"),
-                                       `RadioButton ("2"),
-                                       `RadioButton ("3", true),
-                                       `RadioButton ("5"),
-                                       `RadioButton ("6"),
-                                       `HStretch ())
-                    ),
-                `HBox (
-                    `HWeight (1, `VBox (
-                        `Label (`opt (`hstretch), "Start:"),
-                        `Table (`id (`start),
-                                `header ("Service", "Order"),
-                                [
-                                    `item (`id (1), "ampd" , "01" ),
-                                    `item (`id (2), "dhclient" , "02" ),
-                                    `item (`id (3), "network" , "05" ),
-                                    `item (`id (4), "route" , "07" ),
-                                    `item (`id (5), "cups" , "10" ),
-                                    `item (`id (6), "gpm", "auto"),
-                                ]
-                            ),
-                        `HBox (`PushButton (`id (`startup), "Up"), `PushButton (`id (`startdown),"Down"), `HStretch())
-                        )),
-                    `HWeight (1, `VBox (
-                        `Label (`opt (`hstretch), "Stop:"),
-                        `Table (`id (`stop),
-                                `header ("Service", "Order"),
-                                [
-                                    `item (`id (1), "ampd" , "22" ),
-                                    `item (`id (2), "dhclient" , "21" ),
-                                    `item (`id (3), "network" , "18" ),
-                                    `item (`id (4), "route" , "16" ),
-                                    `item (`id (5), "cups" , "13" ),
-                                    `item (`id (6), "gpm", "auto"),
-                                ]
-                            ),
-                        `HBox (`PushButton (`id (`stopup), "Up"), `PushButton (`id (`stopdown),"Down"), `HStretch())
-                        ))
-                    ),
-                `HBox (
-                    `PushButton (`id (`edit), "&Edit"),
-                    `HStretch (),
-                    `PushButton (`id (`switch), "Show &services")
-                    )
-                );
-            SetWizardContents (_("Runlevel editor"), contents, getHelp (), true, true);
-            UserInput ();
-        });
-    }
-
-    global define runEditService () ``{
-        map work_services = services;
-
+    global define allInOne () ``{
+        // currently selected service we are working with
+        map service = $[];
+        
         define changeService () ``{
-            map service = lookup (work_services, current_service, $[]);
             string st = lookup (service, "started");
             if (nil == st)
                 {
                     st = serviceStatus (current_service);
                 }
-            UI (``{
-                list start = lookup (service, "start", []);
-                foreach (`i, runlevels, ``{
-                    ChangeWidget (`id (i), `Value, false);
-                    ChangeWidget (`id (i+i), `Value, false);
-                });
-                foreach (`i, start, ``{
-                    ChangeWidget (`id (i), `Value, true);
-                });
-                foreach (`i, lookup (service, "defstart"), ``{
-                    ChangeWidget (`id (i+i), `Value, true);
-                });
-                string richtext = "<UL><LI>" + lookup (service, "description") + "</LI>";
-                // add is running? here.
-                start = lookup (service, "START", []);
-                if (0 != size (start))
-                    {
-                        richtext = richtext + "<LI>Uses <B>Start-Variables:</B> ";
-                        foreach (`i, lookup (service, "START", []), ``{
-                            richtext = richtext + i + " ";
-                        });
-                        richtext = richtext + "</LI>";
-                    }
-                if ("0" == st)
-                    {
-                        richtext = richtext + "<LI>Service is <B>running</B> (status <B>0</B>)</LI>";
-                    }
-                else
-                    {
-                        richtext = richtext + sformat ("<LI>Service is <B>not running</B> (status <B>%1</B>)</LI>", st);
-                    }
-                ChangeWidget (`id (`description), `Value, richtext + "</LI>");
+            list start = lookup (service, "start", []);
+            foreach (`i, runlevels, ``{
+                UI (`ChangeWidget (`id (i), `Value, false));
             });
+            if (!isDisabled (service))
+                {
+                    foreach (`i, start, ``{
+                        UI (`ChangeWidget (`id (i), `Value, true));
+                    });
+                }
+            UI (`ChangeWidget (`id (`help), `Value, getRunlevelRich () + getServiceDescription (current_service) + getHelpComplex ()));
+
+            list menu_items = [
+                // menu item
+                `item (`id (`to_default), _("Reset to &default")),
+                ];
+            if (isDisabled (service))
+                {
+                    // menu item
+                    menu_items = add (menu_items, `item (`id (`to_enable), _("&Enable the service")));
+                }
+            // menu item
+            menu_items = add (menu_items, `item (`id (`to_all_default), _("Reset &all service to default")));
+            // menu button label
+            UI (`ReplaceWidget (`id (`menubutton), `MenuButton (_("Set/&Reset"), menu_items)));
         }
-        define grabData (map service) ``{
+        define grabData () ``{
             list start_in = [];
             foreach (`i, runlevels, ``{
                 if (UI (`QueryWidget (`id (i), `Value)))
@@ -214,94 +234,106 @@
             if (lookup (service, "start") != start_in)
                 {
                     service = add (add (service, "start", start_in), "dirty", true);
-                    work_services = add (work_services, current_service, service);
+                    services = add (services, current_service, service);
                 }
         }
-
-        list scripts = [];
-        foreach (`k, `v, work_services, ``{
-            scripts = add (scripts, `item (`id (k), k, k == current_service));
+        // headers in table
+        term header = `header (_("Service"), _("Running"));
+        foreach (`i, runlevels, ``{
+            header = add (header, i);
         });
-        UI (``{
-            term rls = `HBox ();
-            term rlds = `HBox ();
-            foreach (`i, runlevels, ``{
-                rls = add (rls, `CheckBox (`id (i), i));
-                rlds = add (rlds, `CheckBox (`id (i+i), `opt (`disabled), i));
-            });
-            term contents = `VBox (
-                `HBox (
-                    `ComboBox (`id (`service), `opt (`notify), "Service:", scripts),
-                    `HStretch ()),
-                `RichText ( `id (`description),
-                            ""
-                    ),
-                `VSpacing (1),
-                `HBox (
-                    `HWeight (3,`Label (`opt (`hstretch), "Started in:")),
-                    `HWeight (7, rls)),
-                `HBox (
-                    `HWeight (3,`Label (`opt (`hstretch), "Default start:")),
-                    `HWeight (7, rlds)),
-                `VSpacing (1),
-                `HBox (
-                    `PushButton (`id (`start), _("&Overview")),
-                    `HStretch (),
-                    `PushButton (`id (`start), _("&Start")),
-                    `PushButton (`id (`stop), _("S&top"))
-                    ),
-                `VSpacing (1)
-                );
-            SetWizardContents (_("Runlevel editor"), contents, getHelp (), true, true);
-            ChangeWidget (`id (`service), `Value, current_service);
+        term rls = `HBox ();
+        foreach (`i, runlevels, ``{
+            rls = add (rls, `CheckBox (`id (i), `opt (`notify), "&" + i));
         });
-        changeService ();
+        // headers in table
+        header = add (header, _("Description"));
+        term contents = `VBox (
+            `VSpacing (0.5),
+            `Table (`id (`table), `opt (`notify, `immediate),
+                    header,
+                    servicesToTable ()
+                ),
+            `VBox (
+                // label above checkboxed
+                `Label (`id (`service_label), `opt (`hstretch), _("Service will be started in following runlevels:")),
+                `HBox (rls)
+                ),
+            `HBox (
+                // menubutton label
+                `MenuButton (_("&Start/Stop now"), [
+                    `item (`id (`start), _("&Start now ...")),
+                    `item (`id (`stop), _("S&top now ...")),
+                    `item (`id (`status), _("&Refresh status ...")),
+                    ]),
+                `HStretch (),
+                `ReplacePoint (
+                    `id (`menubutton),
+                // menubutton label
+                    `MenuButton (_("Set/&Reset"), [
+                        `item (`id (`to_default), _("Reset to &default")),
+                        `item (`id (`to_enable), _("&Enable the service")),
+                        `item (`id (`to_all_default), _("Reset &all service to default")),
+                        ])
+                    )
+                )
+            );
+        // dialog caption. 
+        UI (`SetWizardContents (_("Runlevel editor"), contents, getRunlevelRich () + getHelpComplex (), true, true));
+        // this ChangeWidget causes next UserInput will return `table FIXME does not work in ncurses
+        UI (`ChangeWidget (`id (`table), `CurrentItem, current_service));
         any ret = nil;
         while (`next != ret && `back != ret && `abort != ret)
             {
                 ret = UI (`UserInput ());
-                if (`service == ret)
+                if (`table == ret)
                     {
-                        // save ...
-                        grabData (lookup (work_services, current_service));
-                        // and show new service ...
-                        current_service = UI (`QueryWidget (`id (`service), `Value));
+                        current_service = UI (`QueryWidget (`id (`table), `CurrentItem));
+                        service = lookup (services, current_service);
                         changeService ();
                     }
-                if (`next == ret)
+                if (`to_default == ret)
                     {
-                        // save ...
-                        grabData (lookup (work_services, current_service));
-                        // replace original services
-                        services = work_services;
                     }
-                if (`start == ret || `stop == ret)
+                if (`to_enable == ret)
                     {
-                        map out = runInitScript (current_service, `start == ret ? "start" : "stop");
+                    }
+                if (`to_all_default == ret)
+                    {
+                    }
+                if (`start == ret || `stop == ret || `status == ret)
+                    {
+                        string command = substring (sformat ("%1", ret), 1);
+                        map out = runInitScript (current_service, command);
                         string message = "";
                         if (0 == lookup (out, "exit"))
                             {
                                 // show an output
-                                message = sformat ("Output from '/etc/init.d/%1 %2':\n\n",
-                                                          current_service,
-                                                          `start == ret ? "start" : "stop")
+                                message = sformat (_("Output from '/etc/init.d/%1 %2':\n\n"),
+                                                   current_service, command)
                                     + lookup (out, "stdout");
                             }
                         else
                             {
                                 // show an exit code
-                                message = sformat ("Output from '/etc/init.d/%1 %2':\n\n",
-                                                          current_service,
-                                                          `start == ret ? "start" : "stop")
-                                    + lookup (out, "stdout");
+                                message = sformat (_("'/etc/init.d/%1 %2' returned %3"),
+                                                   current_service,command,
+                                                   lookup (out, "exit")
+                                                   );
                             }
                         UI (`MessagePopup (message));
                         // save ...
-                        grabData (lookup (work_services, current_service));
-                        // and show new service ...
-                        changeService ();
+                        // FIXME: get state of current service (rcservice status)
+                    }
+                if (is (ret, string))
+                    {
+                        // checkbox pressed
+                        // checked of unchecked?
+                        string checked = ((UI (`QueryWidget (`id (ret), `Value))) ? "#" : "");
+                        grabData ();
+                        UI (`ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret)), checked));
                     }
             }
-        return ret;
+        return ret;        
     }
 }
