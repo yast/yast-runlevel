@@ -1,3 +1,8 @@
+-------------------------------------------------------------------
+Mon Apr  8 16:38:00 CEST 2002 - pblahos@suse.cz
+
+- When writting changes, label for progress bar tells
+  "Skipped servicename" for unchanged services. (Bug #15674)
 - Now there are buttons for service enabling and disabling. Button
   to reset to the state after installation was removed -- we have no
   idea what the state after installation was.

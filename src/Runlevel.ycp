@@ -308,9 +308,9 @@
 	Progress::NextStep ();
 
 	foreach (`k, `v, services, ``{
-	    Progress::Title (sformat (_("Service %1"), k));
 	    if (lookup (v, "dirty", false))
 	    {
+		Progress::Title (sformat (_("Service %1"), k));
 		// save!
 		string add_comma = "";
 		list start = lookup (v, "start", []);
@@ -334,6 +334,8 @@
 		y2milestone ("%1 ===> Running %2", k, commandline);
 		SCR::Execute (.target.bash, commandline);
 	    }
+	    else
+		Progress::Title (sformat (_("Skipping service %1."), k));
 	    Progress::NextStep ();
 	});
 	Progress::NextStep ();
