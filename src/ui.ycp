@@ -22,6 +22,37 @@
     import "Runlevel";
     include "ui/common_popups.ycp";
 
+    global string ssn = "yast2";
+    global list(string) ssn_stack = [];
+
+    /**
+     * Declare a name for the current dialog
+     * to ease making screenshots.
+     * @param s eg. "mail-1-conntype"
+     */
+    global define void SetScreenShotName (string s) ``{
+	ssn_stack = prepend (ssn_stack, ssn);
+	ssn = s;
+	UI::SetModulename (ssn);
+    }
+
+    /**
+     * Restore the screenshot name
+     */
+    global define void RestoreScreenShotName () ``{
+	ssn = ssn_stack[0]:nil;
+	if (ssn == nil)
+	{
+	    ssn = "yast2";
+	    y2error (1, "screenshot name stack empty!");
+	}
+	else
+	{
+	    ssn_stack = remove (ssn_stack, 0);
+	}
+	UI::SetModulename (ssn);
+    }
+
     /**
      * Create term of checkboxes for runlevel selection.
      * @return HBox full of checkboxes.
@@ -310,6 +341,7 @@ Select runlevels in which to run currently selected service.<ul>
      * @return symbol for wizard sequencer
      */
     global define symbol runMain () ``{
+	SetScreenShotName ("runlevel-1-main");
 
 	term contents = `VBox (
 	    `VStretch (),
@@ -382,6 +414,8 @@ Select runlevels in which to run currently selected service.<ul>
 	    }
 	    break;
 	}
+
+	RestoreScreenShotName ();
 	return ret;
     }
 
@@ -861,6 +895,8 @@ because they depend on it:
      * @return symbol for wizard sequencer
      */
     global define symbol allInOne () ``{
+	SetScreenShotName ("runlevel-2-services");
+
 	// currently selected service we are working with
 	map service = $[];
 
@@ -1068,6 +1104,8 @@ both of them?")))
 		    UI::LongTextPopup ("", `RichText(r[1]:""), 70, 5);
 		}
 	    }
+
+	RestoreScreenShotName ();
 	return ret;
     }
     /**
