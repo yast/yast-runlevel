@@ -406,7 +406,6 @@ Further dependency checking will be disabled."));
 		// progress item, %1 is a service (init script) name
 		Progress::Title (sformat (_("Service %1"), k));
 		// save!
-		string add_comma = "";
 		list start = lookup (v, "start", []);
 		if (contains (lookup (v, "defstart", []), "B"))
 		{
@@ -415,11 +414,8 @@ Further dependency checking will be disabled."));
 		string commandline = "";
 		if (size (start)>0)
 		{
-		    commandline = sformat ("/sbin/insserv -r %1; /sbin/insserv %1,start=", k);
-		    foreach (`i, start, ``{
-			commandline = commandline + add_comma + i;
-			add_comma = ",";
-		    });
+		    string rls = mergestring (start, ",");
+		    commandline = sformat ("/sbin/insserv -r %1; /sbin/insserv %1,start=%2", k, rls);
 		}
 		else
 		{
@@ -568,12 +564,20 @@ Further dependency checking will be disabled."));
 
 	if (size(services)>0) {
 	    sum = Summary::OpenList(sum);
-	    foreach(`k, `v, services,
-		``{
+	    foreach(string k, map v, services, ``{
 		if (v["dirty"]:false)
-		    sum = Summary::AddListItem(sum, "<p><b>" + k + "</b><br> Start: " + mergestring(v["start"]:[], " ") + "<br>" +" Stop: " + mergestring(v["stop"]:[], " ") + "</p>" );
+		{
+		    string item = sformat (
+			// summary item: %1 service name,
+			// %2, %3 list of runlevels it starts/stops in
+			_("<p><b>%1</b><br> Start: %2<br> Stop: %3</p>"),
+			k,
+			mergestring(v["start"]:[], " "),
+			mergestring(v["stop"]:[], " ")
+			);
+		    sum = Summary::AddListItem(sum, item );
+		}
 	    });
-
 	    sum = Summary::CloseList(sum);
 	}
 	else
