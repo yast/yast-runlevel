@@ -8,7 +8,7 @@ On command line, do rcfoo start
 ps ax |grep foo
 ls -l /proc/$pid/fd
  will probably show a fd attached to the terminal.
-Or try rcfoo start |cat	 # 22836 (pure-ftpd)
+Or try rcfoo start 2>&1 |cat	 # 22836 (pure-ftpd)
 #25386 gpm
-
+#33051 lisa
 #16555.
