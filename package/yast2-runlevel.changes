@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jul 18 16:31:55 CEST 2002 - mvidner@suse.cz
+
+- Dependencies: filter out optional (+) system services (#16966).
+- 2.6.10
+
+-------------------------------------------------------------------
 Fri Jul 12 16:05:18 CEST 2002 - arvin@suse.de
 
 - use proper namespace for Args and CallFunction (#16776)
