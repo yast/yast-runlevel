@@ -207,6 +207,7 @@
 
     /**
      * Read settings
+     * @return success
      */
     global define boolean Read () ``{
 	Progress::Simple (_("Initializing runlevel editor. Please wait."), " ", 6, "");
@@ -261,8 +262,8 @@
     }
 
     /**
-     * Is service disabled? Check "disabled" key which reflects whether service is disabled by some START_-like variable.
-     * Otherwise it checks if it is disabled by unchecking all checkboxes...
+     * Is a service disabled?
+     * Checks whether the list of runlevels it runs in is empty
      * @param service service to check
      * @return boolean true if service is disabled
      */
@@ -387,7 +388,10 @@
 
     /**
      * Export user settings.
-     * @return user settings
+     * @return user settings:<pre>$[
+     *    "services": $[ map of dirty services ],
+     *    "default":  the default runlevel, if changed,
+     *]</pre>
      */
     global define map Export () ``{
 	map svc = filter (`k, `v, services, ``{
@@ -403,6 +407,7 @@
     /**
      * Import user settings
      * @param s user settings
+     * @see Export
      * @return success state
      */
     global define boolean Import (map s) ``{
