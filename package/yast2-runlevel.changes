@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Mar  3 15:13:09 CET 2005 - locilka@suse.cz
+
+- merged proofed texts
+- 2.11.8 
+
+-------------------------------------------------------------------
 Mon Feb 21 17:58:16 CET 2005 - mlazar@suse.cz
 
 - fixed bug 65733: runlevel editor does not work in autoyast interface
