@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Jan 15 14:45:19 CET 2003 - mvidner@suse.de
+
+- Added function key shortcuts in ncurses.
+- 2.7.0
+
+-------------------------------------------------------------------
 Thu Sep 26 21:56:53 EDT 2002 - nashif@suse.de
 
 - Fix: ServiceInfo is part of the Runlevel module
