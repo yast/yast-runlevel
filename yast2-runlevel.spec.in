@@ -6,6 +6,8 @@
 Requires:       yast2
 Provides:	yast2-config-runlevel
 Obsoletes:	yast2-config-runlevel
+Provides:	yast2-trans-runlevel
+Obsoletes:	yast2-trans-runlevel
 BuildArchitectures:     noarch
 Summary:	Configuration of runlevel
 
@@ -32,6 +34,7 @@ Summary:	Configuration of runlevel
 @clientdir@/runlevel.ycp
 @clientdir@/runlevel_auto.ycp
 @clientdir@/runlevel_write.ycp
-@yncludedir@/runlevel
+%dir @yncludedir@/runlevel
+@yncludedir@/runlevel/*.ycp
 @moduledir@/Runlevel.ycp
 %doc @docdir@
