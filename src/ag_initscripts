@@ -79,6 +79,7 @@ get_script_info () {
             if (FILENAME ~ /\.local$/ || FILENAME ~ /\.rpm/ || FILENAME ~ /\.ba/ ||
                 FILENAME ~ /\.old$/ || FILENAME ~ /\.new$/ || FILENAME ~ /\.save$/ || 
                 FILENAME ~ /\.swp$/ || FILENAME ~ /\.core$/ || FILENAME ~ /~$/ ||
+		FILENAME ~ /boot\.klog/ ||
                 FILENAME ~ /\.[^0-9$.#_\-\\*]*[0-9$.#_\-\\*]/)
                 skipfile = 1;
             else {
@@ -257,7 +258,7 @@ while true ; do
             ;;
 
         'Read (.runlevel_list)')
-            echo -n "["
+            echo -n "[ \"B\", "
             /usr/bin/awk '/^[^#]..*\/etc\/init\.d\/rc / { print "\"" $2 "\"," }' /etc/inittab
             echo "]"
             ;;

@@ -190,14 +190,6 @@ Select runlevels in which to run currently selected service.<ul>
 	    Runlevel::services = add (Runlevel::services, service_name, add (service, "started", Runlevel::RunInitScript (service_name, "status")));
 	}
 
-	list levels = [];
-	foreach (`i, Runlevel::runlevels, ``{
-	    if ("6" != i && "0" != i && "S" != i)
-	    {
-		levels = add (levels, `item (`id (i), i, Runlevel::default == i));
-	    }
-	});
-
 	term contents = `VBox (
 	    `VStretch (),
 	    // label in dialog
@@ -298,7 +290,7 @@ Select runlevels in which to run currently selected service.<ul>
     global define list getDefaultPicker () ``{
 	list items = [];
 	foreach (`i, Runlevel::runlevels, ``{
-	    if ("0" != i && "6" != i && "S" != i)
+	    if ("0" != i && "6" != i && "S" != i && "B" != i)
 	    {
 		items = add (items, `item (`id (i), getRunlevelDescr (i), i == Runlevel::default));
 	    }

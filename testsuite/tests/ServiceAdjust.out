@@ -1,5 +1,5 @@
 Read	.init.scripts.exists "aaa" false
-Log	Init script  does not exist.
+Log	Init script aaa does not exist.
 Return	false
 Read	.init.scripts.exists "aaa" true
 Read	.init.scripts.exists "aaa" true
