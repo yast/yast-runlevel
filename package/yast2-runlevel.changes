@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 12 14:12:06 CET 2005 - mlazar@suse.cz
+
+- fixed #36178 - status of services not correctly displayed after runlevel change
+
+-------------------------------------------------------------------
 Wed Jan 12 10:00:16 CET 2005 - mlazar@suse.cz
 
 - fixed #49731 - runlevel does not work in autoyast
