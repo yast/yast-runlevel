@@ -62,6 +62,7 @@ get_script_info () {
 /usr/bin/awk '
     BEGIN {
             in_comment = 0; in_descr = 0; skip_file = 0; first_time = 1;
+            header_printed = 0;
         }
     first_time {
             first_time = 0;
@@ -70,9 +71,15 @@ get_script_info () {
                 FILENAME ~ /\.swp$/ || FILENAME ~ /\.core$/ || FILENAME ~ /~$/ ||
                 FILENAME ~ /\.[^0-9$.#_\-\\*]*[0-9$.#_\-\\*]/)
                 skipfile = 1;
-            else
+            else {
                 printf "\"%s\" : $[\n", FILENAME ;
+                header_printed = 1;
+            }
         }
+    END {
+        if (header_printed)
+                print "],";
+    }
     skipfile {
             nextfile;
         }
@@ -89,7 +96,7 @@ get_script_info () {
             in_comment = 0;
             gsub (/"/, "\\\"", description);
             print "     \"description\": \""description"\",";
-            print "],"; 
+            # we print ] in END rule
             nextfile;
         }
     in_continue && in_comment && $2 == "Default-Start:" {
