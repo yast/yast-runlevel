@@ -102,7 +102,8 @@
      * @return reversed graph
      */
     global define map ReverseGraph (map g) ``{
-	map rev = $[];
+	// initialize, otherwise we miss nodes with zero in-degree
+	map rev = mapmap (any node, any dummy, g, ``( [node, []] ));
 	foreach (any source, list targets, g, ``{
 	    foreach (any target, targets, ``{
 		rev[target] = add (rev[target]:[], source);
