@@ -267,85 +267,83 @@ Further dependency checking will be disabled."));
     }
 
     /**
-     * Filter out already started/stopped services.
-     * @param svcs	service list to be started/stopped
-     * @param start	start/stop
-     * @return a list of scripts that must really be started/stopped
+     * Gets a list of dependent services and a target state they
+     * should be in. Filters out those that are already in the target
+     * state.
+     * If both init_time and run_time are on, a conjunction is needed.
+     * @param svcs	dependent services
+     * @param rls	used for init_time
+     * @param enable	on/off:
+     * @param init_time enable/disable
+     * @param run_time  start/stop
      */
-    global define list(string) FilterStartStop (list(string) svcs,
-						boolean start) ``{
-	return filter (string service, svcs, ``{
-	    boolean started =
-		services[service, "started"]:-1 == 0 ||
-		// boot scripts are always considered to be started,
-		// even if they return 4 :(
-		services[service, "defstart"]:[] == [ "B" ] ||
-		// and while we're at it with kludges,
-		// pretend nfs is running (ie. /usr is available)
-		// because it reports 3 when no nfs imports are defined :(
-		// TODO resolve it better!
-		service == "nfs";
-	    // keep it in the list if the wanted result
-	    // is different from the current state
-	    return start != started;
-	});
-    }
-    /**
-     * Filter out already enabled/disabled services.
-     * @param svcs	service list to be enabled/disabled
-     * @param rl	which runlevel
-     * @param enable	enabling or disabling?
-     * @return a list of scripts that must really be enabled/disabled
-     */
-    global define list(string) FilterEnableDisable (list(string) svcs,
-						    string rl,
-						    boolean enable) ``{
-	return filter (string service, svcs, ``{
-	    list start = services[service, "start"]:[];
-	    // keep it in the list if the wanted result
-	    // is different from the current state
-	    return enable != StartContainsImplicitly (start, rl);
-	});
-    }
-    /**
-     * Filter out already enabled/disabled services.
-     * @param svcs	service list to be enabled/disabled
-     * @param rls	which runlevels (all of them).
-     *  For disabling, must be nil, meaning disable in all.
-     * @param enable	enabling or disabling?
-     * @return a list of scripts that must really be enabled/disabled
-     */
-    global define list(string) FilterEnableDisableSet (list(string) svcs,
-						    list(string) rls,
-						    boolean enable) ``{
-	if (enable)
+    global define list(string) FilterAlreadyDoneServices (list(string) svcs,
+							  list(string) rls,
+							  boolean enable,
+							  boolean init_time,
+							  boolean run_time) ``{
+
+	boolean one = size (rls) == 1;
+	if (init_time && !enable &&
+	    rls != nil && !one)
 	{
-	    return filter (string service, svcs, ``{
+	    // should not happen
+	    y2error ("Disabling in a nontrivial set of runlevels (%1) not implemented.", rls);
+	    return nil;
+	}
+	string rl = rls[0]:"";
+
+	return filter (string service, svcs, ``{
+	    boolean all_ok = nil; // is the service in the target state?
+
+	    // run_time
+	    boolean run_ok = true;
+	    if (run_time)
+	    {
+		boolean started =
+		    services[service, "started"]:-1 == 0 ||
+		    // boot scripts are always considered to be started,
+		    // even if they return 4 :(
+		    services[service, "defstart"]:[] == [ "B" ] ||
+		    // and while we're at it with kludges,
+		    // pretend nfs is running (ie. /usr is available)
+		    // because it reports 3 when no nfs imports are defined :(
+		    // TODO resolve it better!
+		    service == "nfs";
+		run_ok = started == enable;
+	    }
+
+	    // init_time
+	    boolean init_ok = true;
+	    if (init_time)
+	    {
 		list start = services[service, "start"]:[];
-		// keep it in the list
-		// if it should start in a bigger set than now
-		return !ImplicitlySubset (rls, start);
-	    });
-	}
-	else
-	{
-	    if (rls != nil)
-	    {
-		// should not happen
-		y2error ("Disabling in a nontrivial set of runlevels (%1) not implemented.", rls);
-		return nil;
+
+		if (one)
+		{
+		    init_ok = enable == StartContainsImplicitly (start, rl);
+		}
+		else
+		{
+		    if (enable)
+		    {
+			init_ok = ImplicitlySubset (rls, start);
+		    }
+		    else
+		    {
+			// rls is nil, we only support disabling
+			// in one or all runleves at once
+			init_ok = start == [];
+		    }
+		}
 	    }
-	    else
-	    {
-		return filter (string service, svcs, ``{
-		    list start = services[service, "start"]:[];
-		    // keep it in the list
-		    // if it is enabled now
-		    return start != [];
-		});
-	    }
-	}
+
+
+	    // keep it in the list if something needs to be done
+	    return !(init_ok && run_ok);
+	});
     }
+
 
     /**
      * Is a service started in a runlevel, given the list of rulevels
@@ -438,8 +436,9 @@ Further dependency checking will be disabled."));
     /**
      * Save changed services into proper runlevels. Save also changed
      * default runlevel.
+     * @return success
      */
-    global define void Write () ``{
+    global define boolean Write () ``{
 	integer prsize = size (services);
 	// progress caption
 	Progress::Simple (_("Saving changes to runlevels."), " ", prsize + 1, "");
@@ -448,30 +447,31 @@ Further dependency checking will be disabled."));
 	    SCR::Write (.init.scripts.default_runlevel, default);
 	Progress::NextStep ();
 
-	foreach (`k, `v, services, ``{
+	map failed = filter (`k, `v, services, ``{
+	    boolean fail = false;
 	    if (lookup (v, "dirty", false))
 	    {
 		// progress item, %1 is a service (init script) name
 		Progress::Title (sformat (_("Service %1"), k));
 		// save!
 		list start = lookup (v, "start", []);
-		/*
-		// This was an additional safety measure.
-		// The dependencies and the easy mode make it obsolete.
-		// #21214
-		if (contains (lookup (v, "defstart", []), "B"))
-		{
-		    start = union (start, [ "B" ]);
-		}
-		*/
-		Runlevel::ServiceFinetune (k, start);
+		y2milestone ("Setting %1: %2", k, start);
+		fail = ! Runlevel::ServiceFinetune (k, start);
 	    }
 	    else
 		// progress item, %1 is a service (init script) name
 		Progress::Title (sformat (_("Skipping service %1."), k));
 	    Progress::NextStep ();
+	    return fail;
 	});
 	Progress::NextStep ();
+	string failed_s = mergestring (maplist (`k, `v, failed, ``(k)), ", ");
+	if (size (failed_s) > 0)
+	{
+	    Report::Error (sformat (_("Failed services: %1."), failed_s));
+	    return false;
+	}
+	return true;
     }
 
     /**
@@ -606,32 +606,45 @@ Further dependency checking will be disabled."));
     }
 
     /**
+     * Returns textual runlevel description.
+     * Descriptions are hard-coded in ycp script.
+     * @param rl Runlevel to check.
+     * @return string Description.
+     */
+    global define string getRunlevelDescr (string rl) ``{
+	return lookup ($[
+	    // descriptions of runlevels. there must be number: description
+	    // number is runlevel name
+	    // runlevel description
+	    "0" : _("0: System halt"),
+	    // runlevel description
+	    "1" : _("1: Single user mode"),
+	    // runlevel description
+	    "2" : _("2: Local multiuser without remote network"),
+	    // runlevel description
+	    "3" : _("3: Full multiuser with network"),
+	    // runlevel description
+	    "4" : _("4: User defined"),
+	    // runlevel description
+	    "5" : _("5: Full multiuser with network and xdm"),
+	    // runlevel description
+	    "6" : _("6: System reboot"),
+	    // runlevel description
+	    // internal one: without a number
+	    "" : _("Unchanged"),
+	    ], rl, rl);
+    }
+
+    /**
      * @return Html formatted configuration summary
      */
     global define string Summary()
 	``{
 
-	map rl = $[
-	    // summary item: description of a run level
-	    "0" : _("0: System halt"),
-	    // summary item: description of a run level
-	    "1" : _("1: Single user mode"),
-	    // summary item: description of a run level
-	    "2" : _("2: Local multiuser without remote network"),
-	    // summary item: description of a run level
-	    "3" : _("3: Full multiuser with network"),
-	    // summary item: description of a run level
-	    "4" : _("4: User defined"),
-	    // summary item: description of a run level
-	    "5" : _("5: Full multiuser with network and xdm"),
-	    // summary item: description of a run level
-	    "6" : _("6: System reboot"),
-	    ];
-
 	string sum = "";
 	// summary header
-	sum = Summary::AddHeader(sum, _("Current Runlevel"));
-	sum = Summary::AddLine(sum,  rl[default]:"");
+	sum = Summary::AddHeader(sum, _("Default Runlevel"));
+	sum = Summary::AddLine(sum,  getRunlevelDescr (default));
 	// summary header
 	sum = Summary::AddHeader(sum, _("Services"));
 

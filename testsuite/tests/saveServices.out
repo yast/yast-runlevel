@@ -1,33 +1,33 @@
-Return	nil
-Return	nil
+Return	true
+Return	true
 Read	.init.scripts.exists "a" true
 Execute	.target.bash_output "/sbin/insserv -rf /etc/init.d/a" $["exit":0, "stderr":"", "stdout":""]
-Execute	.target.bash_output "/sbin/insserv /etc/init.d/a,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
+Execute	.target.bash_output "/sbin/insserv -f /etc/init.d/a,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
 Read	.init.scripts.exists "b" true
 Execute	.target.bash_output "/sbin/insserv -rf /etc/init.d/b" $["exit":0, "stderr":"", "stdout":""]
-Execute	.target.bash_output "/sbin/insserv /etc/init.d/b,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
-Return	nil
+Execute	.target.bash_output "/sbin/insserv -f /etc/init.d/b,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
+Return	true
 Read	.init.scripts.exists "a" true
 Execute	.target.bash_output "/sbin/insserv -rf /etc/init.d/a" $["exit":0, "stderr":"", "stdout":""]
-Execute	.target.bash_output "/sbin/insserv /etc/init.d/a,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
+Execute	.target.bash_output "/sbin/insserv -f /etc/init.d/a,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
 Read	.init.scripts.exists "b" true
 Execute	.target.bash_output "/sbin/insserv -rf /etc/init.d/b" $["exit":0, "stderr":"", "stdout":""]
-Execute	.target.bash_output "/sbin/insserv /etc/init.d/b,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
-Return	nil
+Execute	.target.bash_output "/sbin/insserv -f /etc/init.d/b,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
+Return	true
 Read	.init.scripts.exists "a" true
 Execute	.target.bash_output "/sbin/insserv -rf /etc/init.d/a" $["exit":0, "stderr":"", "stdout":""]
-Execute	.target.bash_output "/sbin/insserv /etc/init.d/a,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
+Execute	.target.bash_output "/sbin/insserv -f /etc/init.d/a,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
 Read	.init.scripts.exists "b" true
 Execute	.target.bash_output "/sbin/insserv -rf /etc/init.d/b" $["exit":0, "stderr":"", "stdout":""]
-Execute	.target.bash_output "/sbin/insserv /etc/init.d/b,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
-Return	nil
+Execute	.target.bash_output "/sbin/insserv -f /etc/init.d/b,start=1,2,3" $["exit":0, "stderr":"", "stdout":""]
+Return	true
 Read	.init.scripts.exists "a" true
-Execute	.target.bash_output "/sbin/insserv -r /etc/init.d/a" $["exit":0, "stderr":"", "stdout":""]
+Execute	.target.bash_output "/sbin/insserv -rf /etc/init.d/a" $["exit":0, "stderr":"", "stdout":""]
 Read	.init.scripts.exists "b" true
-Execute	.target.bash_output "/sbin/insserv -r /etc/init.d/b" $["exit":0, "stderr":"", "stdout":""]
-Return	nil
-Return	nil
+Execute	.target.bash_output "/sbin/insserv -rf /etc/init.d/b" $["exit":0, "stderr":"", "stdout":""]
+Return	true
+Return	true
 Read	.init.scripts.exists "nfsserver" true
 Execute	.target.bash_output "/sbin/insserv -rf /etc/init.d/nfsserver" $["exit":0, "stderr":"", "stdout":""]
-Execute	.target.bash_output "/sbin/insserv /etc/init.d/nfsserver,start=1" $["exit":0, "stderr":"", "stdout":""]
-Return	nil
+Execute	.target.bash_output "/sbin/insserv -f /etc/init.d/nfsserver,start=1" $["exit":0, "stderr":"", "stdout":""]
+Return	true

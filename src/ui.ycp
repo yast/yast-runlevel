@@ -26,11 +26,24 @@
     import "Label";
     import "Popup";
 
+    global string current_service = "";
+
 
     // UI "slots"
     // update parts of the UI
 
     global string CheckMark = UI::Glyph (`CheckMark);
+
+    // columns in the table where these items are located
+    // -1 means it is not there
+    global integer c_dirty = -1;
+    global integer c_bstatus = -1;
+    global integer c_rstatus = -1;
+    global integer c_runlevels = -1;
+    global integer c_descr = -1;
+    // index into table column for each runlevel
+    global map runlevel2tableindex = $[];
+
 
     /**
      * Create term of checkboxes for runlevel selection.
@@ -89,6 +102,11 @@
      */
     global define void updateRlColumns (string service_name, map service,
 					list(string) rls) ``{
+	if (c_runlevels == -1)
+	{
+	    return;
+	}
+
 	list start = service["start"]:[];
 	if (rls == nil)
 	{
@@ -96,18 +114,39 @@
 	}
 	foreach (string rl, rls, ``{
 	    UI::ChangeWidget (`id (`table),
-			      `Item (service_name, runlevel2tableindex[rl]:0),
+			      `Item (service_name, runlevel2tableindex[rl]:-1),
 			      contains (start, rl) ? rl : " ");
 	});
     }
     /**
-     * Helper function for fetching service status in run-time.
+     * Update simple-mode status column.
+     * TODO combine runtime status too?
+     * @param service_name which line
+     * @param service @ref service
+     * @param started status or -1 (unknown yet)
+     */
+    global define void updateSimpleStatusColumn (string service_name,
+						 map service) ``{
+	if (c_bstatus == -1)
+	{
+	    return;
+	}
+	string state = RunlevelEd::isDisabled (service)? _("No"): _("Yes");
+	UI::ChangeWidget (`id (`table), `Item (service_name, c_bstatus),
+			  state);
+    }
+    /**
+     * Update run-time status column.
      * @param service_name which line
      * @param started status or -1 (unknown yet)
      */
     global define void updateStatusColumn (string service_name,
 					   integer started) ``{
-	UI::ChangeWidget (`id (`table), `Item (service_name, 1),
+	if (c_rstatus == -1)
+	{
+	    return;
+	}
+	UI::ChangeWidget (`id (`table), `Item (service_name, c_rstatus),
 			  StartedText (started));
     }
     /**
@@ -174,29 +213,28 @@
      * @return string help text
      */
     global define string getActionReturnHelp (integer exit) ``{
-	// Init script non-status-command return codes
-	// http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
 	return lookup (
 	    $[
+		// Init script non-status-command return codes
+		// http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
 		// status code.
-		// this is used only in case someone called this function
-		// with bad input
-		0: _("Success."),
+		// Changed "Foo bar." to "foo bar", #25082
+		0: _("success"),
 		/* 1: handled as default below */
 		// status code.
-		2: _("Invalid or excess arguments."),
+		2: _("invalid or excess arguments"),
 		// status code.
-		3: _("Unimplemented feature."),
+		3: _("unimplemented feature"),
 		// status code.
-		4: _("User had insufficient privileges."),
+		4: _("user had insufficient privileges"),
 		// status code.
-		5: _("Program is not installed."),
+		5: _("program is not installed"),
 		// status code.
-		6: _("Program is not configured."),
+		6: _("program is not configured"),
 		// status code.
-		7: _("Program is not running."),
+		7: _("program is not running"),
 		// status code.
-		], exit, _("Unspecified error."));
+		], exit, _("unspecified error"));
     }
     /**
      * Get help text for rcscript status return value
@@ -205,54 +243,45 @@
      * @return string help text
      */
     global define string getStatusReturnHelp (integer exit) ``{
-	// Init script "status" command return codes
-	// http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
 	return lookup (
 	    $[
+		// Init script "status" command return codes
+		// http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
 		// status code.
-		0: _("Program is running."),
+		// Changed "Foo bar." to "foo bar", #25082
+		0: _("program is running"),
 		// status code.
-		1: _("Program is dead and /var/run pid file exists."),
+		1: _("program is dead and /var/run pid file exists"),
 		// status code.
-		2: _("Program is dead and /var/lock lock file exists."),
+		2: _("program is dead and /var/lock lock file exists"),
 		// status code.
-		3: _("Program is stopped."),
+		3: _("program is stopped"),
 		// status code.
-		4: _("Program or service status is unknown."),
+		4: _("program or service status is unknown"),
 		// status code.
-		], exit, _("Unspecified error."));
-    }
-
-    /**
-     * Returns textual runlevel description. Descriptions are hard-coded in ycp script.
-     * @param rl Runlevel to check.
-     * @return string Description.
-     */
-    global define string getRunlevelDescr (string rl) ``{
-	return lookup ($[
-	    // descriptions of runlevels. there must be number: description
-	    // number is runlevel name
-	    "0" : _("0: System halt"),
-	    "1" : _("1: Single user mode"),
-	    "2" : _("2: Local multiuser without remote network"),
-	    "3" : _("3: Full multiuser with network"),
-	    "4" : _("4: User defined"),
-	    "5" : _("5: Full multiuser with network and xdm"),
-	    "6" : _("6: System reboot"),
-	    ], rl, rl);
+		], exit, _("unspecified error"));
     }
 
     /**
      * Returns items for default runlevel combo box.
      * (Excludes 0, 6, S and B)
+     * @param mode if `auto, adds Unchanged
      * @return list List of items. Default is selected.
      */
-    global define list getDefaultPicker () ``{
+    global define list getDefaultPicker (symbol mode) ``{
 	list items = [];
-	foreach (`i, RunlevelEd::runlevels, ``{
+	list (string) rls = RunlevelEd::runlevels;
+	if (mode == `auto)
+	{
+	    rls = prepend (rls, "");
+	}
+
+	foreach (`i, rls, ``{
 	    if ("0" != i && "6" != i && "S" != i && "B" != i)
 	    {
-		items = add (items, `item (`id (i), getRunlevelDescr (i), i == RunlevelEd::default));
+		items = add (items, `item (`id (i),
+					   RunlevelEd::getRunlevelDescr (i),
+					   i == RunlevelEd::default));
 	    }
 	});
 	return items;
@@ -331,6 +360,14 @@
 	boolean m_runlevels = mix != `simple;
 	boolean m_descr = true;
 
+	// assume it is not there until placed in
+	c_dirty = -1;
+	c_bstatus = -1;
+	c_rstatus = -1;
+	c_runlevels = -1;
+	c_descr = -1;
+	runlevel2tableindex = $[];
+
 	// filter out services that are too important to be messed with
 	// in the simple mode
 	map services = RunlevelEd::services;
@@ -347,35 +384,50 @@
 	    if (first)
 	    {
 		first = false;
-		current_service = k;
+		// preserve current service when switching modes
+		if (!haskey (services, current_service))
+		{
+		    current_service = k;
+		}
 	    }
 	    // id=name, name
 	    term item = `item (`id (k), k);
+	    // column where a item is added
+	    integer col = 1;
 	    if (m_dirty)
 	    {
 		// dirty
+		c_dirty = col;
 		item = add (item, v["dirty"]:false ? CheckMark : " ");
+		col = col + 1;
 	    }
 	    if (m_bstatus)
 	    {
 		// boot status
 		string state = RunlevelEd::isDisabled (v)?
-		    _("Disabled"):
-		    _("Enabled");
+		    _("No"):
+		    _("Yes");
+		c_bstatus = col;
 		item = add (item, state);
+		col = col + 1;
 	    }
 	    if (m_rstatus)
 	    {
 		// runtime status
 		integer started = lookup (v, "started", -1);
+		c_rstatus = col;
 		item = add (item, StartedText (started));
+		col = col + 1;
 	    }
 	    if (m_runlevels)
 	    {
 		// runlevels
 		list rl = lookup (v, "start", []);
+		c_runlevels = col;
 		foreach (`i, RunlevelEd::runlevels, ``{
+		    runlevel2tableindex[i] = col;
 		    item = add (item, (contains (rl, i)? i : " "));
+		    col = col + 1;
 		});
 	    }
 	    if (m_descr)
@@ -388,7 +440,9 @@
 		{
 		    descr = v["description"]:"";
 		}
+		c_descr = col;
 		item = add (item, descr);
+		col = col + 1;
 	    }
 	    // next
 	    items = add (items, item);
@@ -503,6 +557,7 @@ Please wait.</P>")
 				      service_name, service);
 
 	    updateRlColumns (service_name, service, rls);
+	    updateSimpleStatusColumn (service_name, service);
 	}
     }
 
@@ -586,25 +641,8 @@ Please wait.</P>")
 	y2debug ("DEP: %1", dep_s);
 
 	// filter ones that are ok already
-	// simple mode: for now, filter out disjunctively
-	//  TODO but to be sure the system is in a consistent state,
-	//  do it conjunctively
-	if (run_time)
-	{
-	    dep_s = RunlevelEd::FilterStartStop (dep_s, enable);
-	}
-	if (init_time)
-	{
-	    if (one)
-	    {
-		string rl = rls[0]:"";
-		dep_s = RunlevelEd::FilterEnableDisable (dep_s, rl, enable);
-	    }
-	    else
-	    {
-		dep_s = RunlevelEd::FilterEnableDisableSet (dep_s, rls, enable);
-	    }
-	}
+	dep_s = RunlevelEd::FilterAlreadyDoneServices (dep_s, rls, enable,
+						       init_time, run_time);
 	y2debug ("DEP filtered: %1", dep_s);
 
 	boolean doit = size (dep_s) == 0;
@@ -690,7 +728,8 @@ and enabled, because it depends on them:
 	{
 	    // iterate dep_s, not including service_name
 	    // because we will ask "continue?" on error
-	    foreach (string s, dep_s, ``{
+	    // Foreach with a break: find the failing one
+	    find (string s, dep_s, ``{
 		if (run_time)
 		{
 		    list ret = startStopService (s, command);
@@ -707,7 +746,7 @@ and enabled, because it depends on them:
 			rich_message = "";
 			if (!doit)
 			{
-			    return; // break(foreach)
+			    return true; // break(foreach)
 			}
 		    }
 		}
@@ -716,6 +755,7 @@ and enabled, because it depends on them:
 		    // set the variables and update the ui
 		    SetService (s, rls, enable);
 		}
+		return false;
 	    });
 	}
 	if (doit)
@@ -799,7 +839,8 @@ and enabled, because it depends on them:
 	string rich_message = sformat (
 	    // %1 service, %2 command,
 	    // %3 exit status, %4 status description, %5 stdout
-	    _("<p><b>/etc/init.d/%1 %2</b> returned %3 (%4)<br>%5</p>"),
+	    // added a colon
+	    _("<p><b>/etc/init.d/%1 %2</b> returned %3 (%4):<br>%5</p>"),
 	    service_name, command, exit,
 	    (command == "status" ?
 	     getStatusReturnHelp (exit) :
@@ -985,7 +1026,7 @@ Select runlevels in which to run the currently selected service.<ul>
 		),
 	    */
 	    // combo box label
-	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker ()), //TODO "do not change for AY"
+	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker (`complex)),
 
 	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
@@ -1207,7 +1248,7 @@ both of them?")))
 */
 	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
-		    `header (_("Service"), _("Status"), _("Description")),
+		    `header (_("Service"), _("Enabled"), _("Description")),
 		    servicesToTable (`simple)
 		),
 	    `VSquash (
@@ -1414,7 +1455,7 @@ name or the name specified is already in use."));
 	 */
 	define void refreshTableLine2 () ``{
 	    updateRlColumns (current_service, service, nil);
-	    UI::ChangeWidget (`id (`table), `Item (current_service, 1),
+	    UI::ChangeWidget (`id (`table), `Item (current_service, c_dirty),
 			      service["dirty"]:false ? CheckMark : " ");
 	}
 
@@ -1433,7 +1474,7 @@ name or the name specified is already in use."));
 	term contents = `VBox (
 	    `VSpacing (0.4),
 	    // combo box label
-	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker ()), //TODO "do not change for AY"
+	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker (`auto)),
 
 	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
@@ -1564,8 +1605,8 @@ disabled?\n"), nfs_adj)))
 		    // checked or unchecked?
 		    string checked = ((UI::QueryWidget (`id (ret), `Value)) ? ret : " ");
 		    service = queryRlCheckBoxes (current_service, service);
-		    UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret, 0)), checked);
-		    UI::ChangeWidget (`id (`table), `Item (current_service, 1), CheckMark);
+		    UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret, -1)), checked);
+		    UI::ChangeWidget (`id (`table), `Item (current_service, c_dirty), CheckMark);
 		}
 
 		// not a part of the else-if chain above!
