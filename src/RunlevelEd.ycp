@@ -666,9 +666,9 @@ Further dependency checking will be disabled."));
      */
     global define string Summary()
 	``{
-
-	string sum = ProposalSummary ();
-
+	string sum = "";
+        sum = Summary::AddHeader(sum, _("Default Runlevel"));
+        sum = Summary::AddLine(sum,  getRunlevelDescr (default));
 	// summary header
 	sum = Summary::AddHeader(sum, _("Services"));
 
