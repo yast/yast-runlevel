@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jan 31 13:34:18 CET 2005 - gizo@suse.cz
+
+- 2.11.4
+
+-------------------------------------------------------------------
 Fri Jan 28 09:54:22 CET 2005 - mlazar@suse.cz
 
 - fixed agent: don't dump error msg if service script isn't readable
