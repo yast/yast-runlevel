@@ -30,8 +30,8 @@
      */
     global define list< list<string> > TopologicalSort (map<string, list<string> > g) ``{
 	list out = [];
-	map in_degree = mapmap (string vertex, list<string> targets, g, ``($[vertex: 0]));
-	foreach (string vertex, list<string> targets, g, ``{
+	map<string, integer> in_degree = (map<string, integer>) mapmap (string vertex, list<string> targets, g, ``($[vertex: 0]));
+        foreach (string vertex, list<string> targets, g, ``{
 	    foreach (string target, targets, ``{
 		in_degree[target] = in_degree[target]:0 + 1;
 	    });
@@ -41,26 +41,26 @@
 	while (size (in_degree) > 0)
 	{
 	    // get the vertices that can go next because they have zero in degree
-	    map next_m = filter (any vertex, integer d, in_degree, ``(d == 0));
+	    map<string, integer> next_m = (map<string, integer>) filter (string vertex, integer d, in_degree, ``(d == 0));
 	    if (size (next_m) == 0)
 	    {
 		// the graph is cyclic!
 		break;
 	    }
-	    foreach (any vertex, any dummy, next_m, ``{
-		out = add (out, vertex);
+	    foreach (string vertex, integer dummy, next_m, ``{
+		out[size(out)] = vertex;
 	    });
 	    // remove the vertices
-	    in_degree = filter (any vertex, integer d, in_degree, ``(d != 0));
+	    in_degree = (map<string, integer>) filter (string vertex, integer d, in_degree, ``(d != 0));
 	    // remove the edges that were leading from them
-	    foreach (any vertex, any dummy, next_m, ``{
-		foreach (any target, g[vertex]:[], ``{
+	    foreach (string vertex, integer dummy, next_m, ``{
+		foreach (string target, g[vertex]:[], ``{
 		    in_degree[target] = in_degree[target]:0 - 1;
 		});
 	    });
 	}
 
-	list rest = maplist (any k, any v, in_degree, ``( k )); //mapkeys
+	list<string> rest = (list<string>) maplist (string k, integer v, in_degree, ``( k )); //mapkeys
 	if (size (rest) > 0)
 	{
 	    y2error ("Cyclic subgraph found, remainder has %1 nodes: %2",
@@ -77,29 +77,28 @@
      * @param start starting node
      * @return the reachable subgraph
      */
-    global define map<string, list<string> > ReachableSubgraph (map<string, list<string> > g, any start) ``{
+    global define map<string, list<string> > ReachableSubgraph (map<string, list<string> > g, string start) ``{
 	// a breadth-first search
 	map<string, list<string> >  result = $[];
 	// seen and next_layer are sets, realized as maps with dummy values
 	map seen = $[];
-//	map next_layer = $[start: true]; //AARGH! YCP!! #16701
-	map next_layer = add ($[], start, true);
+	map<string, boolean> next_layer = $[start: true];
 	do
 	{
-	    map current_layer = next_layer;
+	    map<string, boolean> current_layer = next_layer;
 	    next_layer = $[];
-	    foreach (any node, any dummy, current_layer, ``{
+	    foreach (string node, boolean dummy, current_layer, ``{
 		// action: add the node and edges
-		result = (map<string, list<string> > ) add (result, node, g[node]:[]);
+		result[node] = g[node]:[];
 
 		// next
-		seen = add (seen, node, true);
+		seen[node] = true;
 		// targets from this node.
 		// filter the ones already seen (including itself)
-		list targets = filter (any target, g[node]:[],
+		list<string> targets = filter (string target, g[node]:[],
 				       ``( !haskey (seen, target)));
-		foreach (any target, targets, ``{
-		    next_layer = add (next_layer, target, true);
+		foreach (string target, targets, ``{
+		    next_layer[target] = true;
 		});
 	    });
 	}
