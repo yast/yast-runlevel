@@ -1,0 +1,31 @@
+/**
+ * File:
+ *   ui.ycp
+ *
+ * Module:
+ *   Runlevel Editor
+ *
+ * Summary:
+ *   Write module.
+ *
+ * Authors:
+ *   Petr Blahos <pblahos@suse.cz>
+ *
+ * $Id$
+ *
+ * See summary.
+ */
+{
+    import "Runlevel";
+    import "Progress";
+
+    list args = Args ();
+    map settings = select (Args (), 0, $[]);
+
+    Progress::off ();
+    Runlevel::Read ();
+    Runlevel::Import (settings);
+    Runlevel::Write ();
+    Progress::on ();
+    return true;
+}

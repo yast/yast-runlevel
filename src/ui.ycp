@@ -15,6 +15,10 @@
  *
  * Runlevel editor user interface functions.
  */
+
+// FIXME: implement message box when user selected nfsserver but not
+// portmap
+
 {
     textdomain "runlevel";
 
@@ -107,6 +111,16 @@ Select runlevels in which to run currently selected service.<ul>
 <li><B>Enable the service</B><BR>Reactivates deactivated services in the standard runlevels.</li>
 </ul></p>")
 	    ;
+    }
+    /**
+     * Help text for auto-complex-screen
+     * FIXME: better help
+     * @return help text
+     */
+    global define string getHelpAuto () ``{
+	return
+	    // help text
+	    _("<p>Prepare data for autoinstallation.</p>");
     }
 
     /**
@@ -245,12 +259,13 @@ Select runlevels in which to run currently selected service.<ul>
 	    }
 	    else if (`next == ret)
 	    {
-		if (Runlevel::isDirty () && UI::YesNoPopup (_("Changes made to the runlevels \nwill now be saved.")))
+		if (Runlevel::isDirty ())
 		{
-		    Runlevel::Write ();
-		    UI::MessagePopup (_("The new configuration \nwas saved successfully."));
+		    if (!UI::YesNoPopup (_("Changes made to the runlevels \nwill now be saved.")))
+		    {
+			continue;
+		    }
 		}
-		continue;
 	    }
 	    break;
 	}
@@ -437,7 +452,6 @@ Select runlevels in which to run currently selected service.<ul>
 	    if (lookup (service, "start", []) != start_in)
 		{
 		    service = add (add (service, "start", start_in), "dirty", true);
-		    service = add (service, "START", true);
 		    Runlevel::services = add (Runlevel::services, current_service, service);
 		}
 	}
@@ -562,13 +576,24 @@ Select runlevels in which to run currently selected service.<ul>
 		}
 		if (`next == ret)
 		{
-		    if (Runlevel::isDirty () && UI::YesNoPopup (_("Now the changes to runlevels \nwill be saved.")))
+		    if (Runlevel::AdjustNfsserver ())
 		    {
-			Runlevel::Write ();
-			UI::MessagePopup (_("The new configuration \nwas stored successfully.") + overviewText ());
-			break;
+			UI::ChangeWidget (`id (`table), `CurrentItem, "portmap");
+			current_service = "portmap";
+			service = lookup (Runlevel::services, "portmap", $[]);
+			refreshTableLine ();
+			UI::PollInput ();
+			UI::MessagePopup (_( "Service portmap, which is needed by\n nfsserver, was enabled."));
 		    }
-		    ret = nil;
+		    if (Runlevel::isDirty ())
+		    {
+			if (!UI::YesNoPopup (_("Now the changes to runlevels \nwill be saved.")))
+			{
+			    ret = nil;
+			    continue;
+			}
+		    }
+		    break;
 		}
 		if (`table == ret)
 		{
@@ -658,6 +683,180 @@ Select runlevels in which to run currently selected service.<ul>
 		    string checked = ((UI::QueryWidget (`id (ret), `Value)) ? ret : " ");
 		    grabData ();
 		    UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret, 0)), checked);
+		}
+	    }
+	return ret;
+    }
+    /**
+     * Main dialog for changing services.
+     * @return symbol for wizard sequencer
+     */
+    global define symbol runAutoDialog () ``{
+	// currently selected service we are working with
+	map service = $[];
+
+	/**
+	 * Create table items from services.
+	 * @return list List of items for table.
+	 */
+	define list servicesToTable () ``{
+	    list items = [];
+	    boolean first = true;
+	    foreach (`k, `v, Runlevel::services, ``{
+		term item = `item (`id (k), k, lookup (v, "dirty", false) ? UI::Glyph (`CheckMark): " ");
+		list rl = Runlevel::isDisabled (v) ? [] : lookup (v, "start", []);
+		foreach (`i, Runlevel::runlevels, ``{
+		    item = add (item, (contains (rl, i)? i : " "));
+		});
+		if (first)
+		{
+		    first = false;
+		    current_service = k;
+		}
+		item = add (item, lookup (v, "description", ""));
+		items = add (items, item);
+	    });
+	    return items;
+	}
+	/**
+	 * Local function to allInOne. Changes values of checkboxes 0-S. Changes menubuttons.
+	 */
+	define void changeService () ``{
+	    list start = Runlevel::isDisabled (service) ? [] : lookup (service, "start", []);
+	    foreach (`i, Runlevel::runlevels, ``{
+		UI::ChangeWidget (`id (i), `Value, contains (start, i));
+	    });
+	}
+	/**
+	 * Reads data from checkboxes and updates service and services maps.
+	 */
+	define void grabData () ``{
+	    list start_in = [];
+	    foreach (`i, Runlevel::runlevels, ``{
+		if (UI::QueryWidget (`id (i), `Value))
+		    {
+			start_in = add (start_in, i);
+		    }
+	    });
+	    if (lookup (service, "start", []) != start_in)
+		{
+		    service = add (add (service, "start", start_in), "dirty", true);
+		    Runlevel::services = add (Runlevel::services, current_service, service);
+		}
+	}
+
+	/**
+	 * Sets columns 0-S (runlevels) in table so they are synchronized with checkboxes.
+	 */
+	define void refreshTableLine () ``{
+	    list start = (Runlevel::isDisabled (service) ? [] : lookup (service, "start", []));
+	    foreach (`i, Runlevel::runlevels, ``{
+		UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, i, 0)), contains (start, i) ? i : " ");
+	    });
+	    UI::ChangeWidget (`id (`table), `Item (current_service, 1), lookup (service, "dirty", false) ? UI::Glyph (`CheckMark) : " ");
+	}
+	/**
+	 * Sets current value to column running in table.
+	 */
+	define void refreshTableRunning () ``{
+	    integer started = lookup (service, "started", -1);
+	    // ???: we do not know what is the service state
+	    UI::ChangeWidget (`id (`table), `Item (current_service, 1), (0 == started ? _("Yes") : (started > 0 ? _("No") : _("???"))));
+	}
+
+	// headers in table
+	term header = `header (_("Service"), _("Changed"));
+	foreach (`i, Runlevel::runlevels, ``{
+	    header = add (header, `Center (" " + i + " "));
+	});
+	term rls = `HBox ();
+	foreach (`i, Runlevel::runlevels, ``{
+	    rls = add (rls, `CheckBox (`id (i), `opt (`notify), "&" + i));
+	});
+	// headers in table
+	header = add (header, _("Description"));
+	term contents = `VBox (
+	    `VSpacing (0.5),
+	    `Table (`id (`table), `opt (`notify, `immediate),
+		    header,
+		    servicesToTable ()
+		),
+	    `VBox (
+		// label above checkboxed
+		`Label (`id (`service_label), `opt (`hstretch), _("Service will be started in following runlevels:")),
+		`HBox (rls)
+		),
+	    `HBox (
+		`PushButton (`id (`clear), _("&Clear")),
+		`PushButton (`id (`clear_all), _("Clea&r All")),
+		`PushButton (`id (`default), _("&Default"))
+		)
+	    );
+	// dialog caption.
+	Wizard::SetContents (_("Runlevel editor: details"), contents, getHelpAuto (), true, true);
+	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
+	service = lookup (Runlevel::services, current_service, $[]);
+	changeService ();
+	any ret = nil;
+	while (`next != ret && `back != ret && `abort != ret)
+	    {
+		ret = UI::UserInput ();
+		if (`abort == ret)
+		{
+		    if (!reallyAbort ())
+			{
+			    ret = nil;
+			    continue;
+			}
+		}
+		if (`next == ret)
+		{
+		    if (Runlevel::AdjustNfsserver ())
+		    {
+			UI::ChangeWidget (`id (`table), `CurrentItem, "portmap");
+			current_service = "portmap";
+			service = lookup (Runlevel::services, "portmap", $[]);
+			refreshTableLine ();
+			while (nil != UI::PollInput ()) {}
+			UI::MessagePopup (_( "Service portmap, which is needed by\n nfsserver, was enabled."));
+		    }
+		    break;
+		}
+		if (`clear == ret)
+		{
+		    service = Runlevel::ServiceInfo (current_service);
+		    Runlevel::services = add (Runlevel::services, current_service, service);
+		    refreshTableLine ();
+		    ret = `table;
+		}
+		if (`default == ret)
+		{
+		    setServiceToDefault (current_service);
+		    service = lookup (Runlevel::services, current_service, 15);
+		    refreshTableLine ();
+		    ret = `table;
+		}
+		if (`clear_all == ret)
+		{
+		    Runlevel::ReadServices ();
+		    UI::ChangeWidget (`id (`table), `Items, servicesToTable ());
+		    ret = `table;
+		}
+		if (`table == ret)
+		{
+		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
+		    service = lookup (Runlevel::services, current_service, $[]);
+		    changeService ();
+		    while (nil != UI::PollInput ()) {}
+		}
+		if (nil != ret && is (ret, string))
+		{
+		    // checkbox pressed
+		    // checked of unchecked?
+		    string checked = ((UI::QueryWidget (`id (ret), `Value)) ? ret : " ");
+		    grabData ();
+		    UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret, 0)), checked);
+		    UI::ChangeWidget (`id (`table), `Item (current_service, 1), UI::Glyph (`CheckMark));
 		}
 	    }
 	return ret;

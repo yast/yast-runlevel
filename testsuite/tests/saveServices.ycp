@@ -65,5 +65,33 @@
             ],
         ];
     TEST (``(Runlevel::Write ()), [] , 0);
+
+    Runlevel::services = $[
+        "nfsserver" : $[
+            "dirty" : false,
+            "start" : ["1"],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        "portmap" : $[
+            "dirty" : false,
+            "start" : [],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        ];
+    TEST (``(Runlevel::Write ()), [] , 0);
+
+    Runlevel::services = $[
+        "nfsserver" : $[
+            "dirty" : true,
+            "start" : ["1"],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        "portmap" : $[
+            "dirty" : false,
+            "start" : [],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        ];
+    TEST (``(Runlevel::Write ()), [] , 0);
     Progress::on ();
 }

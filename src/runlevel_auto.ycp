@@ -1,16 +1,19 @@
 /**
  * File:
- *  runlevel.ycp
+ *   ui.ycp
+ *
  * Module:
- *  Runlevel editor.
+ *   Runlevel Editor
+ *
  * Summary:
- *  Main file of runlevel editor.
+ *   Runlevel Editor data gathering.
+ *
  * Authors:
- *  Petr Blahos <pblahos@suse.cz>, 2001
+ *   Petr Blahos <pblahos@suse.cz>
  *
  * $Id$
  *
- * Main file of runlevel editor.
+ * See summary.
  */
 {
     textdomain "runlevel";
@@ -22,6 +25,8 @@
     include "wizard/sequencer.ycp";
     include "runlevel/ui.ycp";
 
+    list args = Args ();
+    map settings = select (Args (), 0, $[]);
 
     // you know what this means
     boolean do_abort_now = false;
@@ -31,7 +36,7 @@
     // and then update map services.
     integer fetching_service_index = 0;
     // when fetching_service_status becomes false, we stop fetching services
-    boolean fetching_service_status = true;
+    boolean fetching_service_status = false;
 
     string current_service = "";
 
@@ -42,7 +47,10 @@
     Wizard::DisableAbortButton ();
     Wizard::RestoreHelp (getHelpProgress ());
 
+    // We take data from underlying system
     Runlevel::Read ();
+    Runlevel::Import (settings);
+    // and patch them with supplied map
 
     integer id = 2;
     foreach (`i, Runlevel::runlevels, ``{
@@ -55,7 +63,7 @@
     //
     map aliases = $[
 	"start" :            ``(runMain ()),
-	"complex" :          ``(allInOne ()),
+	"complex" :          ``(runAutoDialog ()),
 	];
 
     map main_sequence = $[
@@ -66,8 +74,9 @@
 
     if (`finish == WizardSequencer (aliases, main_sequence))
     {
-	Runlevel::Write ();
-	UI::MessagePopup (_("The new configuration \nwas saved successfully."));
+	settings = Runlevel::Export ();
     }
     UI::CloseDialog ();
+    return settings;
 }
+

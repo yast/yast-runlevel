@@ -12,3 +12,10 @@ Return	nil
 Execute	.target.bash "/sbin/insserv -r a" 0
 Execute	.target.bash "/sbin/insserv -r b" 0
 Return	nil
+Log	nfsserver is enabled, but portmap is not. Enabling portmap.
+Execute	.target.bash "/sbin/insserv portmap,start=1,2,S" 0
+Return	nil
+Log	nfsserver is enabled, but portmap is not. Enabling portmap.
+Execute	.target.bash "/sbin/insserv nfsserver,start=1" 0
+Execute	.target.bash "/sbin/insserv portmap,start=1,2,S" 0
+Return	nil

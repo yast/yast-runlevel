@@ -3,7 +3,7 @@
 # neededforbuild yast2-devtools  autoconf automake ycpdoc yast2-testsuite dejagnu expect tcl yast2-base libycp liby2 libyui libscr yast2-core-wfm yast2-core-scr yast2-agent-system yast2-lib-wizard libycp-devel
 
 @HEADER@
-Requires:       yast2 yast2-trans-tv yast2-db-tv yast2-lib-wizard yast2-lib-sequencer yast2-agent-audio yast2-config-package-manager
+Requires:       yast2 yast2-trans-runlevel yast2-lib-wizard yast2-lib-sequencer
 BuildArchitectures:     noarch
 Summary:	Configuration of runlevel
 
@@ -27,6 +27,8 @@ Summary:	Configuration of runlevel
 @YAST2DIR@/servers_non_y2/ag_initscripts
 @YAST2DIR@/scrconf/initscripts.scr
 @YAST2DIR@/clients/runlevel.ycp
+@YAST2DIR@/clients/runlevel_auto.ycp
+@YAST2DIR@/clients/runlevel_write.ycp
 @YAST2DIR@/include/runlevel
 @YAST2DIR@/modules/Runlevel.ycp
 %doc @DOCDIR@
