@@ -75,14 +75,12 @@ foreach (`i, RunlevelEd::runlevels, ``{
 // maps for sequencer
 //
 map aliases = $[
-"start" :            ``(runMain ()),
-	"complex" :          ``(runAutoDialog ()),
+	"auto" :          ``(AutoDialog ()),
 	];
 
 map main_sequence = $[
-"ws_start" : "start",
-	"start" : $[ `next : `finish , `abort : `abort, `edit : "complex", ],
-	"complex" : $[ `next : `finish, `abort : `abort ],
+	"ws_start" : "auto",
+	"auto" : $[ `next : `finish, `abort : `abort ],
 	];
 
 
