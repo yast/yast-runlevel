@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Jul 19 18:56:48 CEST 2002 - mvidner@suse.cz
+
+- Merged proofread texts.
+- 2.6.11
+
+-------------------------------------------------------------------
 Thu Jul 18 16:31:55 CEST 2002 - mvidner@suse.cz
 
 - Dependencies: filter out optional (+) system services (#16966).
