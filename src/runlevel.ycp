@@ -55,17 +55,18 @@
     // maps for sequencer
     //
     map aliases = $[
-	"start" :            ``(runMain ()),
-	"complex" :          ``(allInOne ()),
+	"start" :            ``(DecideComplexity ()),
+	"complex" :          ``(ComplexDialog ()),
 	"simple" :	``(SimpleDialog ()),
 	];
 
     map main_sequence = $[
-	"ws_start" : "start",
+	"ws_start" : "simple", //TODO implement DecideComplexity
 	"start" : $[
 	    `next : `finish,
 	    `abort : `abort,
-	    `edit : "simple",
+	    `simple : "simple",
+	    `complex : "complex",
 	    ],
 	"simple" : $[
 	    `next : `finish,

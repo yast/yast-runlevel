@@ -1,5 +1,7 @@
 # -*- Makefile -*-
-depviz.ps: depviz.dot
+depviz.ps:
+
+%.ps: %.dot
 	dot -Tps -o$@ $<
 
 # make, make install into test area

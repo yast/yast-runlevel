@@ -314,6 +314,7 @@
 
     /**
      * Create table items from services.
+     * For simple mode, also filter out critical services: boot ones.
      * For Expert mode:
      * Mixin: started, start, (short)description.
      * @param mix which items to mix in:<pre>
@@ -330,9 +331,19 @@
 	boolean m_runlevels = mix != `simple;
 	boolean m_descr = true;
 
+	// filter out services that are too important to be messed with
+	// in the simple mode
+	map services = RunlevelEd::services;
+	if (mix == `simple)
+	{
+	    services = filter (string s_name, map s, services, ``(
+				   ! contains (s["defstart"]:[], "B")
+				   ));
+	}
+
 	list items = [];
 	boolean first = true;
-	foreach (`k, `v, RunlevelEd::services, ``{
+	foreach (`k, `v, services, ``{
 	    if (first)
 	    {
 		first = false;
@@ -433,6 +444,7 @@ Please wait.</P>")
     }
 
     /**
+     * Orphan help. Find a dialog for it.
      * help text for main dialog
      * @return help text
      */
@@ -454,97 +466,6 @@ Please wait.</P>")
  You will also be able to start and stop services directly.</p>
 ")
 	    ;
-    }
-
-    /**
-     * Dialog that allows changing of default runlevel.
-     * @return symbol for wizard sequencer
-     */
-    global define symbol runMain () ``{
-	Wizard::SetScreenShotName ("runlevel-1-main");
-
-	term contents = `VBox (
-	    `VStretch (),
-	    // label in dialog
-	    `HBox (
-		`HSpacing (1),
-		`Frame (
-		    // frame label
-		    _("Default runlevel"),
-		    `HBox (
-			`HSpacing (2),
-			`VBox (
-			    `VSpacing (1),
-			    // label
-			    `Label (`opt (`hstretch),_("Current runlevel is:")),
-			    `Label (`opt (`outputField, `hstretch), getRunlevelDescr (RunlevelEd::current)),
-			    `VSpacing (1),
-			    // combo box label
-			    `ComboBox (`id (`default), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker ()),
-			    `VSpacing (1)
-			    ),
-			`HSpacing (2)
-			)
-		    ),
-		`HSpacing (1)
-		),
-	    `VStretch (),
-	    // pushbutton
-	    `PushButton (`id (`edit), `opt (`key_F2), _("Runlevel &properties...")),
-	    `VStretch ()
-	    );
-	// window label
-	Wizard::SetContents (_("Runlevel editor: default runlevel"), contents, getHelpMain (), true, true);
-	Wizard::ReplaceNextButton (`PushButton (`id (`next), `opt (`key_F10), Label::FinishButton()));
-
-	any ret = nil;
-	while (true)
-	{
-	    if (fetching_service_status)
-	    {
-		ret = UI::PollInput ();
-		UI::NormalCursor ();
-		if (nil == ret)
-		{
-		    serviceStatusIterator (nil);
-		    continue ;
-		}
-		UI::BusyCursor ();
-	    }
-	    else
-	    {
-		ret = UI::UserInput ();
-	    }
-	    if (ret == `cancel)
-	    {
-		ret = `abort;
-	    }
-
-	    // we may read this anyway...
-	    RunlevelEd::default = UI::QueryWidget (`id (`default), `Value);
-	    if (`back == ret || `abort == ret)
-	    {
-		if (!reallyAbort ())
-		{
-		    continue;
-		}
-	    }
-	    else if (`next == ret)
-	    {
-		if (RunlevelEd::isDirty ())
-		{
-		    // yes-no popup
-		    if (!Popup::YesNo (_("Changes made to the runlevels \nwill now be saved.")))
-		    {
-			continue;
-		    }
-		}
-	    }
-	    break;
-	}
-
-	Wizard::RestoreScreenShotName ();
-	return ret;
     }
 
     /**
@@ -1036,13 +957,11 @@ Select runlevels in which to run the currently selected service.<ul>
      * Main dialog for changing services.
      * @return symbol for wizard sequencer
      */
-    global define symbol allInOne () ``{
+    global define symbol ComplexDialog () ``{
 	Wizard::SetScreenShotName ("runlevel-2-services");
 
 	// currently selected service we are working with
 	map service = $[];
-
-	// --- body of allInOne ---
 
 	term header = `header (
 	    // table header
@@ -1058,11 +977,16 @@ Select runlevels in which to run the currently selected service.<ul>
 	term contents = `VBox (
 	    `VSpacing (0.4),
 	    ModeTabs (`complex),
+	    /*
 	    `HBox (
 		// preserve 2 spaces at the end.
 		`Label (_("Current runlevel:  ")),
 		`Label (`opt (`outputField, `hstretch), getRunlevelDescr (RunlevelEd::current))
 		),
+	    */
+	    // combo box label
+	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker ()), //TODO "do not change for AY"
+
 	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
 		    header,
@@ -1100,6 +1024,8 @@ Select runlevels in which to run the currently selected service.<ul>
 			`item (`id (`to_disable), /*`opt (`key_F5),*/ _("&Disable the service")),
 				 // menu item
 			`item (`id (`to_all_enable), _("Enable &all services")),
+				// menu item
+			`item (`id (`depviz), _("Save dependency &graph")),
 			])
 		    )
 		)
@@ -1175,6 +1101,7 @@ both of them?")))
 			    continue;
 			}
 		    }
+		    RunlevelEd::default = UI::QueryWidget (`id (`default_rl), `Value);
 		    break;
 		}
 		else if (`table == ret)
@@ -1193,6 +1120,13 @@ both of them?")))
 			// restore the check box
 			updateRlCheckBox (service, ret);
 		    }
+		}
+		else if (`depviz == ret)
+		{
+		    include "ui/file_popups.ycp";
+		    string filename = SaveFileAs (".");
+		    SCR::Write (.target.string, filename,
+				RunlevelEd::DotRequires ());
 		}
 		else if (`to_enable == ret)
 		{
@@ -1258,16 +1192,19 @@ both of them?")))
      * @return symbol for wizard sequencer
      */
     global define symbol SimpleDialog () ``{
+	Wizard::SetScreenShotName ("runlevel-2-simple");
 	map service = $[];
 
 	term contents = `VBox (
 	    `VSpacing (0.4),
 	    ModeTabs (`simple),
+/*
 	    `HBox (
 		// preserve 2 spaces at the end.
 		`Label (_("Current runlevel:  ")),
 		`Label (`opt (`outputField, `hstretch), getRunlevelDescr (RunlevelEd::current))
 		),
+*/
 	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
 		    `header (_("Service"), _("Status"), _("Description")),
@@ -1330,7 +1267,7 @@ both of them?")))
 	    }
 	    else if (`next == ret)
 	    {
-		// FIXME copied from allInOne, make it a function
+		// FIXME copied from ComplexDialog, make it a function
 		// Misaligned for consistency with the original
 		    if (RunlevelEd::CheckXInetd () && !Popup::YesNoHeadline (
 			    // yes-no popup headline
@@ -1375,6 +1312,7 @@ both of them?")))
 		SimpleSetServiceDep (current_service, true);
 	    }
 	}
+	Wizard::RestoreScreenShotName ();
 	return ret;
     }
 
@@ -1466,7 +1404,8 @@ name or the name specified is already in use."));
      * Main dialog for changing services.
      * @return symbol for wizard sequencer
      */
-    global define symbol runAutoDialog () ``{
+    global define symbol AutoDialog () ``{
+	Wizard::SetScreenShotName ("runlevel-2-auto");
 	// currently selected service we are working with
 	map service = $[];
 
@@ -1492,7 +1431,11 @@ name or the name specified is already in use."));
 	// headers in table
 	header = add (header, _("Description"));
 	term contents = `VBox (
-	    `VSpacing (0.5),
+	    `VSpacing (0.4),
+	    // combo box label
+	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker ()), //TODO "do not change for AY"
+
+	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
 		    header,
 		    servicesToTable (`auto)
@@ -1543,6 +1486,8 @@ name or the name specified is already in use."));
 		}
 		else if (`next == ret)
 		{
+		    //FIXME dependencies none or proper
+
 		    if (RunlevelEd::CheckXInetd () && !Popup::YesNoHeadline (
 			    // yes-no popup headline
 				_("Both inetd and xinetd are selected!"),
@@ -1574,6 +1519,7 @@ disabled?\n"), nfs_adj)))
 			    continue;
 			}
 		    }
+		    RunlevelEd::default = UI::QueryWidget (`id (`default_rl), `Value);
 		    break;
 		}
 		else if (`add == ret)
@@ -1631,6 +1577,7 @@ disabled?\n"), nfs_adj)))
 		    while (nil != UI::PollInput ()) {}
 		}
 	    }
+	Wizard::RestoreScreenShotName ();
 	return ret;
     }
 
