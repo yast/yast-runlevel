@@ -21,6 +21,36 @@
     include "ui/common_popups.ycp";
 
     /**
+     * Get help text for rcscript start|stop command exit value.
+     * @param exit exit value
+     * @return string help text
+     */
+    global define getActionReturnHelp (integer exit) ``{
+	return lookup ($[
+		0: _("Success."),  // this is not used but in case someone called this function with bad input
+		2: _("Invalid or excess argument(s)."),
+		3: _("Unimplemented feature."),
+		4: _("User had insufficient privilege."),
+		5: _("Program is not installed."),
+		6: _("Program is not configured."),
+		7: _("Program is not running."),
+		], exit, _("Unspecified error."));
+    }
+    /**
+     * Get help text for rcscript status return value
+     * according to LSB.
+     * @param exit exit value
+     * @return string help text
+     */
+    global define getStatusReturnHelp (integer exit) ``{
+	return lookup ($[
+		0: _("Program is running."),
+		1: _("Program is dead and /var/run pid file exists."),
+		2: _("Program is dead and /var/lock lock file exists."),
+		3: _("Program is stopped."),
+		], exit, _("Unspecified error."));
+    }
+    /**
      * help text for progress
      */
     global define getHelpProgress () ``{
@@ -625,7 +655,8 @@ Select runlevels in which to run currently selected service.<ul>
 				string command = substring (sformat ("%1", ret), 1);
 				map out = runInitScript (current_service, command);
 				string message = "";
-				if (0 == lookup (out, "exit"))
+				integer exit = lookup (out, "exit");
+				if (0 == exit)
 				    {
 					// show an output
 					message = sformat (_("Output from '/etc/init.d/%1 %2':\n\n"),
@@ -637,11 +668,12 @@ Select runlevels in which to run currently selected service.<ul>
 				else
 				    {
 					// show an exit code
-					message = sformat (_("'/etc/init.d/%1 %2' returned %3"),
+					message = sformat (_("'/etc/init.d/%1 %2' returned %3:\n%4"),
 							   current_service,command,
-							   lookup (out, "exit")
+							   exit,
+							   getActionReturnHelp (exit)
 					    );
-					service = add (service, "started", "");
+					service = add (service, "started", sformat ("%1", exit));
 				    }
 				refreshTableRunning ();
 				UI::MessagePopup (message);
@@ -652,7 +684,19 @@ Select runlevels in which to run currently selected service.<ul>
 			map out = runInitScript (current_service, "status");
 			service = add (service, "started", sformat ("%1", lookup (out, "exit")));
 			refreshTableRunning ();
-			UI::MessagePopup (sformat (_("Output from '/etc/init.d/%1 status':\n\n"), current_service) + lookup (out, "stdout"));
+			integer exit = lookup (out, "exit", 0);
+			if (0 == exit)
+			{
+			    UI::MessagePopup (sformat (_("Output from '/etc/init.d/%1 status':\n\n"), current_service) + lookup (out, "stdout"));
+			}
+			else
+			{
+			    UI::MessagePopup (sformat (_("'/etc/init.d/%1 status' returned %2:\n%3"),
+					current_service,
+					exit,
+					getStatusReturnHelp (exit)
+					));
+			}
 		    }
 		if (nil != ret && is (ret, string))
 		    {
