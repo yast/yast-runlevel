@@ -4,8 +4,8 @@
  * tests function dirtyServices
  */
 {
-    import "Runlevel";
     include "testsuite.ycp";
+    import "Runlevel";
 
     Runlevel::services = $[
         "a" : $[ ],

@@ -4,9 +4,9 @@
  * tests function getScripts
  */
 {
+    include "testsuite.ycp";
     import "Runlevel";
     import "Progress";
-    include "testsuite.ycp";
 
     Progress::off ();
 
