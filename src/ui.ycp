@@ -22,7 +22,8 @@
     import "Runlevel";
     import "RunlevelEd";
     import "Wizard";
-    include "ui/common_popups.ycp";
+    import "Label";
+    import "Popup";
 
     /**
      * Create term of checkboxes for runlevel selection.
@@ -275,7 +276,7 @@ Select runlevels in which to run the currently selected service.<ul>
 		do_abort_now = true;
 		return true;
 	    }
-	do_abort_now = UI::ReallyAbortPopup (true);
+	do_abort_now = Popup::ReallyAbort (true);
 	return do_abort_now;
     }
 
@@ -397,7 +398,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	    );
 	// window label
 	Wizard::SetContents (_("Runlevel editor: default runlevel"), contents, getHelpMain (), true, true);
-	Wizard::ReplaceNextButton (`PushButton (`id (`next), `opt (`key_F10), FinishButtonLabel()));
+	Wizard::ReplaceNextButton (`PushButton (`id (`next), `opt (`key_F10), Label::FinishButton()));
 
 	any ret = nil;
 	while (true)
@@ -436,7 +437,7 @@ Select runlevels in which to run the currently selected service.<ul>
 		if (RunlevelEd::isDirty ())
 		{
 		    // yes-no popup
-		    if (!UI::YesNoPopup (_("Changes made to the runlevels \nwill now be saved.")))
+		    if (!Popup::YesNo (_("Changes made to the runlevels \nwill now be saved.")))
 		    {
 			continue;
 		    }
@@ -613,7 +614,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	if (size (missing) > 0)
 	{
 	    // missing services only occur when enabling
-	    ok = UI::ContinueCancelPopup (
+	    ok = Popup::ContinueCancel (
 		sformat (
 		    // continue-cancel popup when enabling a service
 		    // %1 is a list of unsatisfied dependencies
@@ -651,7 +652,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	y2debug ("DEP filtered: %1", dep_s);
 
 	boolean doit = size (dep_s) == 0 ||
-	    UI::ContinueCancelPopup (
+	    Popup::ContinueCancel (
 		sformat (
 		    enable ?
 		    // translators: %2 is "in runlevel(s) 3, 5"
@@ -707,7 +708,7 @@ because they depend on it:
 	y2debug ("DEP filtered: %1", dep_s);
 
 	boolean doit = size (dep_s) == 0 ||
-	    UI::ContinueCancelPopup (
+	    Popup::ContinueCancel (
 		sformat (
 		    enable ?
 		    // continue-cancel popup
@@ -763,14 +764,14 @@ because they depend on it:
 	    list ret = startStopService (service_name, command);
 
 	    rich_message = rich_message + ret[1]:"";
-	    UI::LongTextPopup ("", `RichText(rich_message), 70, 5);
+	    Popup::LongText ("", `RichText(rich_message), 70, 5);
 	    service = RunlevelEd::services[current_service]:$[];
 	}
 	return doit;
     }
 
     /**
-     * Like UI::LongTextPopup
+     * Like Popup::LongText
      * @param headline	a headline
      * @param richtext	`RichText(_("&lt;p>foo...&lt;/p>"))
      * @param hdim	popup width
@@ -793,11 +794,11 @@ because they depend on it:
 			`PushButton (
 			    `id (`continue),
 			    `opt (`default, `key_F10),
-			    ContinueButtonLabel ()),
+			    Label::ContinueButton ()),
 			`PushButton (
 			    `id (`cancel),
 			    `opt (`key_F9),
-			    CancelButtonLabel ())
+			    Label::CancelButton ())
 			)
 		    )
 		)
@@ -842,7 +843,7 @@ because they depend on it:
 	service = add (service, "started", started);
 	RunlevelEd::services = add (RunlevelEd::services, service_name, service);
 	updateStatusColumn (service_name, service["started"]:-1);
-//	UI::MessagePopup (message);
+//	Popup::Message (message);
 	return [exit, rich_message];
     }
 
@@ -1072,7 +1073,7 @@ because they depend on it:
 		}
 		else if (`next == ret)
 		{
-		    if (RunlevelEd::CheckXInetd () && !UI::YesNoHeadlinePopup (
+		    if (RunlevelEd::CheckXInetd () && !Popup::YesNoHeadline (
 			    // yes-no popup headline
 				_("Both inetd and xinetd are selected!"),
 			    // yes-no popup
@@ -1091,7 +1092,7 @@ both of them?")))
 		    if (RunlevelEd::isDirty ())
 		    {
 			// yes-no popup
-			if (!UI::YesNoPopup (_("Now the changes to runlevels \nwill be saved.")))
+			if (!Popup::YesNo (_("Now the changes to runlevels \nwill be saved.")))
 			{
 			    ret = nil;
 			    continue;
@@ -1135,14 +1136,14 @@ both of them?")))
 		else if (`to_all_enable == ret)
 		{
 		    // yes-no popup
-		    if (UI::YesNoPopup (_("Really enable all services?")))
+		    if (Popup::YesNo (_("Really enable all services?")))
 		    {
 			foreach (`k, `v, RunlevelEd::services, ``{
 			    setServiceToDefault (k);
 			});
 			UI::ChangeWidget (`id (`table), `Items, servicesToTable ());
 			// message popup
-			UI::MessagePopup (_("Each service was enabled\nin the appropriate runlevels."));
+			Popup::Message (_("Each service was enabled\nin the appropriate runlevels."));
 		    }
 		}
 		else if (`start == ret || `stop == ret)
@@ -1151,7 +1152,7 @@ both of them?")))
 		    if (`stop == ret && "xdm" == current_service)
 		    {
 			// yes-no popup. the user wants to stop xdm
-			if (!UI::YesNoPopup ( _("This may kill your X session.\n\nProceed?")))
+			if (!Popup::YesNo ( _("This may kill your X session.\n\nProceed?")))
 			{
 			    really = false;
 			}
@@ -1167,9 +1168,9 @@ both of them?")))
 		    // when dependencies are checked
 
 		    //TODO: find a place for it
-		    //UI::MessagePopup (overviewText ());
+		    //Popup::Message (overviewText ());
 		    list r = startStopService (current_service, "status");
-		    UI::LongTextPopup ("", `RichText(r[1]:""), 70, 5);
+		    Popup::LongText ("", `RichText(r[1]:""), 70, 5);
 		}
 	    }
 
@@ -1195,9 +1196,9 @@ both of them?")))
 		    `TextEntry (`id (`des), _("&Description (optional)"), ""),
 		    `VSpacing (1),
 		    `HBox (`PushButton (`id (`ok), `opt (`default, `key_F10),
-					UI::OKButtonLabel ()),
+					Label::OKButton ()),
 			   `PushButton (`id (`cancel), `opt (`key_F9),
-					UI::CancelButtonLabel ()))
+					Label::CancelButton ()))
 		    ));
 	UI::SetFocus (`id (`name));
 
@@ -1212,7 +1213,7 @@ both of them?")))
 		if (nil == name || "" == name || haskey (RunlevelEd::services, name))
 		{
 		    // message popup
-		    UI::MessagePopup (_("Invalid service name. You did not specify service
+		    Popup::Message (_("Invalid service name. You did not specify service
 name or the name specified is already in use."));
 		    continue;
 		}
@@ -1349,7 +1350,7 @@ name or the name specified is already in use."));
 		}
 		else if (`next == ret)
 		{
-		    if (RunlevelEd::CheckXInetd () && !UI::YesNoHeadlinePopup (
+		    if (RunlevelEd::CheckXInetd () && !Popup::YesNoHeadline (
 			    // yes-no popup headline
 				_("Both inetd and xinetd are selected!"),
 			    // yes-no popup
@@ -1369,7 +1370,7 @@ both of them?")))
 			updateRlCheckBoxes (service);
 			while (nil != UI::PollInput ()) {}
 			// yes-no popup
-			if (!UI::YesNoPopup (sformat (_("Service portmap, which is required by
+			if (!Popup::YesNo (sformat (_("Service portmap, which is required by
 %1, is disabled. Enable
 portmap if you want to run %1.
 

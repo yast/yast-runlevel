@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Jun 11 09:20:11 CEST 2003 - mvidner@suse.cz
+
+- using Label and Popup
+- 2.8.0
+
+-------------------------------------------------------------------
 Wed Mar 12 16:32:42 CET 2003 - mvidner@suse.de
 
 - Do not export empty values to autoyast (#25191).
