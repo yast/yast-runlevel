@@ -41,8 +41,8 @@ Please wait.</P>")
     global define getHelpMain () ``{
 	return
 	    // help text
-	    _("<p><big><b>With the runlevel editor you can set the default runlevel and specify in detail
- which system services you want to be started in which runlevel.</b></big></p>")
+	    _("<p><b>With the runlevel editor you can set the default runlevel and specify in detail
+ which system services you want to be started in which runlevel.</b></p>")
 	    +
 	    // warning
 	    _("<p><b>Warning!</b> The runlevel editor is an expert tool. Only change settings if you know
@@ -51,8 +51,8 @@ Please wait.</P>")
 	    // The change does not occur immediately. After a reboot the system boots into the specified runlevel.
 	    _("<p>Changes to the <b>default runlevel</b> will take effect next time you boot your computer.</p>")
 	    +
-	    _("<p>To change the behaviour of runlevels and system services in detail, click <b>Runlevel properties...</b>.
- You will also be able to start and stop services directly.</p>")
+	    _("<p>To change the behaviour of runlevels and system services in detail, click <b>Runlevel properties</b>.
+	    You will also be able to start and stop services directly.</p>")
 	    ;
     }
 
@@ -63,19 +63,18 @@ Please wait.</P>")
 	// help text
 	return
 	    // help text
-	    _("<P><BIG><B>Changing the default behavior of all available services</B></BIG></P>")
+	    _("<p>You can assign system services to runlevels by selecting the list entry of the resp. service and
+ then ticking or unticking the <b>checkboxes 0 - S</b> for the runlevel.</p>")
 	    +
-	    _("<P><B>Checkboxes 0 to S:</B> Select runlevels in which to run currently selected service in.</P>")
-	    +
-	    _("<P><B>Menu Button Start/Stop/Refresh:</B> You can start or stop selected service. You can also query its state.</P>")
+	    _("<p><b>Start/Stop/Refresh:</b> Use this to start or stop services individually.</p>")
 	    +
 	    // help text
-	    _("<P><B>Menu Button Set/Reset:</B>
+	    _("<P><B>Set/Reset:</B>
 Select runlevels in which to run currently selected service.<ul>
-<li><B>Reset to default</B><BR>restores services to their original status upon initial installation.</li>
-<li><B>Reset all to default</B><BR>does the same for all services.</li>
-<li><B>Enable the service</B><BR>Enables deactivated services and configures them to run in common runlevels.</li>
-</ul></P>")
+<li><B>Reset to default</B><BR>restores services to their original status (installation defaults).</li>
+<li><B>Reset all to default</B><BR>does the same, but for all services.</li>
+<li><B>Enable the service</B><BR>Reactivates deactivated services in the standard runlevels.</li>
+</ul></p>")
 	    ;
     }
 
@@ -173,7 +172,7 @@ Select runlevels in which to run currently selected service.<ul>
 	    `HBox (
 		`HSpacing (1),
 		`Frame (
-		    _("Changing default runlevel"),
+		    _("Default runlevel"),
 		    `HBox (
 			`HSpacing (2),
 			`VBox (
