@@ -60,6 +60,11 @@
 
     /**
      * Make a subgraph of g, starting at start
+     * @param g A directed acyclic graph as a map:
+     *  nodes are keys, values are lists of nodes that are reached
+     *  by an edge from the respective key.
+     * @param start starting node
+     * @return the reachable subgraph
      */
     global define map ReachableSubgraph (map g, any start) ``{
 	// a breadth-first search
@@ -91,5 +96,18 @@
 	return result;
     }
 
-
+    /**
+     * Reverse edges of an oriented graph
+     * @param g a graph
+     * @return reversed graph
+     */
+    global define map ReverseGraph (map g) ``{
+	map rev = $[];
+	foreach (any source, list targets, g, ``{
+	    foreach (any target, targets, ``{
+		rev[target] = add (rev[target]:[], source);
+	    });
+	});
+	return rev;
+    }
 }
