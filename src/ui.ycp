@@ -30,7 +30,7 @@
 Please wait.</P>")
 	    +
 	    // warning
-	    _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings the in the
+	    _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings in the
  next dialogs, your system may not function properly.</P>")
 	    ;
     }
@@ -44,7 +44,7 @@ Please wait.</P>")
 	    _("<P><BIG><B>Change of default runlevel and detailed start/stop behavior of system services.</B></BIG></P>")
 	    +
 	    // warning
-	    _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings the in the
+	    _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings in the
  next dialogs, your system may not function properly.</P>")
 	    +
 	    // The change does not occure immediately. After reboot system boots into given runlevel.
@@ -418,7 +418,7 @@ Select runlevels in which to run currently selected service.<ul>
 		    menu_items = add (menu_items, `item (`id (`to_enable), _("&Enable the service")));
 		}
 	    // menu item
-	    menu_items = add (menu_items, `item (`id (`to_all_default), _("Reset &all service to default")));
+	    menu_items = add (menu_items, `item (`id (`to_all_default), _("Reset &all services to default")));
 	    // menu button label
 	    UI::ReplaceWidget (`id (`menubutton), `MenuButton (_("Set/&Reset"), menu_items));
 	}
