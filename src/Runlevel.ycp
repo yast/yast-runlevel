@@ -178,7 +178,7 @@
      */
     global define map RunInitScriptOutput (string name, string param) ``{
 	map env = $["TERM": "raw"];
-/*
+
 	// encoding problems - append .UTF-8 to LANG
 	if (lang == nil)
 	{
@@ -190,16 +190,20 @@
 	    {
 		lang = lang + ".UTF-8";
 	    }
-	    y2internal ("LANG: %1", lang);
+	    y2debug ("LANG: %1", lang);
 	}
 	if (lang != "")
 	{
 	    env = add (env, "LANG", lang);
 	}
-*/
+
+	// looks like a bug in bash...
+	string locale_debug = "";
+	// locale_debug = "; ls /nono 2>&1; /usr/bin/locale; /usr/bin/env";
+
 	return SCR::Execute (.target.bash_output,
-			     // "/usr/bin/locale; " +
-			     sformat ("/etc/init.d/%1 %2 2>&1", name, param),
+			     sformat ("/etc/init.d/%1 %2 2>&1", name, param)
+			     + locale_debug,
 			     env);
     }
 
