@@ -575,7 +575,8 @@ Select runlevels in which to run currently selected service.<ul>
 			service = lookup (Runlevel::services, "portmap", $[]);
 			refreshTableLine ();
 			UI::PollInput ();
-			UI::MessagePopup (_( "Service portmap, which is needed by\n nfsserver, was enabled."));
+			UI::MessagePopup (_("Service portmap, required by
+nfsserver, was enabled."));
 		    }
 		    if (Runlevel::isDirty ())
 		    {
@@ -866,7 +867,8 @@ Select runlevels in which to run currently selected service.<ul>
 			service = lookup (Runlevel::services, "portmap", $[]);
 			refreshTableLine ();
 			while (nil != UI::PollInput ()) {}
-			UI::MessagePopup (_( "Service portmap, which is needed by\n nfsserver, was enabled."));
+			UI::MessagePopup (_("Service portmap, required by
+nfsserver, was enabled."));
 		    }
 		    break;
 		}
