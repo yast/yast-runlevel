@@ -31,6 +31,7 @@ Summary:	Configuration of runlevel
 %dir @clientdir@
 @clientdir@/runlevel.ycp
 @clientdir@/runlevel_auto.ycp
+@clientdir@/runlevel_proposal.ycp
 %dir @yncludedir@/runlevel
 @yncludedir@/runlevel/*.ycp
 %dir @moduledir@

@@ -14,12 +14,13 @@ agent_SCRIPTS =
 
 scrconf_DATA = insserv_conf.scr
 
-client_DATA =		\
-	runlevel.ycp	\
-	runlevel_auto.ycp
+client_DATA =			\
+	runlevel.ycp		\
+	runlevel_auto.ycp	\
+	runlevel_proposal.ycp 
 
 myynclude_DATA =		\
-	toposort.ycp \
+	toposort.ycp		\
 	ui.ycp
 
 module_DATA = RunlevelEd.ycp
