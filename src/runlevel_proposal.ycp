@@ -60,25 +60,23 @@ define symbol RL() {
 
 /* create a textual proposal */
 if(func == "MakeProposal") {
+    boolean force_reset = param["force_reset"]:false;
 
-    // #35292: force_reset is only triggered manually. better always recheck.
-    if (true) {
-	RunlevelEd::proposal_valid = true;
-	// some architectures don't have X at all
-	boolean x = Arch::x11_setup_needed;
-	if (x)
-	{
-	    // Check if X11 package is installed.
-	    boolean x11_installed = Pkg::IsProvided("XFree86");
-	    if (!x11_installed)
-	    {
-		// is it selected for installation
-		x11_installed = Pkg::IsSelected ("XFree86");
-	    }
-	    y2milestone ("x11_installed: <%1>", x11_installed );
-	    x = x11_installed;
-	}
-	RunlevelEd::default = x? "5": "3";
+    // find out proposal parameters, ie. what it depends on
+    // some architectures don't have X at all
+    boolean x11_needed = Arch::x11_setup_needed; // it is a constant
+    boolean x11_selected = Pkg::IsSelected ("XFree86");
+    y2milestone ("x11_setup_needed: %1, x11_selected: %2",
+		 x11_needed, x11_selected );
+    
+    if (RunlevelEd::x11_selected != x11_selected ||
+	force_reset)
+    {
+	// update parameters
+	RunlevelEd::x11_selected = x11_selected;
+
+	// do the proposal - it is simple
+	RunlevelEd::default = (x11_needed && x11_selected)? "5": "3";
     }
     string proposal = RunlevelEd::ProposalSummary ();
 
