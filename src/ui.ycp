@@ -52,7 +52,7 @@ Please wait.</P>")
 	    _("<p>Changes to the <b>default runlevel</b> will take effect next time you boot your computer.</p>")
 	    +
 	    _("<p>To change the behaviour of runlevels and system services in detail, click <b>Runlevel properties...</b>.
-	    You will also be able to start and stop services directly.</p>")
+ You will also be able to start and stop services directly.</p>")
 	    ;
     }
 
@@ -205,11 +205,13 @@ Select runlevels in which to run currently selected service.<ul>
 		if (fetching_service_status)
 		    {
 			ret = UI::PollInput ();
+			UI::NormalCursor ();
 			if (nil == ret)
 			    {
 				fetchNextServiceStatus ();
 				continue ;
 			    }
+			UI::BusyCursor ();
 		    }
 		else
 		    {
@@ -539,7 +541,13 @@ Select runlevels in which to run currently selected service.<ul>
 		if (fetching_service_status)
 		    {
 			ret = UI::PollInput ();
-			fetchNextServiceStatus ();
+			UI::NormalCursor ();
+			if (nil == ret)
+			    {
+				fetchNextServiceStatus ();
+				continue;
+			    }
+			UI::BusyCursor ();
 		    }
 		else
 		    {
@@ -606,7 +614,6 @@ Select runlevels in which to run currently selected service.<ul>
 					really = false;
 				    }
 			    }
-			really = false;
 			if (really)
 			    {
 				string command = substring (sformat ("%1", ret), 1);

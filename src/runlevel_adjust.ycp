@@ -13,7 +13,7 @@
  *
  * $Id$
  *
- * <h3>Allows foreign modules to start/stop service or enable/disable it.</h3>
+ * <h3>Allows foreign modules to enable/disable service or start/stop it.</h3>
  * <pre>
  * CallModule ("runlevel_adjust", [ "script_name", "action" [, "action" ...] ]);
  *
@@ -33,9 +33,6 @@
  * script_name is name of the init script.
  *
  * action is one of:
- * "start" :    Starts service.
- * "stop"  :    Stops service.
- * "restart" :  Restarts service.
  *
  * "disable" :  If service is not disabled, it disables it by calling
  *              insserv service,start=
@@ -49,8 +46,17 @@
  *              insserv -d service
  *              which creates default links under /etc/init.d/rc?.d for service.
  *
- * You should not combine "start", "stop", "restart".
+ * "start" :    Starts service.
+ * "stop"  :    Stops service.
+ * "restart" :  Restarts service.
+ *              
  * You should not combine "enable", "disable", "default".
+ * You should not combine "start", "stop", "restart".
+ *
+ * If you want just to start/stop/restart service, please use system agent
+ * (SCR::Execute (.target.bash, "/etc/init.d/script start")), which is much faster.
+ * It was intended to allow you writing one-liner that e.g.: enables and starts
+ * or disables and stops.
  * </pre>
  */
 
