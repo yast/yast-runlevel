@@ -5,7 +5,9 @@
 If you need activate or de-activate services from your yast2 package, use
 module <tt>Runlevel</tt>. It is a replacement for the old client
 <tt>runlevel_adjust</tt> that you should have been using till now. You may
-also use it to obtain information about services.</p>
+also use it to obtain information about services. Following functions are
+self-containing. <font color="red">You do not need to run Runlevel::Read
+</font> if you want to use any of them.</p>
 <h2>Enabling/disabling service</h2>
 <p>
 <b><tt>boolean ServiceAdjust (string name, string action);</tt></b><br>
