@@ -29,4 +29,7 @@
 
     DUMP ("ReachableSubgraph");
     DUMP (ReachableSubgraph (g, "v1"));
+
+    DUMP ("ReverseGraph");
+    DUMP (ReverseGraph (g));
 }
