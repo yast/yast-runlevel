@@ -44,7 +44,7 @@
 
     import "RunlevelEd";
     import "Progress";
-    Progress::off ();
+    Progress::set(false);
     RunlevelEd::Read ();
     string dot_graph = RunlevelEd::DotRequires ();
     SCR::Write (.target.string, "/dev/stdout", dot_graph);
