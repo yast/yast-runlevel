@@ -428,6 +428,47 @@ Select runlevels in which to run currently selected service.<ul>
     }
 
     /**
+     * Starts/stops/checks status of a service
+     * @param service_name service to start/stop
+     * @param service @ref service other service info
+     * @param command "start" or "stop" or "status"
+     * @return @ref service updated status
+     */
+    global define map startStopService (string service_name, string command) ``{
+	map out = Runlevel::RunInitScriptOutput (service_name, command);
+	string message = "";
+	integer exit = lookup (out, "exit", -1);
+	if (0 == exit)
+	{
+	    // show the command output
+	    message = sformat (_("Output from '/etc/init.d/%1 %2':\n\n"),
+			       service_name, command)
+		+ lookup (out, "stdout", "");
+	}
+	else
+	{
+	    // show the exit code
+	    message = sformat (_("'/etc/init.d/%1 %2' returned %3:\n%4"),
+			       service_name, command,
+			       exit,
+			       (command == "status" ?
+				getStatusReturnHelp (exit) :
+				getActionReturnHelp (exit))
+		);
+	}
+	// succesful stop => status: program not running
+	// TODO: broken scripts may violate this
+	exit = command == "stop" ? 3 : 0;
+	// normally "started" has the exit code of "status",
+	// and we may be adding output of a different command
+	// but is is only tested angainst zero anyway
+	service = add (service, "started", exit);
+	updateStatusColumn (service_name, service["started"]:-1);
+	UI::MessagePopup (message);
+	return service;
+    }
+
+    /**
      * Prints list items into a string, separating them by commas
      * and when line exceeds len characters, it does line break (\n).
      * It adds 5 spaces before each line.
@@ -471,7 +512,7 @@ Select runlevels in which to run currently selected service.<ul>
 	list should_not_run = [];
 	list should_run = [];
 	foreach (`k, `v, Runlevel::services, ``{
-	    if (!Runlevel::isDisabled (v) && contains (lookup (v, "start", []), Runlevel::current))
+	    if (contains (v["start"]:[], Runlevel::current))
 		{   // it should run
 		    if (0 != lookup (v, "started", ""))
 			{
@@ -615,6 +656,7 @@ Select runlevels in which to run currently selected service.<ul>
 		{
 		    ret = UI::UserInput ();
 		}
+
 		if (`abort == ret)
 		{
 		    if (!reallyAbort ())
@@ -623,7 +665,7 @@ Select runlevels in which to run currently selected service.<ul>
 			    continue;
 			}
 		}
-		if (`next == ret)
+		else if (`next == ret)
 		{
 		    if (Runlevel::CheckXInetd () && !UI::YesNoHeadlinePopup (
 				_("Both inetd and xinetd are selected!"),
@@ -634,6 +676,8 @@ both of them?")))
 			ret = nil;
 			continue;
 		    }
+
+		    // TODO: genenric dependency checking
 		    string nfs_adj = Runlevel::CheckPortmap ();
 		    if (nil != nfs_adj)
 		    {
@@ -668,17 +712,17 @@ disabled?
 		    }
 		    break;
 		}
-		if (`table == ret)
+		else if (`table == ret)
 		{
 		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
-		    service = lookup (Runlevel::services, current_service, $[]);
+		    service = Runlevel::services[current_service]:$[];
 		    changeService1 ();
 		}
-		if (`to_disable == ret)
+		else if (`to_disable == ret)
 		{
 		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 		    setServiceDisable (current_service);
-		    service = lookup (Runlevel::services, current_service, $[]);
+		    service = Runlevel::services[current_service]:$[];
 		    changeService1 ();
 		    updateRlColumns (current_service);
 		}
@@ -686,7 +730,7 @@ disabled?
 		{
 		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 		    setServiceToDefault (current_service);
-		    service = lookup (Runlevel::services, current_service, $[]);
+		    service = Runlevel::services[current_service]:$[];
 		    changeService1 ();
 		    updateRlColumns (current_service);
 		}
@@ -701,67 +745,34 @@ disabled?
 			UI::MessagePopup (_("All services restored to their original\nstatus upon initial installation."));
 		    }
 		}
-		if (`start == ret || `stop == ret)
+		else if (`start == ret || `stop == ret)
 		{
 		    boolean really = true;
 		    if (`stop == ret && "xdm" == current_service)
+		    {
+			if (!UI::YesNoPopup ( _("This may kill your X session.\n\nProceed?")))
 			{
-			    if (!UI::YesNoPopup ( _("This may kill your X session.\n\nProceed?")))
-				{
-				    really = false;
-				}
+			    really = false;
 			}
+		    }
 		    if (really)
-			{
-			    string command = substring (sformat ("%1", ret), 1);
-			    map out = Runlevel::RunInitScriptOutput (current_service, command);
-			    string message = "";
-			    integer exit = lookup (out, "exit", 0);
-			    if (0 == exit)
-				{
-				    // show an output
-				    message = sformat (_("Output from '/etc/init.d/%1 %2':\n\n"),
-						       current_service, command)
-					+ lookup (out, "stdout", "");
-				    //action was successfull
-				    service = add (service, "started", `start == ret ? 0 : 3);
-				}
-			    else
-				{
-				    // show an exit code
-				    message = sformat (_("'/etc/init.d/%1 %2' returned %3:\n%4"),
-						       current_service,command,
-						       exit,
-						       getActionReturnHelp (exit)
-					);
-				    service = add (service, "started", exit);
-				}
-			    updateStatusColumn (current_service, service["started"]:-1);
-			    UI::MessagePopup (message);
-			}
+		    {
+			string command = ""+ ret; // drops `
+			service = startStopService (current_service, service,
+						    command);
+		    }
 		}
-		if (`status == ret)
+		else if (`status == ret)
 		{
+		    // similar to startStopService but there will be changes
+		    // when dependencies are checked
+
 		    //TODO: find a place for it
 		    //UI::MessagePopup (overviewText ());
-		    map out = Runlevel::RunInitScriptOutput (current_service, "status");
-		    integer exit = lookup (out, "exit", 0);
-		    service = add (service, "started", exit);
-		    updateStatusColumn (current_service, exit);
-		    if (0 == exit)
-		    {
-			UI::MessagePopup (sformat (_("Output from '/etc/init.d/%1 status':\n\n"), current_service) + lookup (out, "stdout", ""));
-		    }
-		    else
-		    {
-			UI::MessagePopup (sformat (_("'/etc/init.d/%1 status' returned %2:\n%3"),
-				    current_service,
-				    exit,
-				    getStatusReturnHelp (exit)
-				    ));
-		    }
+		    service = startStopService (current_service, service,
+						"status");
 		}
-		if (nil != ret && is (ret, string))
+		else if (nil != ret && is (ret, string))
 		{
 		    // checkbox pressed
 		    // checked of unchecked?
@@ -774,9 +785,9 @@ disabled?
     }
     /**
      * Add service by hand.
-     * @return new service
+     * @return new service name (already added to Runlevel::Services) or ""
      */
-    global define map addService () ``{
+    global define string addService () ``{
 	UI::OpenDialog (`VBox (
 		    `Heading (`opt (`hstretch), _("Add service")),
 		    `VSpacing (1),
@@ -810,7 +821,12 @@ name or the name specified is already in use."));
 			def = add (def, i);
 		    }
 		});
-		map m = $[ "dirty" : true, "defstart" : def, "start" : def, "description" : UI::QueryWidget (`id (`des), `Value) ];
+		map m = $[
+		    "dirty" : true,
+		    "defstart" : def,
+		    "start" : def,
+		    "description" : UI::QueryWidget (`id (`des), `Value)
+		    ];
 		Runlevel::services = add (Runlevel::services, name, m);
 		break;
 	    }
@@ -912,7 +928,7 @@ name or the name specified is already in use."));
 			    continue;
 			}
 		}
-		if (`next == ret)
+		else if (`next == ret)
 		{
 		    if (Runlevel::CheckXInetd () && !UI::YesNoHeadlinePopup (
 				_("Both inetd and xinetd are selected!"),
@@ -945,7 +961,7 @@ disabled?
 		    }
 		    break;
 		}
-		if (`add == ret)
+		else if (`add == ret)
 		{
 		    string name = addService ();
 		    if ("" != name)
@@ -956,34 +972,28 @@ disabled?
 			ret = `table;
 		    }
 		}
-		if (`clear == ret)
+		else if (`default == ret)
 		{
+		    setServiceToDefault (current_service);
+		    service = Runlevel::services[current_service]:$[];
+		    refreshTableLine2 ();
+		    ret = `table;
+		}
+		else if (`clear == ret)
+		{
+		    // re-read from SCR
 		    service = Runlevel::ServiceInfo (current_service);
 		    Runlevel::services = add (Runlevel::services, current_service, service);
 		    refreshTableLine2 ();
 		    ret = `table;
 		}
-		if (`default == ret)
-		{
-		    setServiceToDefault (current_service);
-		    service = lookup (Runlevel::services, current_service, $[]);
-		    refreshTableLine2 ();
-		    ret = `table;
-		}
-		if (`clear_all == ret)
+		else if (`clear_all == ret)
 		{
 		    Runlevel::ClearServices ();
 		    UI::ChangeWidget (`id (`table), `Items, servicesToTable2 ());
 		    ret = `table;
 		}
-		if (`table == ret)
-		{
-		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
-		    service = lookup (Runlevel::services, current_service, $[]);
-		    updateRlCheckBoxes (service);
-		    while (nil != UI::PollInput ()) {}
-		}
-		if (nil != ret && is (ret, string))
+		else if (nil != ret && is (ret, string))
 		{
 		    // checkbox pressed
 		    // checked or unchecked?
@@ -991,6 +1001,15 @@ disabled?
 		    service = queryRlCheckBoxes (current_service, service);
 		    UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret, 0)), checked);
 		    UI::ChangeWidget (`id (`table), `Item (current_service, 1), CheckMark);
+		}
+
+		// not a part of the else-if chain above!
+		if (`table == ret)
+		{
+		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
+		    service = lookup (Runlevel::services, current_service, $[]);
+		    updateRlCheckBoxes (service);
+		    while (nil != UI::PollInput ()) {}
 		}
 	    }
 	return ret;
