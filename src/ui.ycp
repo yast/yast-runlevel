@@ -260,7 +260,7 @@ Select runlevels in which to run currently selected service.<ul>
         // headers in table
         term header = `header (_("Service"), _("Running"));
         foreach (`i, runlevels, ``{
-            header = add (header, `Center (i));
+            header = add (header, `Center (" " + i + " "));
         });
         term rls = `HBox ();
         foreach (`i, runlevels, ``{
@@ -373,6 +373,14 @@ Select runlevels in which to run currently selected service.<ul>
                         UI (`ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret)), checked));
                     }
             }
-        return ret;        
+
+        // message label
+        string s0 =_("Overview");
+        // list of services will follow
+        string s1 = _("Following services run in current\nrunlevel although they should not:");
+        // list of services will follow
+        string s2 = _("Following services do not run in current\nrunlevel although they should:");
+
+        return ret;      
     }
 }
