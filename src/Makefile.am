@@ -2,6 +2,10 @@
 # Makefile.am for y2c_runlevel/src
 #
 
+#crude:
+TAGS_DEPENDENCIES = *.ycp
+ETAGS_ARGS = $(TAGS_DEPENDENCIES)
+
 myyncludedir = $(yncludedir)/runlevel
 
 agent_SCRIPTS = 
