@@ -71,11 +71,7 @@
 
     if (`finish == WizardSequencer (aliases, main_sequence))
     {
-	if (RunlevelEd::Write ())
-	{
-	    // message popup
-	    Popup::Message (_("The new configuration \nwas saved successfully."));
-	}
+	RunlevelEd::Write ();
     }
     UI::CloseDialog ();
 }
