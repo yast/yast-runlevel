@@ -43,14 +43,14 @@
     // index into table column for each runlevel
     map runlevel2tableindex = $[];
 
-    Wizard::CreateDialog ();
-    Wizard::DisableAbortButton ();
-    Wizard::RestoreHelp (getHelpProgress ());
 
     // We take data from underlying system
-    Runlevel::Read ();
+    // Runlevel::Read ();
+
     Runlevel::Import (settings);
     // and patch them with supplied map
+    y2milestone("Imported: (%1)", settings);
+
 
     integer id = 2;
     foreach (`i, Runlevel::runlevels, ``{
@@ -72,15 +72,54 @@
 	"complex" : $[ `next : `finish, `abort : `abort ],
 	];
 
-    if (`finish == WizardSequencer (aliases, main_sequence))
-    {
-	settings = Runlevel::Export ();
+
+    define set_contents()
+	``{
+	term contents =
+	    `VBox(
+		  `VSpacing(1),
+		  `RichText( `id(`summary), Runlevel::Summary()),
+		  `VSpacing(0.5),
+		  `HBox(
+			`PushButton(`id(`configure), _("&Configure Runlevels")),
+			`HStretch(),
+			`PushButton(`id(`reset), _("&Reset Configuration"))
+			),
+		  `VSpacing(1)
+		  );
+	Wizard::SetContents(_("Runlevel Configuration"),
+			    contents, "", true, true);
     }
-    else
-    {
-	settings = $[];
-    }
-    UI::CloseDialog ();
-    return settings;
+
+    set_contents();
+    any result = nil;
+    any ret = nil;
+    repeat {
+	ret = UI::UserInput();
+	if (ret == `configure)
+	{
+
+	    Wizard::CreateDialog ();
+	    Wizard::DisableAbortButton ();
+	    Wizard::RestoreHelp (getHelpProgress ());
+	    result = WizardSequencer (aliases, main_sequence);
+	    UI::CloseDialog ();
+	    if (result == `next || result == `finish)
+	    {
+		settings = Runlevel::Export ();
+	    }
+	    Runlevel::Import(settings);
+	    set_contents();
+	}
+	else if ( ret == `reset)
+	{
+	    settings= $[];
+	    Runlevel::Import(settings);
+	    set_contents();
+	}
+    } until (ret == `back || ret == `next || ret ==`key);
+
+    return [ret, settings];
+
 }
 

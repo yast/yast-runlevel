@@ -20,6 +20,7 @@
     module "Runlevel";
     textdomain "runlevel";
     import "Progress";
+    import "Summary";
 
     /**
      * @struct service
@@ -43,6 +44,7 @@
      */
     //
     //
+
 
     /**
      * Get service info without peeking if service runs.
@@ -398,7 +400,18 @@
 	map svc = filter (`k, `v, services, ``{
 	    return lookup (v, "dirty", false);
 	});
-	map ret = $[ "services" : svc ];
+	list tmp_services = maplist(string service_name, map service_data, svc, ``{
+	    string  service_start = mergestring(lookup(service_data,"start",[]), " ");
+	    string service_stop = mergestring(lookup(service_data,"stop",[]), " ");
+	    map service_map =
+	    $[
+	      "service_name":service_name,
+	      "service_start":service_start,
+	      "service_stop":service_stop
+	    ];
+	    return (service_map);
+	});
+	map ret = $[ "services" : tmp_services ];
 	if (default != default_orig)
 	{
 	    ret = add (ret, "default", default);
@@ -422,21 +435,21 @@
 	default= SCR::Read (.init.scripts.default_runlevel);
 	default_orig = default;
 
-	map details = SCR::Read (.init.scripts.runlevels);
-	services = SCR::Read (.init.scripts.comments);
-	services = mapmap (`k, `v, services, ``{
-	    // play tennis
-	    map second_service = lookup (details, k, $[]);
-	    service_list = add (service_list, k);
-	    v = add (v, "start", lookup (second_service, "start", []));
-	    v = add (v, "stop" , lookup (second_service, "stop",  []));
-	    return [ k, v ];
-	});
 	// and finaly process map being imported
-	map new = lookup (s, "services", $[]);
-	if (size (new) > 0)
+	list new = lookup (s, "services", []);
+	map tmp_services = listmap(map service, new,  ``{
+	    string name = lookup(service,"service_name","");
+	    list start = splitstring(lookup(service,"service_start",""), " ");
+	    list stop = splitstring(lookup(service,"service_stop",""), " ");
+	    map service_map = $[];
+	    service_map = add(service_map,"start",start);
+	    service_map = add(service_map,"stop",stop);
+	    return([name,service_map]);
+	});
+
+	if (size (tmp_services) > 0)
 	{
-	    foreach (`k, `v, new, ``{
+	    foreach (`k, `v, tmp_services, ``{
 		if (nil == lookup (services, k, nil))
 		{
 		    y2milestone ("Service %1 is not installed on target system, adding it by hand.", k);
@@ -453,4 +466,43 @@
 	}
 	return true;
     }
+
+    /**
+     * @return Html formatted configuration summary
+     */
+    global define string Summary()
+	``{
+
+	map rl = $[
+            "0" : _("0: System halt"),
+            "1" : _("1: Single user mode"),
+            "2" : _("2: Local multiuser without remote network"),
+            "3" : _("3: Full multiuser with network"),
+            "4" : _("4: User defined"),
+            "5" : _("5: Full multiuser with network and xdm"),
+            "6" : _("6: System reboot"),
+            ];
+
+	string sum = "";
+	sum = Summary::AddHeader(sum, _("Current Runlevel"));
+	sum = Summary::AddLine(sum,  rl[default]:"");
+	sum = Summary::AddHeader(sum, _("Services"));
+
+	if (size(services)>0) {
+	    sum = Summary::OpenList(sum);
+	    foreach(`k, `v, services,
+		``{
+		if (v["dirty"]:false)
+		    sum = Summary::AddListItem(sum, "<p><b>" + k + "</b><br> Start: " + mergestring(v["start"]:[], " ") + "<br>" +" Stop: " + mergestring(v["stop"]:[], " ") + "</p>" );
+	    });
+
+	    sum = Summary::CloseList(sum);
+	}
+	else
+	{
+	    sum =  Summary::AddLine(sum, Summary::NotConfigured());
+	}
+	return sum;
+    }
+
 }
