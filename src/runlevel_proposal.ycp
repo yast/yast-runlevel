@@ -60,9 +60,9 @@ define symbol RL() {
 
 /* create a textual proposal */
 if(func == "MakeProposal") {
-    boolean force_reset = param["force_reset"]:false;
 
-    if(force_reset || !RunlevelEd::proposal_valid) {
+    // #35292: force_reset is only triggered manually. better always recheck.
+    if (true) {
 	RunlevelEd::proposal_valid = true;
 	// some architectures don't have X at all
 	boolean x = Arch::x11_setup_needed;
