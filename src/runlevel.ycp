@@ -24,6 +24,7 @@
     include "runlevel/ui.ycp";
 
     Wizard::CreateDialog ();
+    Wizard::SetDesktopIcon("runlevel");
     Wizard::DisableAbortButton ();
     Wizard::RestoreHelp (getHelpProgress ());
 
