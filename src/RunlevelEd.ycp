@@ -649,15 +649,25 @@ Further dependency checking will be disabled."));
     }
 
     /**
+     * @return Html formatted summary for the installation proposal
+     */
+    global define string ProposalSummary() ``{
+	string sum = "";
+	// summary header
+	sum = Summary::AddHeader(sum, _("Default Runlevel"));
+	sum = Summary::AddLine(sum,  getRunlevelDescr (default));
+
+	return sum;
+    }
+
+    /**
      * @return Html formatted configuration summary
      */
     global define string Summary()
 	``{
 
-	string sum = "";
-	// summary header
-	sum = Summary::AddHeader(sum, _("Default Runlevel"));
-	sum = Summary::AddLine(sum,  getRunlevelDescr (default));
+	string sum = ProposalSummary ();
+
 	// summary header
 	sum = Summary::AddHeader(sum, _("Services"));
 

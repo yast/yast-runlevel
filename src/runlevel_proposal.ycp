@@ -20,6 +20,7 @@ import "Label";
 import "Progress";
 import "RunlevelEd";
 import "Summary";
+import "Arch";
 
 include "runlevel/ui.ycp";
 
@@ -34,7 +35,7 @@ define symbol RL() {
 	`Heading( _("Set Default Runlevel") ),
 	`VSpacing( 0.7 ),
 	    /* ComboBox label */
-	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Default Runlevel:"), getDefaultPicker (`complex)),
+	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Default Runlevel:"), getDefaultPicker (`proposal)),
 	`VSpacing( 0.5 ),
 	`HBox(
 	    `HStretch(),
@@ -59,24 +60,32 @@ define symbol RL() {
 
 /* create a textual proposal */
 if(func == "MakeProposal") {
-    string proposal = "";
-    string warning = nil;
-    symbol warning_level = nil;
     boolean force_reset = param["force_reset"]:false;
 
     if(force_reset || !RunlevelEd::proposal_valid) {
 	RunlevelEd::proposal_valid = true;
-	Progress::off();
-	RunlevelEd::Read();
+	// some architectures don't have X at all
+	boolean x = Arch::x11_setup_needed;
+	if (x)
+	{
+	    // Check if X11 package is installed.
+	    boolean x11_installed = Pkg::IsProvided("XFree86");
+	    if (!x11_installed)
+	    {
+		// is it selected for installation
+		x11_installed = Pkg::IsSelected ("XFree86");
+	    }
+	    y2milestone ("x11_installed: <%1>", x11_installed );
+	    x = x11_installed;
+	}
+	RunlevelEd::default = x? "5": "3";
     }
-    // FIXME: proposal = RunlevelEd::Summary();
-    proposal = Summary::DevicesList([Summary::Device(RunlevelEd::getRunlevelDescr (RunlevelEd::default), "")]);
-    Progress::on();
+    string proposal = RunlevelEd::ProposalSummary ();
 
     ret = $[
 	"preformatted_proposal" : proposal,
-	"warning_level" : warning_level,
-	"warning" : warning,
+	"warning_level" : nil,
+	"warning" : nil,
     ];
 }
 /* run the module */
@@ -100,7 +109,7 @@ else if(func == "Description") {
 }
 /* write the proposal */
 else if(func == "Write") {
-    RunlevelEd::Write();
+    y2milestone ("Not writing yet, will be done in inst_finish");
 }
 /* unknown function */
 else {
