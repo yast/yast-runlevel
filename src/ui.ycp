@@ -932,11 +932,11 @@ and enabled, because it depends on them:
 		`HBox (
 		    `RadioButton (`id (`simple), `opt (`notify),
 				  // radio button label
-				  _("&Simple mode"), mode == `simple),
+				  _("&Simple Mode"), mode == `simple),
 		    `HSpacing (3),
 		    `RadioButton (`id (`complex), `opt (`notify, `key_F7),
 				  // radio button label
-				  _("&Expert mode"), mode == `complex)
+				  _("&Expert Mode"), mode == `complex)
 		    )
 		);
 	return `Left (rbg);
@@ -1061,7 +1061,7 @@ Select runlevels in which to run the currently selected service.<ul>
 			+ (!show_debug ? [] :
 			[
 				// menu item
-			`item (`id (`depviz), _("Save dependency &graph")),
+			`item (`id (`depviz), _("Save Dependency &Graph")),
 			])
 			)
 		    )
@@ -1235,7 +1235,7 @@ both of them?")))
 	string help_text =
 	    // Simple mode dialog
 	    // help text
-	    _("<p>Here you can specify which system services should be started.</p>")
+	    _("<p>Here, specify which system services should be started.</p>")
 	    +
 	    // warning
 	    _("<p><b>Warning!</b> The runlevel editor is an expert tool. Only change settings if you know
@@ -1249,8 +1249,7 @@ Likewise, <b>Deactivate</b> stops services that depend on a given service
 and the service itself and disables their start at system boot time.</p>")
 	    +
 	    // help text
-	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Expert mode</b>.</p>
-")
+	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Expert Mode</b>.</p>\n")
 	    ;
 
 	term contents = `VBox (
@@ -1273,7 +1272,7 @@ and the service itself and disables their start at system boot time.</p>")
 		)
 	    );
 	// dialog caption.
-	Wizard::SetContents (_("Runlevel editor: services"), contents, help_text, true, true);
+	Wizard::SetContents (_("Runlevel Editor: Services"), contents, help_text, true, true);
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = lookup (RunlevelEd::services, current_service, $[]);
