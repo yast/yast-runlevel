@@ -39,7 +39,7 @@
 	];
 */
 
-    map services = SCR::Read (.target.ycp, "scripts2.ycp.out");
+    map services = SCR::Read (.target.ycp, "scripts.ycp.out");
     SCRTorture (.init.scripts.comments, services);
 
     import "RunlevelEd";

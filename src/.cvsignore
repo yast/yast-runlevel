@@ -1,2 +1,7 @@
 Makefile
 Makefile.in
+depviz.dot
+depviz.ps
+scripts-pkgs
+scripts.ycp.out
+etc
