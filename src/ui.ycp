@@ -633,7 +633,8 @@ Please wait.</P>")
      * What it does: gets dependent services (in the correct order),
      * filters ones that are already in the desired state, if there
      * are dependencies left, pop up a confirmation dialog, check for
-     * missing dependencies, perform the action for the deps and the
+     * missing dependencies, perform the action (run-time, then init-time)
+     * for the deps and the
      * service (in this order), displaying output after each error and
      * at the end.
      *
@@ -650,6 +651,170 @@ Please wait.</P>")
 					    boolean enable,
 					    boolean init_time,
 					    boolean run_time) ``{
+	y2debug (1, "Modify: %1 %2 %3 %4 %5",
+		 service_name,
+		 rls,
+		 enable,
+		 init_time? "+init": "-init",
+		 run_time? "+run": "-run");
+	boolean one = size (rls) == 1;
+	string command = enable? "start": "stop";
+
+	// get dependent services
+	list dep_s = RunlevelEd::ServiceDependencies (service_name, enable);
+	y2debug ("DEP: %1", dep_s);
+
+	// filter ones that are ok already
+	// simple mode: for now, filter out disjunctively
+	//  TODO but to be sure the system is in a consistent state,
+	//  do it conjunctively
+	if (run_time)
+	{
+	    dep_s = RunlevelEd::FilterStartStop (dep_s, enable);
+	}
+	if (init_time)
+	{
+	    if (one)
+	    {
+		string rl = rls[0]:"";
+		dep_s = RunlevelEd::FilterEnableDisable (dep_s, rl, enable);
+	    }
+	    else
+	    {
+		dep_s = RunlevelEd::FilterEnableDisableSet (dep_s, rls, enable);
+	    }
+	}
+	y2debug ("DEP filtered: %1", dep_s);
+
+	boolean doit = size (dep_s) == 0;
+	// if there are dependencies left, pop up a confirmation dialog
+	if (!doit)
+	{
+	    string key =
+		(run_time? "+run": "-run") + "," +
+		(init_time? "+init": "-init") + "," +
+		(enable? "on": "off");
+	    map texts = $[
+		//"-run,-init,..." does not make sense
+
+		// *disable*
+		// continue-cancel popup
+		// translators: %2 is "in runlevel(s) 3, 5"
+		// or "in all runlevels"
+		"-run,+init,off" : _("To disable service %1 %2,
+these services must be additionally disabled,
+because they depend on it:
+%3."),
+		// *enable*
+		// continue-cancel popup
+		// translators: %2 is "in runlevel(s) 3, 5"
+		// or "in all runlevels"
+		"-run,+init,on" : _("To enable service %1 %2,
+these services must be additionally enabled,
+because it depends on them:
+%3."),
+		// *stop*
+		// continue-cancel popup
+		"+run,-init,off" : _("To stop service %1,
+these services must be additionally stopped,
+because they depend on it:
+%2."),
+		// *start*
+		// continue-cancel popup
+		"+run,-init,on" : _("To start service %1,
+these services must be additionally started,
+because it depends on them:
+%2."),
+		// *stop and disable*
+		// continue-cancel popup
+		// translators: %2 is "in runlevel(s) 3, 5"
+		// or "in all runlevels"
+		"+run,+init,off" :_("To stop service %1 and disable it %2,
+these services must be additionally stopped
+and disabled, because they depend on it:
+%3."),
+		// *start and enable*
+		// continue-cancel popup
+		// translators: %2 is "in runlevel(s) 3, 5"
+		// or "in all runlevels"
+		"+run,+init,on" : _("To start service %1 and enable it %2,
+these services must be additionally started
+and enabled, because it depends on them:
+%3."),
+		];
+	    string dep_formatted = formatLine (dep_s, 40);
+	    doit = Popup::ContinueCancel (
+		sformat (
+		    texts[key]:"?",
+		    service_name,
+		    // non-init-time does not need the runlevels
+		    // so we omit it not to confuser the translators
+		    init_time? getInRunlevels (rls): dep_formatted,
+		    dep_formatted
+		    )
+		);
+	}
+
+	// check for missing services
+	if (doit)
+	{
+	    list r = CheckMissingServices (dep_s);
+	    doit = r[0]:false;
+	    dep_s = r[1]:[];
+	}
+
+
+	string rich_message = "";
+	if (doit)
+	{
+	    // iterate dep_s, not including service_name
+	    // because we will ask "continue?" on error
+	    foreach (string s, dep_s, ``{
+		if (run_time)
+		{
+		    list ret = startStopService (s, command);
+
+		    rich_message = rich_message + ret[1]:"";
+		    integer exit = ret[0]:-1;
+		    if (exit != 0)
+		    {
+			doit = LongContinueCancelHeadlinePopup (
+			    // popup heading
+			    _("An error has occurred."), `RichText (rich_message),
+			    70, 10);
+			// don't show what we've already seen
+			rich_message = "";
+			if (!doit)
+			{
+			    return; // break(foreach)
+			}
+		    }
+		}
+		if (init_time)
+		{
+		    // set the variables and update the ui
+		    SetService (s, rls, enable);
+		}
+	    });
+	}
+	if (doit)
+	{
+	    // only for service_name
+	    if (run_time)
+	    {
+		list ret = startStopService (service_name, command);
+
+		rich_message = rich_message + ret[1]:"";
+		Popup::LongText ("", `RichText(rich_message), 70, 5);
+	    }
+	    // TODO only if the run succeeded (integrate with the above loop?
+	    if (init_time)
+	    {
+		// set the variables and update the ui
+		SetService (service_name, rls, enable);
+	    }
+	}
+	return doit;
     }
 
 
@@ -663,6 +828,10 @@ Please wait.</P>")
      */
     global define boolean SimpleSetServiceDep (string service_name,
 					       boolean enable) ``{
+	list(string) rls = enable?
+	    RunlevelEd::services[current_service, "defstart"]:[] :
+	    nil;
+	return ModifyServiceDep (service_name, rls, enable, true, true);
     }
 
 
@@ -677,59 +846,7 @@ Please wait.</P>")
     global define boolean EnableDisableServiceDep (string service_name,
 						   list(string) rls,
 						   boolean enable) ``{
-	y2debug (1, "RL: %1 %2 %3", service_name, rls, enable);
-	boolean one = size (rls) == 1;
-
-	list dep_s = RunlevelEd::ServiceDependencies (service_name, enable);
-	y2debug ("DEP: %1", dep_s);
-	if (one)
-	{
-	    string rl = rls[0]:"";
-	    dep_s = RunlevelEd::FilterEnableDisable (dep_s, rl, enable);
-	}
-	else
-	{
-	    dep_s = RunlevelEd::FilterEnableDisableSet (dep_s, rls, enable);
-	}
-	y2debug ("DEP filtered: %1", dep_s);
-
-	boolean doit = size (dep_s) == 0 ||
-	    Popup::ContinueCancel (
-		sformat (
-		    enable ?
-		    // translators: %2 is "in runlevel(s) 3, 5"
-		    // or "in all runlevels"
-		    _("To enable service %1 %2,
-these services must be additionally enabled,
-because it depends on them:
-%3.")
-		    :
-		    // translators: %2 is "in runlevel(s) 3, 5"
-		    // or "in all runlevels"
-		    _("To disable service %1 %2,
-these services must be additionally disabled,
-because they depend on it:
-%3."),
-		    service_name, getInRunlevels (rls), formatLine (dep_s, 40)
-		    )
-		);
-	// check for missing services
-	if (doit)
-	{
-	    list r = CheckMissingServices (dep_s);
-	    doit = r[0]:false;
-	    dep_s = r[1]:[];
-	}
-
-	if (doit)
-	{
-	    foreach (string s, add (dep_s, service_name), ``{
-		// set the variables and update the ui
-		SetService (s, rls, enable);
-	    });
-	    service = RunlevelEd::services[current_service]:$[];
-	}
-	return doit;
+	return ModifyServiceDep (service_name, rls, enable, true, false);
     }
 
     /**
@@ -741,75 +858,7 @@ because they depend on it:
      */
     global define boolean StartStopServiceDep (string service_name,
 					       boolean enable) ``{
-	y2debug (1, "RUN: %1 %2", service_name, enable);
-	string command = enable? "start": "stop";
-
-	list dep_s = RunlevelEd::ServiceDependencies (service_name, enable);
-	y2debug ("DEP: %1", dep_s);
-	dep_s = RunlevelEd::FilterStartStop (dep_s, enable);
-	y2debug ("DEP filtered: %1", dep_s);
-
-	boolean doit = size (dep_s) == 0 ||
-	    Popup::ContinueCancel (
-		sformat (
-		    enable ?
-		    // continue-cancel popup
-		    _("To start service %1,
-these services must be additionally started,
-because it depends on them:
-%2.")
-		    :
-		    // continue-cancel popup
-		    _("To stop service %1,
-these services must be additionally stopped,
-because they depend on it:
-%2."),
-		    service_name, formatLine (dep_s, 40)
-		    )
-		);
-	// check for missing services
-	if (doit)
-	{
-	    list r = CheckMissingServices (dep_s);
-	    doit = r[0]:false;
-	    dep_s = r[1]:[];
-	}
-
-	string rich_message = "";
-	if (doit)
-	{
-	    // iterate dep_s, not including service_name
-	    // because we will ask "continue?" on error
-	    foreach (string s, dep_s, ``{
-		list ret = startStopService (s, command);
-
-		rich_message = rich_message + ret[1]:"";
-		integer exit = ret[0]:-1;
-		if (exit != 0)
-		{
-		    doit = LongContinueCancelHeadlinePopup (
-			// popup heading
-			_("An error has occurred."), `RichText (rich_message),
-			70, 10);
-		    // don't show what we've already seen
-		    rich_message = "";
-		    if (!doit)
-		    {
-			return; // break(foreach)
-		    }
-		}
-	    });
-	}
-	if (doit)
-	{
-	    // only for service_name
-	    list ret = startStopService (service_name, command);
-
-	    rich_message = rich_message + ret[1]:"";
-	    Popup::LongText ("", `RichText(rich_message), 70, 5);
-	    service = RunlevelEd::services[current_service]:$[];
-	}
-	return doit;
+	return ModifyServiceDep (service_name, [], enable, false, true);
     }
 
 
@@ -1318,10 +1367,12 @@ both of them?")))
 	    else if (`disable == ret)
 	    { //FIXME...
 		y2milestone ("%1", ret);
+		SimpleSetServiceDep (current_service, false);
 	    }
 	    else if (`enable == ret)
 	    { //FIXME...
 		y2milestone ("%1", ret);
+		SimpleSetServiceDep (current_service, true);
 	    }
 	}
 	return ret;
