@@ -30,22 +30,6 @@ import "Progress";
 import "Wizard";
 
 include "wizard/sequencer.ycp";
-include "runlevel/ui.ycp";
-
-any ret = nil;
-string func = "";
-map param = $[];
-
-/* Check arguments */
-if(size(Args()) > 0 && is(Args(0), string)) {
-	func = WFM::Args(0);
-	if(size(Args()) > 1 && is(Args(1), map))
-		param = WFM::Args(1);
-}
-y2debug("func=%1", func);
-y2debug("param=%1", param);
-
-
 
 // you know what this means
 boolean do_abort_now = false;
@@ -56,6 +40,23 @@ boolean do_abort_now = false;
 integer fetching_service_index = 0;
 // when fetching_service_status becomes false, we stop fetching services
 boolean fetching_service_status = false;
+
+include "runlevel/ui.ycp";
+
+any ret = nil;
+string func = "";
+map param = $[];
+
+/* Check arguments */
+if(size(WFM::Args()) > 0 && is(WFM::Args(0), string)) {
+	func = (string) WFM::Args(0);
+	if(size(WFM::Args()) > 1 && is(WFM::Args(1), map))
+		param = (map) WFM::Args(1);
+}
+y2debug("func=%1", func);
+y2debug("param=%1", param);
+
+
 
 // We take data from underlying system
 // RunlevelEd::Read ();

@@ -21,8 +21,6 @@
     import "Popup";
 
     include "wizard/sequencer.ycp";
-    include "runlevel/ui.ycp";
-
 
     // you know what this means
     boolean do_abort_now = false;
@@ -34,6 +32,9 @@
     // when fetching_service_status becomes false, we stop fetching services
     boolean fetching_service_status = true;
 
+    include "runlevel/ui.ycp";
+
+
     Wizard::CreateDialog ();
     Wizard::DisableAbortButton ();
     Wizard::RestoreHelp (getHelpProgress ());
@@ -44,7 +45,7 @@
     // maps for sequencer
     //
     map aliases = $[
-	"start" :            ``(DecideComplexity ()),
+//	"start" :            ``(DecideComplexity ()),
 	"complex" :          ``(ComplexDialog ()),
 	"simple" :	``(SimpleDialog ()),
 	];
