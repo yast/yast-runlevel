@@ -27,23 +27,25 @@
 Please wait.</P>")
             +
             // warning
-            _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings in the next dialogs, your system may be out of order.</P>")
+            _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings the in the
+ next dialogs, your system may not function properly.</P>")
             ;
     }
 
     global define getHelpMain () ``{
         return
             // help text
-            _("<P><BIG><B>Change of default runlevel and detailed start/stop behaviour of system services.</B></BIG></P>")
+            _("<P><BIG><B>Change of default runlevel and detailed start/stop behavior of system services.</B></BIG></P>")
             +
             // warning
-            _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings in the next dialogs, your system may be out of order.</P>")
+            _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings the in the
+ next dialogs, your system may not function properly.</P>")
             +
             // The change does not occure immediately. After reboot system boots into given runlevel.
-            _("<P>The change of <B>default runlevel after booting</B> will be executed after a reboot of your computer.</P>")
+            _("<P>Changes to <B>default runlevel after booting</B> will only take effect after you reboot your computer.</P>")
             +
             _("<P>The button <B>Edit runlevel details...</B>
- will open a new dialog with full overview about
+ will open a new dialog containing a full summary of
  the available services and their actual status
  with complete manipulation.</P>")
             ;
@@ -53,18 +55,18 @@ Please wait.</P>")
         // help text
         return
             // help text
-            _("<P><BIG><B>Changing the default behaviour of all available services</B></BIG></P>")
+            _("<P><BIG><B>Changing the default behavior of all available services</B></BIG></P>")
             +
             _("<P><B>Checkboxes 0 to S:</B> Select runlevels in which to run currently selected service in.</P>")
             +
-            _("<P><B>Menubutton Start/Stop/Refresh:</B> You can start or stop selected service. You can also query its state.</P>")
+            _("<P><B>Menu Button Start/Stop/Refresh:</B> You can start or stop selected service. You can also query its state.</P>")
             +
             // help text
-            _("<P><B>Menubutton Set/Reset:</B>
- Select runlevels you want to start currently selected service in.<ul>
+            _("<P><B>Menu Button Set/Reset:</B>
+Select runlevels in which to run currently selected service.<ul>
 <li><B>Reset to default</B><BR>restores services to their original status upon initial installation.</li>
 <li><B>Reset all to default</B><BR>does the same for all services.</li>
-<li><B>Enable the service</B><BR>Enables deactivated services and sets them to run in common runlevels.</li>
+<li><B>Enable the service</B><BR>Enables deactivated services and configures them to run in common runlevels.</li>
 </ul></P>")
             ;
     }
@@ -146,7 +148,7 @@ Please wait.</P>")
             `VStretch ()
             );
         // window label
-        UI (`SetWizardContents (_("Runlevel editor"), contents, getHelpMain (), true, true));
+        UI (`SetWizardContents (_("Runlevel editor: default runlevel"), contents, getHelpMain (), true, true));
         UI (`ReplaceWizardNextButton (`PushButton (`id (`next), FinishButtonLabel())));
         return UI (``{
             return UserInput ();
@@ -285,7 +287,7 @@ Please wait.</P>")
                 ),
             `HBox (
                 // menubutton label
-                `MenuButton (_("&Start/Stop now"), [
+                `MenuButton (_("&Start/Stop/Refresh"), [
                     `item (`id (`start), _("&Start now ...")),
                     `item (`id (`stop), _("S&top now ...")),
                     `item (`id (`status), _("&Refresh status ...")),
@@ -297,13 +299,13 @@ Please wait.</P>")
                     `MenuButton (_("Set/&Reset"), [
                         `item (`id (`to_default), _("Reset to &default")),
                         `item (`id (`to_enable), _("&Enable the service")),
-                        `item (`id (`to_all_default), _("Reset &all service to default")),
+                        `item (`id (`to_all_default), _("Reset &all services to default")),
                         ])
                     )
                 )
             );
         // dialog caption. 
-        UI (`SetWizardContents (_("Runlevel editor"), contents, getHelpComplex (), true, true));
+        UI (`SetWizardContents (_("Runlevel editor: details"), contents, getHelpComplex (), true, true));
         // this ChangeWidget causes next UserInput will return `table FIXME does not work in ncurses
         UI (`ChangeWidget (`id (`table), `CurrentItem, current_service));
         any ret = nil;
