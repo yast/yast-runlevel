@@ -549,10 +549,13 @@ Further dependency checking will be disabled."));
 		{
 			if (service["service_status"]:"" == "enable")
 			{
-				map info = ServiceInfo(name);
+				map info = Runlevel::ServiceInfo(name);
+				y2milestone("service info for %1: %2", name, info);
 				start = info["start"]:[];
 				stop = info["stop"]:[];
-			} else if (service["service_status"]:"" == "disable") {
+			}
+			else if (service["service_status"]:"" == "disable")
+			{
 				start = [];
 				stop = [];
 			}
