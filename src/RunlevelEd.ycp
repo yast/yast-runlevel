@@ -413,12 +413,12 @@ Further dependency checking will be disabled."));
 
     /**
      * Is a service disabled?
-     * Checks whether the list of runlevels it runs in is empty
+     * Checks whether the default runlevel is in the list of runlevels
      * @param service service to check
      * @return boolean true if service is disabled
      */
     global define boolean isDisabled (map service) ``{
-	return 0 == size (service["start"]:[]);
+	return !contains(service["start"]:[], default);
     }
 
     /**
@@ -440,13 +440,6 @@ Further dependency checking will be disabled."));
 	    }
 	});
 	return size (in) > 0 ? req : nil;
-    }
-    /**
-     * If inetd and xinetd are enabled together, show a warning.
-     * @return are both of them enabled?
-     */
-    global define boolean CheckXInetd () ``{
-	return !isDisabled (services["inetd"]:$[]) && !isDisabled (services["xinetd"]:$[]);
     }
 
     /**

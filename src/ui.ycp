@@ -27,6 +27,7 @@
     import "Popup";
 
     define string StartedText (integer started);
+    define string BstatusText (boolean disabled, integer started);
     define list mapkeys (map m);
     define string formatLine (list<string> l, integer len);
     define list startStopService (string service_name, string command);
@@ -134,36 +135,20 @@
 			      contains (start, rl) ? rl : " ");
 	});
     }
-    /**
-     * Update simple-mode status column.
-     * TODO combine runtime status too?
-     * @param service_name which line
-     * @param service @ref service
-     * @param started status or -1 (unknown yet)
-     */
-    define void updateSimpleStatusColumn (string service_name,
-						 map service) ``{
-	if (c_bstatus == -1)
-	{
-	    return;
-	}
-	string state = RunlevelEd::isDisabled (service)? _("No"): _("Yes");
-	UI::ChangeWidget (`id (`table), `Item (service_name, c_bstatus),
-			  state);
-    }
+
     /**
      * Update run-time status column.
      * @param service_name which line
      * @param started status or -1 (unknown yet)
      */
-    define void updateStatusColumn (string service_name,
-					   integer started) ``{
-	if (c_rstatus == -1)
-	{
-	    return;
+    define void updateStatusColumn (string service_name, integer started) ``{
+	if (c_rstatus >= 0) {
+	    UI::ChangeWidget(`id(`table), `Item(service_name, c_rstatus), StartedText(started));
 	}
-	UI::ChangeWidget (`id (`table), `Item (service_name, c_rstatus),
-			  StartedText (started));
+	if (c_bstatus >= 0) {
+	    boolean disabled = RunlevelEd::isDisabled(RunlevelEd::services[service_name]:$[]);
+	    UI::ChangeWidget(`id(`table), `Item(service_name, c_bstatus), BstatusText(disabled, started));
+	}
     }
     /**
      * Helper function for fetching service status in run-time.
@@ -349,6 +334,20 @@
 		 // ???: we do not know yet what is the service state
 		 _("???")));
     }
+    
+    /**
+     * @param disabled status
+     * @param started status or -1 (unknown yet)
+     * @return "Yes", "Yes*", "No", "No*" or "???"
+     */
+    define string BstatusText (boolean disabled, integer started) ``{
+	string state = (started<0) ? _("???") : (!disabled ? _("Yes") : _("No"));
+	if (started>=0 && (started>0 != disabled)) {
+	    state = state + "*";
+	}
+	return state;
+    }
+
 
     //start unsorted
     /**
@@ -428,11 +427,10 @@
 	    if (m_bstatus)
 	    {
 		// boot status
-		string state = RunlevelEd::isDisabled (v)?
-		    _("No"):
-		    _("Yes");
+		boolean disabled = RunlevelEd::isDisabled(v);
+		integer started = v["started"]:-1;
 		c_bstatus = col;
-		item = add (item, state);
+		item = add (item, BstatusText(disabled, started));
 		col = col + 1;
 	    }
 	    if (m_rstatus)
@@ -563,7 +561,7 @@ Please wait.</P>")
 	    RunlevelEd::services[service_name] = service;
 
 	    updateRlColumns (service_name, service, rls);
-	    updateSimpleStatusColumn (service_name, service);
+	    updateStatusColumn (service_name, service["started"]:-1);
 	}
     }
 
@@ -1126,7 +1124,6 @@ Select runlevels in which to run the currently selected service.<ul>
 		    UI::NormalCursor ();
 		    if (nil == ret)
 		    {
-//			serviceStatusIterator (``(updateStatusInTable ()));
 			serviceStatusIterator (true);
 			continue;
 		    }
@@ -1153,18 +1150,6 @@ Select runlevels in which to run the currently selected service.<ul>
 		}
 		else if (`next == ret)
 		{
-		    if (RunlevelEd::CheckXInetd () && !Popup::YesNoHeadline (
-			    // yes-no popup headline
-				_("Both inetd and xinetd are selected!"),
-			    // yes-no popup
-				_("Services inetd and xinetd need extra configuration
-to run simultaneously. Do you really want to run
-both of them?")))
-		    {
-			ret = nil;
-			continue;
-		    }
-
 		    // TODO: check dependencies of all services? (on demand?)
 		    // string nfs_adj = RunlevelEd::CheckPortmap ();
 		    // ...
@@ -1288,6 +1273,9 @@ Likewise, <b>Deactivate</b> stops services that depend on a given service
 and the service itself and disables their start at system boot time.</p>")
 	    +
 	    // help text
+	    _("<p>Asterix (*) after service status mean that service is enabled but not running or is disabled but running now.")
+	    +
+	    // help text
 	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Expert Mode</b>.</p>\n")
 	    ;
 
@@ -1332,8 +1320,7 @@ and the service itself and disables their start at system boot time.</p>")
 		UI::BusyCursor ();
 		if (nil == ret)
 		{
-//		    serviceStatusIterator (nil);
-		    serviceStatusIterator (false);
+		    serviceStatusIterator (true);
 		    continue ;
 		}
 	    }
@@ -1360,17 +1347,6 @@ and the service itself and disables their start at system boot time.</p>")
 	    {
 		// FIXME copied from ComplexDialog, make it a function
 		// Misaligned for consistency with the original
-		    if (RunlevelEd::CheckXInetd () && !Popup::YesNoHeadline (
-			    // yes-no popup headline
-				_("Both inetd and xinetd are selected!"),
-			    // yes-no popup
-				_("Services inetd and xinetd need extra configuration
-to run simultaneously. Do you really want to run
-both of them?")))
-		    {
-			ret = nil;
-			continue;
-		    }
 
 		    // TODO: check dependencies of all services? (on demand?)
 		    // string nfs_adj = RunlevelEd::CheckPortmap ();
@@ -1580,17 +1556,6 @@ name or the name specified is already in use."));
 		{
 		    //FIXME dependencies none or proper
 
-		    if (RunlevelEd::CheckXInetd () && !Popup::YesNoHeadline (
-			    // yes-no popup headline
-				_("Both inetd and xinetd are selected!"),
-			    // yes-no popup
-				_("Services inetd and xinetd need extra configuration
-to run simultaneously. Do you really want to run
-both of them?")))
-		    {
-			ret = nil;
-			continue;
-		    }
 		    string nfs_adj = RunlevelEd::CheckPortmap ();
 		    if (nil != nfs_adj)
 		    {
