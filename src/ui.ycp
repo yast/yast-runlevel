@@ -1160,8 +1160,7 @@ both of them?")))
 		}
 		else if (`depviz == ret)
 		{
-		    include "ui/file_popups.ycp";
-		    string filename = SaveFileAs (".");
+		    string filename = UI::AskForSaveFileName(".", "*", "");
 		    SCR::Write (.target.string, filename,
 				RunlevelEd::DotRequires ());
 		}
