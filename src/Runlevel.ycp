@@ -22,6 +22,8 @@
     import "Progress";
     import "Summary";
 
+    include "runlevel/toposort.ycp";
+
     /**
      * @struct service
      * One service is described by such map: <pre>
@@ -52,7 +54,7 @@
      * @return service information
      */
     global define map ServiceInfo (string name) ``{
-	// Fhis is an info achieved just by a call of
+	// This is an info achieved just by a call of
 	// the 2 main agent calls. Nothing about service
 	// status is obtained.
 	if (!SCR::Read (.init.scripts.exists, name))
@@ -68,7 +70,7 @@
      * Get service status. It is output from "rcservice status".
      * It should conform to LSB. 0 means running.
      * @param name name of the service
-     * @return init script exit status
+     * @return init script exit status or -1 if it does not exist
      */
     global define integer ServiceStatus (string name) ``{
 	if (!SCR::Read (.init.scripts.exists, name))
@@ -174,6 +176,7 @@
 	return SCR::Execute (.target.bash_output, sformat ("/etc/init.d/%1 %2", name, param), $[ "TERM" : "raw"]);
     }
 
+    /* ------------------------------------------------------------ */
     /*
      * The above interface was very public. Now there is interface for
      * package.
@@ -181,6 +184,7 @@
 
     /**
      * List of all services. Each item is a map described above.
+     * @ref service
      */
     global map services = $[];
 
@@ -208,12 +212,32 @@
      */
     global string current = "";
 
+    /* Dependency solving: */
+    /**
+     * ONLY ONE SCRIPT provides a facility in this model.
+     * In SuSE packages, the only exception are sendmail and postfix
+     * both providing sendmail but they cannot be installed together
+     * anyway.
+     * atd has Provides: at, so
+     *   what_provides["at"] == "atd";
+     * Identity is not represented explicitly: ypbind has Provides: ypbind, but
+     *   haskey (what_provides, "ypbind") == false;
+     */
+    map what_provides = $[];
+
+    /**
+     * System facility definitions
+     * /etc/insserv.conf:
+     *   system_requires["$remote_fs"] == ["$local_fs", "nfs"];
+     */
+    map system_requires = $[];
+
     /**
      * Read settings
      * @return success
      */
     global define boolean Read () ``{
-	Progress::Simple (_("Initializing runlevel editor. Please wait."), " ", 6, "");
+	Progress::Simple (_("Initializing runlevel editor. Please wait."), " ", 7, "");
 	Progress::NextStep ();
 	runlevels= SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))
@@ -230,20 +254,78 @@
 	default_orig = default;
 	Progress::NextStep ();
 
+	system_requires = SCR::Read (.init.insserv_conf);
+	Progress::NextStep ();
+
 	map details = SCR::Read (.init.scripts.runlevels);
 	Progress::NextStep ();
 	services = SCR::Read (.init.scripts.comments);
 	Progress::NextStep ();
-	services = mapmap (`k, `v, services, ``{
+	services = mapmap (string k, map v, services, ``{
+	    foreach (string f, v["provides"]:[], ``{
+		// identity implicit; only the first script provides a facility
+		if (f != k && !haskey (what_provides, f))
+		{
+		    what_provides = add (what_provides, f, k);
+		}
+	    });
+
+	    service_list = add (service_list, k);
+
+
 	    // play tennis
 	    map second_service = lookup (details, k, $[]);
-	    service_list = add (service_list, k);
 	    v = add (v, "start", lookup (second_service, "start", []));
 	    v = add (v, "stop" , lookup (second_service, "stop",  []));
 	    return [ k, v ];
 	});
+	buildRequires ();
 	Progress::NextStep ();
 	return true;
+    }
+
+    /**
+     * A graph where nodes are scripts or system facilities
+     * but not normal facilities (ie. provides are solved).
+     */
+    map requires = $[];
+
+    /**
+     * Create requires from services, system_requires and what_provides.
+     */
+    define void buildRequires () ``{
+	foreach (string service, map comments, services, ``{
+	    addRequires (service, comments["reqstart"]:[]);
+	});
+	foreach (string sys_f, list req, system_requires, ``{
+	    addRequires (sys_f, req);
+	});
+    }
+    /**
+     * Resolve provides and add the requirements to "requires".
+     * Missing services are not detected.
+     * @param service a service
+     * @param req_facilities its required facilities
+     */
+    define void addRequires (string service, list(string) req_facilities) ``{
+	list req_s = maplist (string f, req_facilities,
+			      ``( what_provides[f]:f ));
+	requires = add (requires, service, req_s);
+    }
+
+    /**
+     * @param service a service
+     * @return a list of services required to start a service, ordered
+     * by their dependencies. Missing services are included, system
+     * facilities excluded.
+     */
+    global define list(string) RequiredServices (string service) ``{
+	// make a dependency subgraph
+	map s_req = ReachableSubgraph (requires, service);
+	// sort it
+	list sorted = TopologicalSort (s_req);
+	// filter system facilities
+	return filter (string f, sorted, ``(substring (f, 0, 1) != "$"));
     }
 
     /**
@@ -474,14 +556,14 @@
 	``{
 
 	map rl = $[
-            "0" : _("0: System halt"),
-            "1" : _("1: Single user mode"),
-            "2" : _("2: Local multiuser without remote network"),
-            "3" : _("3: Full multiuser with network"),
-            "4" : _("4: User defined"),
-            "5" : _("5: Full multiuser with network and xdm"),
-            "6" : _("6: System reboot"),
-            ];
+	    "0" : _("0: System halt"),
+	    "1" : _("1: Single user mode"),
+	    "2" : _("2: Local multiuser without remote network"),
+	    "3" : _("3: Full multiuser with network"),
+	    "4" : _("4: User defined"),
+	    "5" : _("5: Full multiuser with network and xdm"),
+	    "6" : _("6: System reboot"),
+	    ];
 
 	string sum = "";
 	sum = Summary::AddHeader(sum, _("Current Runlevel"));
