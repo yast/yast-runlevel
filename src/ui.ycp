@@ -53,6 +53,7 @@
 		1: _("Program is dead and /var/run pid file exists."),
 		2: _("Program is dead and /var/lock lock file exists."),
 		3: _("Program is stopped."),
+		4: _("Program or service status is unknown."),
 		], exit, _("Unspecified error."));
     }
     /**
@@ -568,15 +569,16 @@ Select runlevels in which to run currently selected service.<ul>
 		}
 		if (`next == ret)
 		{
-		    if (Runlevel::AdjustNfsserver ())
+		    string nfs_adj = Runlevel::AdjustNfsserver ();
+		    if (nil != nfs_adj)
 		    {
 			UI::ChangeWidget (`id (`table), `CurrentItem, "portmap");
 			current_service = "portmap";
 			service = lookup (Runlevel::services, "portmap", $[]);
 			refreshTableLine ();
 			UI::PollInput ();
-			UI::MessagePopup (_("Service portmap, required by
-nfsserver, was enabled."));
+			UI::MessagePopup (sformat (_("Service portmap, required by
+%1, was enabled."), nfs_adj));
 		    }
 		    if (Runlevel::isDirty ())
 		    {
@@ -624,7 +626,7 @@ nfsserver, was enabled."));
 		    if (really)
 			{
 			    string command = substring (sformat ("%1", ret), 1);
-			    map out = Runlevel::RunInitScript (current_service, command);
+			    map out = Runlevel::RunInitScriptOutput (current_service, command);
 			    string message = "";
 			    integer exit = lookup (out, "exit", 0);
 			    if (0 == exit)
@@ -634,7 +636,7 @@ nfsserver, was enabled."));
 						       current_service, command)
 					+ lookup (out, "stdout", "");
 				    //action was successfull
-				    service = add (service, "started", `start == ret ? "0" : "3");
+				    service = add (service, "started", `start == ret ? 0 : 3);
 				}
 			    else
 				{
@@ -644,7 +646,7 @@ nfsserver, was enabled."));
 						       exit,
 						       getActionReturnHelp (exit)
 					);
-				    service = add (service, "started", sformat ("%1", exit));
+				    service = add (service, "started", exit);
 				}
 			    refreshTableRunning ();
 			    UI::MessagePopup (message);
@@ -652,9 +654,9 @@ nfsserver, was enabled."));
 		}
 		if (`status == ret)
 		{
-		    map out = Runlevel::RunInitScript (current_service, "status");
+		    map out = Runlevel::RunInitScriptOutput (current_service, "status");
 		    integer exit = lookup (out, "exit", 0);
-		    service = add (service, "started", sformat ("%1", exit));
+		    service = add (service, "started", exit);
 		    refreshTableRunning ();
 		    if (0 == exit)
 		    {
@@ -860,15 +862,16 @@ nfsserver, was enabled."));
 		}
 		if (`next == ret)
 		{
-		    if (Runlevel::AdjustNfsserver ())
+		    string nfs_adj = Runlevel::AdjustNfsserver ();
+		    if (nil != nfs_adj)
 		    {
 			UI::ChangeWidget (`id (`table), `CurrentItem, "portmap");
 			current_service = "portmap";
 			service = lookup (Runlevel::services, "portmap", $[]);
 			refreshTableLine ();
 			while (nil != UI::PollInput ()) {}
-			UI::MessagePopup (_("Service portmap, required by
-nfsserver, was enabled."));
+			UI::MessagePopup (sformat (_("Service portmap, required by
+%1, was enabled."), nfs_adj));
 		    }
 		    break;
 		}

@@ -71,6 +71,7 @@
             "dirty" : false,
             "start" : ["1"],
             "defstart" : ["1", "2", "S", ],
+	    "reqstart" : [ "portmap", ],
             ],
         "portmap" : $[
             "dirty" : false,
@@ -85,6 +86,7 @@
             "dirty" : true,
             "start" : ["1"],
             "defstart" : ["1", "2", "S", ],
+	    "reqstart" : [ "portmap", ],
             ],
         "portmap" : $[
             "dirty" : false,

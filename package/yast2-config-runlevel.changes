@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Feb  1 08:52:09 CET 2002 - pblahos@suse.cz
+
+- portmap is not enabled for nfsserver only but for any service
+  that requires it (Bug #12985)
+- After service is started/stopped/refreshed, its status is 
+  correctly displayed now. (Bug #12964)
+
+-------------------------------------------------------------------
 Thu Jan 24 11:18:21 CET 2002 - pblahos@suse.cz
 
 - Added runlevel B (which selection as a default runlevel is
