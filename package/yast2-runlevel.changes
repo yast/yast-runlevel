@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Jan  6 11:21:14 CET 2005 - mlazar@suse.cz
+
+- fixed #43342 - Rename the editor to "System Services (Runlevel)"
+
+-------------------------------------------------------------------
 Tue Nov 16 14:22:37 CET 2004 - mlazar@suse.cz
 
 - fixed #46793 - Runlevel selection in Network Proposal

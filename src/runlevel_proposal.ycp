@@ -1,6 +1,6 @@
 /**
  * File:	clients/runlevel_proposal.ycp
- * Package:	Runlevel editor
+ * Package:	System Services (Runlevel) (formerly known as Runlevel Editor)
  * Summary:	Default runlevel proposal
  * Authors:	Michal Svec <msvec@suse.cz>
  *

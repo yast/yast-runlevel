@@ -2,7 +2,7 @@
  * File:
  *  runlevel.ycp
  * Module:
- *  Runlevel editor.
+ *  System Services (Runlevel) (formerly known as Runlevel Editor)
  * Summary:
  *  Main file of runlevel editor.
  * Authors:

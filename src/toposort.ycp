@@ -3,7 +3,7 @@
  *   toposort.ycp
  *
  * Module:
- *   Runlevel Editor
+ *   System Services (Runlevel) (formerly known as Runlevel Editor)
  *
  * Summary:
  *   Topological sorting for script dependencies
