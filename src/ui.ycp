@@ -1142,7 +1142,7 @@ both of them?")))
 			});
 			UI::ChangeWidget (`id (`table), `Items, servicesToTable ());
 			// message popup
-			UI::MessagePopup (_("All services restored to their original\nstatus upon initial installation."));
+			UI::MessagePopup (_("Each service was enabled\nin the appropriate runlevels."));
 		    }
 		}
 		else if (`start == ret || `stop == ret)
