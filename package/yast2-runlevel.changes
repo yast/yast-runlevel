@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Jul 24 10:28:39 CEST 2003 - mvidner@suse.cz
+
+- Added help for the main dialog.
+- Hid a debugging menu item.
+- 2.8.2
+
+-------------------------------------------------------------------
 Fri Jun 20 15:53:51 CEST 2003 - mvidner@suse.cz
 
 - Added a simple mode, made it the default dialog (#13789).
