@@ -29,19 +29,20 @@ are OK, but <tt>"default"</tt> runs always insserv.<br>
 <h2>Specifying runlevels for service</h2>
 <p>
 <b><tt>boolean ServiceFinetune (string name, list rl);</tt></b><br>
-Sets service to run in list <tt>rl</tt>. <br>
-<b>example:</b> <tt>ServiceFinetune ("cups", [ "5" ]);</tt>
+Sets service to run in list <tt>rl</tt>. <tt>rl</tt> is list of strings. <br>
+<b>example:</b> <tt>ServiceFinetune ("cups", [ "5" ]);</tt><br>
+<b>example:</b> <tt>ServiceFinetune ("cups", [ "S", "3", "5" ]);</tt>
 </p>
 <h2>Init script actions</h2>
 <p>
-<b><tt>integer RunIniScript (string name, string param);</tt></b><br>
+<b><tt>integer RunInitScript (string name, string param);</tt></b><br>
 Runs init script <tt>name</tt> with parameter <tt>param</tt>. Returns init
 scripts exit value. I do not think it is worth to import module
-<tt>Progress</tt> only because of this one function when you may simply call
+<tt>Runlevel</tt> only because of this one function when you may simply call
 <tt>SCR::Execute (.target.bash, ...)</tt> with the same result. But if you use
 Runlevel for something else, this function may increase readability of the
 code.<br>
-<b>example:</b> <tt>RunIniScript ("cups", "restart");</tt>
+<b>example:</b> <tt>RunInitScript ("cups", "restart");</tt>
 </p>
 <h2>Service info</h2>
 <p>
@@ -51,13 +52,13 @@ map ServiceFullInfo (string name)</tt></b><br>
 <tt>ServiceStatus</tt> tells whether service runs. It calls init script status
 and returns exit value.<br> <tt>ServiceInfo</tt> returns information about
 service. The map contains: <pre>
-$[ "defstart" : [ ... ], //
+$[ "defstart" : [ ... ], // list of strings
    "defstop"  : [ ... ], // list of default runlevels
 
-   "start"    : [ ... ], //
+   "start"    : [ ... ], // list of strings
    "stop"     : [ ... ], // list of real runlevels
 
-   "reqstart" : [ ... ], //
+   "reqstart" : [ ... ], // list of strings
    "reqstop"  : [ ... ], // prerequisites
 
    "description": string,// description
@@ -75,7 +76,7 @@ integeral value of <tt>script status</tt>.
 import "Runlevel";
 
 boolean Read () ``{
-	if (0 != Runlevel::RunIniScript ("foo", "restart"))
+	if (0 != Runlevel::RunInitScript ("foo", "restart"))
 	{
 		y2error ("Can not start service");
 		return false;
@@ -92,14 +93,14 @@ boolean Write () ``{
 		// enable service
 		Runlevel::ServiceAdjust ("foo", "enable");
 		// reload changed settings
-		Runlevel::RunIniScript ("foo", "reload");
+		Runlevel::RunInitScript ("foo", "reload");
 	}
 	else
 	{
 		// disable service
 		Runlevel::ServiceAdjust ("foo", "disable");
 		// and stop it
-		Runlevel::RunIniScript ("foo", "stop");
+		Runlevel::RunInitScript ("foo", "stop");
 	}
 }
 
