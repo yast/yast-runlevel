@@ -1,2 +1,0 @@
-Execute	.target.bash "/etc/init.d/aaa start" $["TERM":"raw"] 0
-Return	0

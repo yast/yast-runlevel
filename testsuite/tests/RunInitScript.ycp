@@ -1,8 +1,0 @@
-{
-    include "testsuite.ycp";
-    import "Runlevel";
-
-    TEST (``(Runlevel::RunInitScript ("aaa", "start")), [$[], $[], $[
-	    "target" : $[ "bash" : 0 ]
-	    ]], nil);
-}
