@@ -147,7 +147,7 @@
      */
     global define boolean Read () ``{
 	// progress caption
-	Progress::Simple (_("Initializing system services (runlevel). Please wait."), " ", 7, "");
+	Progress::Simple (_("Initializing system services (runlevel). Please wait..."), " ", 7, "");
 	Progress::NextStep ();
 	runlevels= (list<string>) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))

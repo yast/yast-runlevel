@@ -513,12 +513,14 @@
     define string getHelpProgress () ``{
 	return
 	    // help text
-	    _("<P><BIG><B>System services (runlevel) initialization</B></BIG><BR>
-Please wait.</P>")
+	    _("<P><BIG><B>System Service (runlevel) Initialization</B></BIG><BR>
+Please wait...</P>
+")
 	    +
 	    // warning
-	    _("<p><b>Note!</b> The System Services (runlevel editor) is an expert tool. Please only change settings if
- you know what you are doing; otherwise your system might not function properly afterwards.</p>")
+	    _("<p><b>Note:</b> The System Services (runlevel editor) is an expert tool. Only change settings if
+ you know what you are doing.  Otherwise your system might not function properly afterwards.</p>
+")
 	    ;
     }
 
@@ -1257,8 +1259,9 @@ Select runlevels in which to run the currently selected service.<ul>
 	    _("<p>Here, specify which system services should be started.</p>")
 	    +
 	    // warning
-	    _("<p><b>Warning!</b> The system services (runlevel editor) is an expert tool. Only change settings if you know
- what you are doing, otherwise your system might not function properly afterwards.</p>")
+	    _("<p><b>Warning:</b> The system services (runlevel editor) is an expert tool. Only change settings if you know
+ what you are doing.  Otherwise your system might not function properly afterwards.</p>
+")
 	    +
 	    // help text
 	    // Activate is a button
@@ -1268,7 +1271,7 @@ Likewise, <b>Deactivate</b> stops services that depend on a given service
 and the service itself and disables their start at system boot time.</p>")
 	    +
 	    // help text
-	    _("<p>Asterix (*) after service status mean that service is enabled but not running or is disabled but running now.")
+	    _("<p>An asterisk (*) after a service status means that the service is enabled but not running or is disabled but running now.")
 	    +
 	    // help text
 	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Expert Mode</b>.</p>\n")
