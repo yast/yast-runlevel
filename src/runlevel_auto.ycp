@@ -66,7 +66,10 @@ map main_sequence = $[
 
 /* Import Data*/
 if(func == "Import") {
-	ret = RunlevelEd::Import(param);
+    Progress::off (); 
+    RunlevelEd::Read (); 
+    ret = RunlevelEd::Import(param); 
+    Progress::on(); 
 }
 /* Create a  summary*/
 else if(func == "Summary") {
@@ -113,8 +116,6 @@ else if (func == "Packages") {
 /* Write givven settings */
 else if (func == "Write") {
     Progress::off();
-    RunlevelEd::Read ();
-    RunlevelEd::Import (param);
     ret = RunlevelEd::Write();
     Progress::on();
 }

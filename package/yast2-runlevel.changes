@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 12 10:00:16 CET 2005 - mlazar@suse.cz
+
+- fixed #49731 - runlevel does not work in autoyast
+
+-------------------------------------------------------------------
 Thu Jan  6 11:21:14 CET 2005 - mlazar@suse.cz
 
 - fixed #43342 - Rename the editor to "System Services (Runlevel)"
