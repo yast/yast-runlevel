@@ -1,7 +1,18 @@
 -------------------------------------------------------------------
-Thu Jun 27 13:30:36 CEST 2002 - kkaempf@suse.de
+Fri Jun 28 10:05:20 CEST 2002 - mvidner@suse.cz
 
-- rename to "yast2-runlevel".
+- Renamed to "yast2-runlevel".
+- 2.6.5
+
+-------------------------------------------------------------------
+Thu Jun 27 13:21:56 CEST 2002 - mvidner@suse.cz
+
+- Implemented service dependency resolving (except autoyast part).
+- Adapted for new autoinstallation interface (nashif).
+- Agent reads all LSB and X-*-Should-* comments.
+- Code cleanup: duplicate local functions factored out.
+- Using current yast2-devtools: menuentries -> config, pot included.
+- 2.6.4
 
 -------------------------------------------------------------------
 Mon May 13 10:51:01 CEST 2002 - mvidner@suse.cz
