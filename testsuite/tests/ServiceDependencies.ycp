@@ -1,6 +1,6 @@
 // test for Read and related functions
 {
-    map comments = SCR::Read (.target.ycp, "tests/scripts.ycp.data");
+    map comments = SCR::Read (.target.ycp, "tests/scripts.ycp.out");
     include "testsuite.ycp";
     import "Progress";
     Progress::off ();
