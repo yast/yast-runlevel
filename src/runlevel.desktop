@@ -1,0 +1,58 @@
+[Desktop Entry]
+Type=Application
+Categories=Qt;X-SuSE-YaST-System;
+
+X-KDE-ModuleType=Library
+X-KDE-RootOnly=true
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-KDE-FactoryName=runlevel
+
+X-SuSE-YaST-Group=System
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=all
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoinstResource=runlevels
+
+Icon=runlevel
+Exec=/sbin/yast2 runlevel 
+
+Name=Runlevel Editor
+GenericName=Configure runlevels
+Name[cs]=Editor úrovní běhu
+GenericName[cs]=Konfigurovat úrovně běhu
+Name[de]=Runlevel-Editor
+GenericName[de]=Runlevel konfigurieren
+Name[es]=Editor de niveles de ejecución
+GenericName[es]=Configurar niveles de ejecución
+Name[hu]=Futási szint szerkesztő
+GenericName[hu]=Futási szintek beállítása
+Name[it]=Editor dei runlevel
+GenericName[it]=Configura runlevel
+Name[ko]=런레벨 편집기
+GenericName[ko]=런레벨 설정
+Name[nl]=Runlevel editor
+GenericName[nl]=Configureer runlevels
+Name[pt]=Editor de Runlevel
+GenericName[pt]=Configurar runlevels
+Name[sk]=Editor úrovní
+GenericName[sk]=Konfigurovať runlevel
+Name[sv]=Editor för körnivåer
+GenericName[sv]=Ställ in körnivåer
+Name[bg]=Редактор за нивата на зареждане
+GenericName[bg]=Настройка на нивата на зареждане
+Name[da]=kørselsniveau værktøj
+GenericName[da]=Konfigurere kørselsniveauer
+Name[el]=Επεξεργαστής runlevel
+GenericName[el]=Ρύθμιση runlevels
+Name[fr]=Éditeur de niveaux d'exécution
+GenericName[fr]=Configurer les niveaux d'exécution
+Name[ja]=ランレベル・エディター
+GenericName[ja]=ランレベルを設定する
+GenericName[lt]=Konfigūruoti paleisties lygmenis
+Name[sl]=Urejevalnik Delovnih Nivojev
+GenericName[sl]=Nastavi delovne nivoje
+Name[tr]=Çalışma düzeyi düzenleyicisi
+GenericName[tr]=Çalışma düzeylerini yapılandır
