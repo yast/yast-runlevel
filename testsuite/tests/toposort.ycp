@@ -1,5 +1,7 @@
 // test for TopologicalSort
 {
+    // testedfiles: toposort.ycp Testsuite.ycp
+
     include "testsuite.ycp";
     include "runlevel/toposort.ycp";
 

@@ -1,5 +1,7 @@
 // tests formatLine
 {
+    // testedfiles: ui.ycp Testsuite.ycp
+
     include "testsuite.ycp";
     include "runlevel/ui.ycp";
 

@@ -4,6 +4,8 @@
  * tests function isDisabled
  */
 {
+    // testedfiles: RunlevelEd.ycp Testsuite.ycp
+
     include "testsuite.ycp";
     import "RunlevelEd";
 

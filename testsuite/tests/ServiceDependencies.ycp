@@ -4,6 +4,8 @@
     map<string,map> comments = (map<string,map>) SCR::Read (.target.ycp, "tests/scripts.ycp.out");
     map insserv_conf = (map) SCR::Read (.target.ycp, "tests/insserv_conf.ycp.out");
 
+    // testedfiles: toposort.ycp RunlevelEd.ycp Report.ycp Testsuite.ycp
+
     include "testsuite.ycp";
     import "Progress";
     import "Report";
