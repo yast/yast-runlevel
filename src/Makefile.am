@@ -2,28 +2,23 @@
 # Makefile.am for y2c_runlevel/src
 #
 
-agentsdir = $(YAST2DIR)/servers_non_y2
-clientsdir = $(YAST2DIR)/clients
-yncludedir = $(YAST2DIR)/include/runlevel
-menudir = $(YAST2DIR)/menuentries
-scrconfdir = $(YAST2DIR)/scrconf
-modulesdir = $(YAST2DIR)/modules
+myyncludedir = $(yncludedir)/runlevel
 
-agents_SCRIPTS = ag_initscripts
+agent_SCRIPTS = ag_initscripts
 
 scrconf_DATA = initscripts.scr
 
-clients_DATA =		\
+client_DATA =		\
 	runlevel.ycp	\
 	runlevel_auto.ycp \
 	runlevel_write.ycp
 
-ynclude_DATA =		\
+myynclude_DATA =		\
 	ui.ycp
 
-modules_DATA = Runlevel.ycp
+module_DATA = Runlevel.ycp
 
-menu_DATA = menuentry_runlevel.y2cc
+config_DATA = runlevel.y2cc
 
-EXTRA_DIST = $(clients_DATA) $(ynclude_DATA) $(menu_DATA) $(agents_SCRIPTS) $(scrconf_DATA) $(modules_DATA)
+EXTRA_DIST = $(client_DATA) $(myynclude_DATA) $(config_DATA) $(agent_SCRIPTS) $(scrconf_DATA) $(module_DATA)
 
