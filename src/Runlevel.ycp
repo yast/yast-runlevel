@@ -51,7 +51,7 @@
     global define map ServiceInfo (string name) ``{
 	// Fhis is an info achieved just by a call of
 	// the 2 main agent calls. Nothing about service
-	// status is beeing obtained.
+	// status is obtained.
 	if (!SCR::Read (.init.scripts.exists, name))
 	    return $[];
 	map detail = lookup (SCR::Read (.init.scripts.runlevel, name), name, $[]);
@@ -372,7 +372,7 @@
     global define boolean ServiceEnabled (string name) ``{
 	// Fhis is an info achieved just by a call of
 	// the 2 main agent calls. Nothing about service
-	// status is beeing obtained.
+	// status is obtained.
 	if (!SCR::Read (.init.scripts.exists, name))
 	{
 	    y2error ("Service does not exist: %1", name);
@@ -423,7 +423,7 @@
 	    v = add (v, "stop" , lookup (second_service, "stop",  []));
 	    return [ k, v ];
 	});
-	// and finaly process map beeing imported
+	// and finaly process map being imported
 	map new = lookup (s, "services", $[]);
 	if (size (new) > 0)
 	{
