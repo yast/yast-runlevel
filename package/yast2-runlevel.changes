@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Mon Mar 22 15:42:09 CET 2004 - mvidner@suse.cz
+
+- offer runlevels 2, 3, 5 (#36110)
+- read status of all services (#36166)
+- update status of all dependent services before we check it
+  (#36171, jhumpol)
+- don't enable a service if it can't be started (#36176, jhumpol)
+- 2.9.10
+
+-------------------------------------------------------------------
 Fri Mar 12 10:44:00 CET 2004 - mvidner@suse.cz
 
 - repropose only if the conditions have changed (#35601)
