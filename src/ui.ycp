@@ -391,7 +391,7 @@
 	map<string,map> services = RunlevelEd::services;
 	if (mix == `simple)
 	{
-	    services = filter (string s_name, map s, services, ``(
+	    services = (map<string, map>)filter (string s_name, map s, services, ``(
 				   ! contains (s["defstart"]:[], "B")
 				   ));
 	}
