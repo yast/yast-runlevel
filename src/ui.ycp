@@ -463,7 +463,7 @@
      * @param func function to call
      * @see updateStatusInTable
      */
-    global define void serviceStatusIterator (term func) ``{
+/*    global define void serviceStatusIterator (term func) ``{
 	if (!fetching_service_status)
 	{
 	    return;
@@ -486,6 +486,30 @@
 	    func = add (func, service);
 	    func = add (func, started);
 	    eval (func);
+	}
+    }
+*/
+    // This is only patch for new interpreter -- we don't like use uncompatible changes to old interpreter
+    global define void serviceStatusIterator (boolean use_func) ``{
+	if (!fetching_service_status)
+	{
+	    return;
+	}
+	if (fetching_service_index >= size (RunlevelEd::service_list))
+	{
+	    fetching_service_status = false;
+	    return;
+	}
+	string service_name = RunlevelEd::service_list[fetching_service_index]:"";
+	fetching_service_index = fetching_service_index + 1;
+	map service = RunlevelEd::services[service_name]:$[];
+	integer started = Runlevel::RunInitScript (service_name, "status");
+
+	RunlevelEd::services = add (RunlevelEd::services, service_name,
+				  add (service, "started", started));
+	if (use_func)
+	{
+            updateStatusInTable(service_name, service, started);
 	}
     }
 
@@ -1095,7 +1119,8 @@ Select runlevels in which to run the currently selected service.<ul>
 		    UI::NormalCursor ();
 		    if (nil == ret)
 		    {
-			serviceStatusIterator (``(updateStatusInTable ()));
+//			serviceStatusIterator (``(updateStatusInTable ()));
+			serviceStatusIterator (true);
 			continue;
 		    }
 		    UI::BusyCursor ();
@@ -1227,7 +1252,7 @@ both of them?")))
 	    }
 
 	Wizard::RestoreScreenShotName ();
-	return ret;
+	return (symbol) ret;
     }
 
     // simple mode
@@ -1300,7 +1325,8 @@ and the service itself and disables their start at system boot time.</p>")
 		UI::NormalCursor ();
 		if (nil == ret)
 		{
-		    serviceStatusIterator (nil);
+//		    serviceStatusIterator (nil);
+		    serviceStatusIterator (false);
 		    continue ;
 		}
 		UI::BusyCursor ();
