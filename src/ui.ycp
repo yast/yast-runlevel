@@ -121,16 +121,28 @@
      * @return string help text
      */
     global define string getActionReturnHelp (integer exit) ``{
-	return lookup ($[
-	   // Init script non-status-command return codes
-	   // http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
-		0: _("Success."),  // this is not used but in case someone called this function with bad input
+	// Init script non-status-command return codes
+	// http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
+	return lookup (
+	    $[
+		// status code.
+		// this is used only in case someone called this function
+		// with bad input
+		0: _("Success."),
+		/* 1: handled as default below */
+		// status code.
 		2: _("Invalid or excess arguments."),
+		// status code.
 		3: _("Unimplemented feature."),
+		// status code.
 		4: _("User had insufficient privileges."),
+		// status code.
 		5: _("Program is not installed."),
+		// status code.
 		6: _("Program is not configured."),
+		// status code.
 		7: _("Program is not running."),
+		// status code.
 		], exit, _("Unspecified error."));
     }
     /**
@@ -140,14 +152,21 @@
      * @return string help text
      */
     global define string getStatusReturnHelp (integer exit) ``{
-	return lookup ($[
-	   // Init script "status" command return codes
-	   // http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
+	// Init script "status" command return codes
+	// http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
+	return lookup (
+	    $[
+		// status code.
 		0: _("Program is running."),
+		// status code.
 		1: _("Program is dead and /var/run pid file exists."),
+		// status code.
 		2: _("Program is dead and /var/lock lock file exists."),
+		// status code.
 		3: _("Program is stopped."),
+		// status code.
 		4: _("Program or service status is unknown."),
+		// status code.
 		], exit, _("Unspecified error."));
     }
     /**
@@ -183,6 +202,7 @@ Please wait.</P>")
 	    // The change does not occur immediately. After a reboot the system boots into the specified runlevel.
 	    _("<p>Changes to the <b>default runlevel</b> will take effect next time you boot your computer.</p>")
 	    +
+	    // help text
 	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Runlevel properties</b>.
  You will also be able to start and stop services directly.</p>
 ")
@@ -201,6 +221,7 @@ Please wait.</P>")
 checking or unchecking the <b>check boxes B-S</b> for the runlevel.</p>
 ")
 	    +
+	    // help text
 	    _("<p><b>Start/Stop/Refresh:</b> Use this to start or stop services individually.</p>")
 	    +
 	    // help text
@@ -222,8 +243,10 @@ Select runlevels in which to run the currently selected service.<ul>
 	    // help text
 	    _("<p><b>Prepare data for autoinstallation.</b></p>")
 	    +
+	    // help text
 	    _("<p>Change the services to requested state. Only services marked as changed will really be changed in the target system.</p>")
 	    +
+	    // help text
 	    _("<p>If you made a mistake and want to undo the change, press <b>Clear</b> or <b>Clear all</b>.</p>")
 	    ;
     }
@@ -247,9 +270,15 @@ Select runlevels in which to run the currently selected service.<ul>
      * @return "Yes", "No" or "???"
      */
     global define string StartedText (integer started) ``{
-	// ???: we do not know what is the service state
-	return (0 == started ? _("Yes") :
-		(started > 0 ? _("No") : _("???")));
+	return (0 == started ?
+		// is the service started?
+		_("Yes") :
+		(started > 0 ?
+		 // is the service started?
+		 _("No") :
+		 // is the service started?
+		 // ???: we do not know yet what is the service state
+		 _("???")));
     }
     /**
      * Create table items from services.
@@ -321,11 +350,13 @@ Select runlevels in which to run the currently selected service.<ul>
 	    `HBox (
 		`HSpacing (1),
 		`Frame (
+		    // frame label
 		    _("Default runlevel"),
 		    `HBox (
 			`HSpacing (2),
 			`VBox (
 			    `VSpacing (1),
+			    // label
 			    `Label (`opt (`hstretch),_("Current runlevel is:")),
 			    `Label (`opt (`outputField, `hstretch), getRunlevelDescr (RunlevelEd::current)),
 			    `VSpacing (1),
@@ -383,6 +414,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	    {
 		if (RunlevelEd::isDirty ())
 		{
+		    // yes-no popup
 		    if (!UI::YesNoPopup (_("Changes made to the runlevels \nwill now be saved.")))
 		    {
 			continue;
@@ -562,6 +594,8 @@ Select runlevels in which to run the currently selected service.<ul>
 	    // missing services only occur when enabling
 	    ok = UI::ContinueCancelPopup (
 		sformat (
+		    // continue-cancel popup when enabling a service
+		    // %1 is a list of unsatisfied dependencies
 		    _("These required services are missing:\n%1."),
 		    formatLine (missing, 40)));
 	}
@@ -655,11 +689,13 @@ because they depend on it:
 	    UI::ContinueCancelPopup (
 		sformat (
 		    enable ?
+		    // continue-cancel popup
 		    _("To start service %1,
 these services must be additionally started,
 because it depends on them:
 %2.")
 		    :
+		    // continue-cancel popup
 		    _("To stop service %1,
 these services must be additionally stopped,
 because they depend on it:
@@ -688,6 +724,7 @@ because they depend on it:
 		if (exit != 0)
 		{
 		    doit = LongContinueCancelHeadlinePopup (
+			// popup heading
 			_("An error has occurred."), `RichText (rich_message),
 			70, 10);
 		    // don't show what we've already seen
@@ -909,8 +946,11 @@ because they depend on it:
 
 	// --- body of allInOne ---
 
-	// headers in table
-	term header = `header (_("Service"), _("Running"));
+	term header = `header (
+	    // table header
+	    _("Service"),
+	    // table header. is a service running?
+	    _("Running"));
 	foreach (`i, RunlevelEd::runlevels, ``{
 //	    header = add (header, `Center (" " + i + " "));
 	    header = add (header, `Center (i));
@@ -930,15 +970,18 @@ because they depend on it:
 		    servicesToTable ()
 		),
 	    `VBox (
-		// label above checkboxed
+		// label above checkboxes
 		`Label (`id (`service_label), `opt (`hstretch), _("Service will be started in following runlevels:")),
 		getRlCheckBoxes ()
 		),
 	    `HBox (
 		// menubutton label
 		`MenuButton (_("S&tart/Stop/Refresh"), [
+				 // menu item
 		    `item (`id (`start), _("&Start now ...")),
+				 // menu item
 		    `item (`id (`stop), _("S&top now ...")),
+				 // menu item
 		    `item (`id (`status), _("&Refresh status ...")),
 		    ]),
 		`HStretch (),
@@ -946,8 +989,11 @@ because they depend on it:
 		    `id (`menubutton),
 		    // menubutton label
 		    `MenuButton (_("Set/&Reset"), [
+				 // menu item
 			`item (`id (`to_enable), _("&Enable the service")),
+				 // menu item
 			`item (`id (`to_disable), _("&Disable the service")),
+				 // menu item
 			`item (`id (`to_all_enable), _("Enable &all services")),
 			])
 		    )
@@ -992,7 +1038,9 @@ because they depend on it:
 		else if (`next == ret)
 		{
 		    if (RunlevelEd::CheckXInetd () && !UI::YesNoHeadlinePopup (
+			    // yes-no popup headline
 				_("Both inetd and xinetd are selected!"),
+			    // yes-no popup
 				_("Services inetd and xinetd need extra configuration
 to run simultaneously. Do you really want to run
 both of them?")))
@@ -1007,6 +1055,7 @@ both of them?")))
 
 		    if (RunlevelEd::isDirty ())
 		    {
+			// yes-no popup
 			if (!UI::YesNoPopup (_("Now the changes to runlevels \nwill be saved.")))
 			{
 			    ret = nil;
@@ -1050,12 +1099,14 @@ both of them?")))
 		}
 		else if (`to_all_enable == ret)
 		{
+		    // yes-no popup
 		    if (UI::YesNoPopup (_("Really enable all services?")))
 		    {
 			foreach (`k, `v, RunlevelEd::services, ``{
 			    setServiceToDefault (k);
 			});
 			UI::ChangeWidget (`id (`table), `Items, servicesToTable ());
+			// message popup
 			UI::MessagePopup (_("All services restored to their original\nstatus upon initial installation."));
 		    }
 		}
@@ -1064,6 +1115,7 @@ both of them?")))
 		    boolean really = true;
 		    if (`stop == ret && "xdm" == current_service)
 		    {
+			// yes-no popup. the user wants to stop xdm
 			if (!UI::YesNoPopup ( _("This may kill your X session.\n\nProceed?")))
 			{
 			    really = false;
@@ -1095,12 +1147,16 @@ both of them?")))
      */
     global define string addService () ``{
 	UI::OpenDialog (`VBox (
+			    // dialog heading
 		    `Heading (`opt (`hstretch), _("Add service")),
 		    `VSpacing (1),
+		    // text entry
 		    `TextEntry (`id (`name), _("Service &name")),
+		    // label
 		    `Label (`opt (`hstretch), _("Starts in these runlevels by default:")),
 		    getRlCheckBoxes (),
 		    `VSpacing (1),
+		    // text entry
 		    `TextEntry (`id (`des), _("&Description (optional)"), ""),
 		    `VSpacing (1),
 		    `HBox (`PushButton (`id (`ok), UI::OKButtonLabel ()), `PushButton (`id (`cancel), UI::CancelButtonLabel ()))
@@ -1116,6 +1172,7 @@ both of them?")))
 		name = UI::QueryWidget (`id (`name), `Value);
 		if (nil == name || "" == name || haskey (RunlevelEd::services, name))
 		{
+		    // message popup
 		    UI::MessagePopup (_("Invalid service name. You did not specify service
 name or the name specified is already in use."));
 		    continue;
@@ -1190,7 +1247,11 @@ name or the name specified is already in use."));
 	}
 
 	// headers in table
-	term header = `header (_("Service"), _("Changed"));
+	term header = `header (
+	    // table header
+	    _("Service"),
+	    // table header. has the service state changed?
+	    _("Changed"));
 	foreach (`i, RunlevelEd::runlevels, ``{
 //	    header = add (header, `Center (" " + i + " "));
 	    header = add (header, `Center (i));
@@ -1209,10 +1270,14 @@ name or the name specified is already in use."));
 		getRlCheckBoxes ()
 		),
 	    `HBox (
+		// button label
 		`PushButton (`id (`add), _("A&dd")),
 		`HStretch (),
+		// button label
 		`PushButton (`id (`clear), _("&Clear")),
+		// button label
 		`PushButton (`id (`clear_all), _("Clea&r All")),
+		// button label
 		`PushButton (`id (`default), _("D&efault"))
 		)
 	    );
@@ -1242,7 +1307,9 @@ name or the name specified is already in use."));
 		else if (`next == ret)
 		{
 		    if (RunlevelEd::CheckXInetd () && !UI::YesNoHeadlinePopup (
+			    // yes-no popup headline
 				_("Both inetd and xinetd are selected!"),
+			    // yes-no popup
 				_("Services inetd and xinetd need extra configuration
 to run simultaneously. Do you really want to run
 both of them?")))
@@ -1258,6 +1325,7 @@ both of them?")))
 			service = lookup (RunlevelEd::services, "portmap", $[]);
 			updateRlCheckBoxes (service);
 			while (nil != UI::PollInput ()) {}
+			// yes-no popup
 			if (!UI::YesNoPopup (sformat (_("Service portmap, which is required by
 %1, is disabled. Enable
 portmap if you want to run %1.
