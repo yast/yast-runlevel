@@ -135,7 +135,7 @@
     global define boolean ServiceFinetune (string name, list rl) ``{
 	if (!SCR::Read (.init.scripts.exists, name))
 	{
-	    y2error ("Init script %s does not exist.", name);
+	    y2error ("Init script %1 does not exist.", name);
 	    return false;
 	}
 	string fill = "";
