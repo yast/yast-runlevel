@@ -545,7 +545,7 @@ Select runlevels in which to run currently selected service.<ul>
 		),
 	    `HBox (
 		// menubutton label
-		`MenuButton (_("&Start/Stop/Refresh"), [
+		`MenuButton (_("S&tart/Stop/Refresh"), [
 		    `item (`id (`start), _("&Start now ...")),
 		    `item (`id (`stop), _("S&top now ...")),
 		    `item (`id (`status), _("&Refresh status ...")),

@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Nov  7 10:06:40 CET 2001 - pblahos@suse.cz
+
+- Fixed duplicate keyboard shortcut: &Start/Stop/Refresh, 
+  Runlevel &S (Bug 12196)
+
+-------------------------------------------------------------------
 Tue Nov  6 15:27:53 CET 2001 - pblahos@suse.cz
 
 - If service start/stop/status was unsuccessful (!=0), shows 
