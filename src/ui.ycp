@@ -116,7 +116,7 @@
      * @param service @ref service
      * @param started status or -1 (unknown yet)
      */
-    define void updateStatusInTable (string service_name, map service,
+    global define void updateStatusInTable (string service_name, map service,
 				     integer started) ``{
 	// just translate the arguments. the callback is generic
 	// because of the future simple UI, bug #13789
@@ -127,7 +127,7 @@
      * Changes values of runlevel checkboxes.
      * Get the status if not known yet.
      */
-    define void changeService1 (map service) ``{
+    global define void changeService1 (map service) ``{
 	if (lookup (service, "started", -1) < 0)
 	{
 	    integer started = Runlevel::RunInitScript (current_service,
@@ -619,6 +619,53 @@ Please wait.</P>")
 	return [ok, services];
     }
 
+
+    /**
+     * Generic function to handle enabling, disabling, starting and
+     * stoping services and their dependencies, in various runlevels.
+     * Piece of cake ;-) <br>
+
+     * Either of init_time or run_time can be specified (for complex
+     * mode) or both (for simple mode).
+
+     * rls: ignored for -init +run
+
+     * What it does: gets dependent services (in the correct order),
+     * filters ones that are already in the desired state, if there
+     * are dependencies left, pop up a confirmation dialog, check for
+     * missing dependencies, perform the action for the deps and the
+     * service (in this order), displaying output after each error and
+     * at the end.
+     *
+
+     * @param service_name	name of service
+     * @param rls		in which run levels, nil == all
+     * @param enable		on/off
+     * @param init_time		do enable/disable
+     * @param run_time		do start/stop
+     * @return success (may have been canceled because of dependencies)
+     */
+    global define boolean ModifyServiceDep (string service_name,
+					    list(string) rls,
+					    boolean enable,
+					    boolean init_time,
+					    boolean run_time) ``{
+    }
+
+
+    /**
+     * Turns a service on or off in the simple mode, ie. resolving
+     * dependencies and for each service doing start,enable or
+     * stop,disable.
+     * @param service_name	name of service
+     * @param rls		in which run levels, nil == all
+     * @return success (may have been canceled because of dependencies)
+     */
+    global define boolean SimpleSetServiceDep (string service_name,
+					       boolean enable) ``{
+    }
+
+
     /**
      * Used for enabling/disabling a service and services depending on
      * it in a runlevel or a set of runlevels.
@@ -797,8 +844,10 @@ because they depend on it:
 	map service = RunlevelEd::services[service_name]:$[];
 	service = add (service, "started", started);
 	RunlevelEd::services = add (RunlevelEd::services, service_name, service);
+	// this won't work in simple mode
+	// make a map "item"->column_number, depending on mode
+	// then the functions can consult it and do nothing if not present
 	updateStatusColumn (service_name, service["started"]:-1);
-//	Popup::Message (message);
 	return [exit, rich_message];
     }
 
@@ -1008,9 +1057,11 @@ Select runlevels in which to run the currently selected service.<ul>
 	    );
 	// dialog caption.
 	Wizard::SetContents (_("Runlevel editor: details"), contents, getHelpComplex (), true, true);
+
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = lookup (RunlevelEd::services, current_service, $[]);
 	changeService1 (service);
+
 	any ret = nil;
 	while (`next != ret && `back != ret && `abort != ret && `simple != ret)
 	    {
@@ -1037,6 +1088,8 @@ Select runlevels in which to run the currently selected service.<ul>
 		{
 		    ret = `abort;
 		}
+
+		current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 
 		if (`abort == ret)
 		{
@@ -1077,7 +1130,6 @@ both of them?")))
 		}
 		else if (`table == ret)
 		{
-		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 		    service = RunlevelEd::services[current_service]:$[];
 		    changeService1 (service);
 		}
@@ -1095,7 +1147,6 @@ both of them?")))
 		}
 		else if (`to_enable == ret)
 		{
-		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 		    list(string) default = RunlevelEd::services[current_service, "defstart"]:[];
 		    EnableDisableServiceDep (current_service, default, true);
 		    service = RunlevelEd::services[current_service]:$[];
@@ -1103,7 +1154,6 @@ both of them?")))
 		}
 		else if (`to_disable == ret)
 		{
-		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 		    EnableDisableServiceDep (current_service, nil, false);
 		    service = RunlevelEd::services[current_service]:$[];
 		    changeService1 (service);
@@ -1174,6 +1224,12 @@ both of them?")))
 		    `header (_("Service"), _("Status"), _("Description")),
 		    servicesToTable (`simple)
 		),
+	    `VSquash (
+		`HBox (
+		    `VSpacing (3.4), // 3+borders in qt, 3 in curses
+		    `RichText (`id (`description), `opt (`shrinkable), "")
+		    )
+		),
 	    `HBox (
 		`PushButton (`id (`enable),  _("&Activate")),
 		`PushButton (`id (`disable), _("&Deactivate"))
@@ -1181,8 +1237,11 @@ both of them?")))
 	    );
 	// dialog caption.
 	Wizard::SetContents (_("Runlevel editor: services"), contents, _("<p>TODO</p>"), true, true);
+
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = lookup (RunlevelEd::services, current_service, $[]);
+	updateDescription (service);
+
 	any ret = nil;
 	while (`next != ret && `back != ret && `abort != ret && `complex != ret)
 	{
@@ -1209,6 +1268,8 @@ both of them?")))
 	    {
 		ret = `abort;
 	    }
+
+	    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 
 	    if (`abort == ret)
 	    {
@@ -1248,6 +1309,11 @@ both of them?")))
 			}
 		    }
 		    break;
+	    }
+	    else if (`table == ret)
+	    {
+		service = RunlevelEd::services[current_service]:$[];
+		updateDescription (service);
 	    }
 	    else if (`disable == ret)
 	    { //FIXME...
