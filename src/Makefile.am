@@ -4,9 +4,9 @@
 
 myyncludedir = $(yncludedir)/runlevel
 
-agent_SCRIPTS = ag_initscripts
+agent_SCRIPTS = 
 
-scrconf_DATA = initscripts.scr insserv_conf.scr
+scrconf_DATA = 
 
 client_DATA =		\
 	runlevel.ycp	\
@@ -14,9 +14,9 @@ client_DATA =		\
 	runlevel_write.ycp
 
 myynclude_DATA =		\
-	ui.ycp toposort.ycp
+	ui.ycp 
 
-module_DATA = Runlevel.ycp
+module_DATA = 
 
 config_DATA = runlevel.y2cc
 
