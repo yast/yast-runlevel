@@ -792,13 +792,14 @@ because they depend on it:
      * Starts/stops/checks status of a service
      * @param service_name service to start/stop
      * @param command "start" or "stop" or "status"
-     * @return [exit_status, rich_message]
+     * @return [integer exit_status, string rich_message]
      */
-    global define map startStopService (string service_name,
-					string command) ``{
+    global define list startStopService (string service_name,
+					 string command) ``{
 	UI::OpenDialog (`Label (service_name + " " + command));
 	map out = Runlevel::RunInitScriptOutput (service_name, command);
 	UI::CloseDialog ();
+
 	integer exit = lookup (out, "exit", -1);
 	string rich_message = sformat (
 	    // %1 service, %2 command,
@@ -867,7 +868,8 @@ because they depend on it:
 	list should_not_run = [];
 	list should_run = [];
 	foreach (`k, `v, RunlevelEd::services, ``{
-	    if (contains (v["start"]:[], RunlevelEd::current))
+	    if (RunlevelEd::StartContainsImplicitly  (v["start"]:[],
+						      RunlevelEd::current))
 		{   // it should run
 		    if (0 != lookup (v, "started", ""))
 			{
