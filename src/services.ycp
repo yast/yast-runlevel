@@ -71,7 +71,7 @@
      * where x is runlevel name and S means start, K means kill.
      * So each tuple means that in runlevel x there is list of services
      * that are Started/Killed. This must be patched in services map<br>
-     * Also START_ variables presence is patched into services. 
+     * Also START_ variables presence is patched into services.
      */
     global define getScripts () ``{
 	map details = SCR::Read (.init.scripts.runlevels);
