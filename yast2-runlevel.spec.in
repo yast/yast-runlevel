@@ -37,4 +37,5 @@ Summary:	Configuration of runlevel
 @yncludedir@/runlevel/*.ycp
 %dir @moduledir@
 @moduledir@/RunlevelEd.ycp
+@moduledir@/RunlevelEd.ybc
 %doc @docdir@
