@@ -10,8 +10,7 @@ scrconf_DATA = insserv_conf.scr
 
 client_DATA =		\
 	runlevel.ycp	\
-	runlevel_auto.ycp \
-	runlevel_write.ycp
+	runlevel_auto.ycp 
 
 myynclude_DATA =		\
 	toposort.ycp \

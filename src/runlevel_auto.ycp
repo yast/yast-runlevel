@@ -115,7 +115,8 @@ else if (func == "Result") {
 /* Write givven settings */
 else if (func == "Write") {
 	import "Progress";
-	RunlevelEd::write_only = true;
+    RunlevelEd::Read ();
+    RunlevelEd::Import (param);
 	Progress::off();
 	ret = RunlevelEd::Write();
 	Progress::on();
