@@ -20,11 +20,16 @@ boolean AddHandler(map<string,string> opts) {
     if (nil == CommandLine::UniqueOption( opts, ["service"])) 
 	return false;
     list<string> rls = nil;
-    string service = opts["service"]:"";
     if (opts["runlevels"]:nil != nil) {
 	rls = splitstring(opts["runlevels"]:"", ",");
     }
-    RunlevelEd::ServiceInstallDep(service, rls);
+    list<string> services = splitstring(opts["service"]:"", ",");
+    foreach(string service, services, {
+	integer ierr = RunlevelEd::ServiceInstall(service, rls);
+	if (ierr == 1) {
+	    CommandLine::Print(sformat(_("Error: service '%1' not found"), service));
+	}
+    });
     return true;
 }
 
@@ -32,11 +37,13 @@ boolean DeleteHandler(map<string,string> opts) {
     if (nil == CommandLine::UniqueOption( opts, ["service"])) 
 	return false;
     list<string> rls = nil;
-    string service = opts["service"]:"";
     if (opts["runlevels"]:nil != nil) {
 	rls = splitstring(opts["runlevels"]:"", ",");
     }
-    RunlevelEd::ServiceRemoveDep(service, rls);
+    list<string> services = splitstring(opts["service"]:"", ",");
+    foreach(string service, services, {
+	RunlevelEd::ServiceRemove(service, rls);
+    });
     return true;
 }
 
@@ -184,7 +191,7 @@ map cmdline = $[
 	],
 	"service": $[
 	    // translators: command line help text for "service" option
-	    "help": _("Service name"),
+	    "help": _("Coma separated service names"),
 	    "type": "string",
 	],
 	"defaults": $[
