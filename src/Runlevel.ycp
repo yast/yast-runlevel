@@ -1,0 +1,315 @@
+/**
+ * File:
+ *   Runlevel.ycp
+ *
+ * Package:
+ *   Runlevel Editor
+ *
+ * Summary:
+ *   Exported functionality
+ *
+ * Authors:
+ *   Petr Blahos <pblahos@suse.cz>
+ *
+ * $Id$
+ *
+ * Function exported by runlevel editor to other modules.
+ */
+
+{
+    module "Runlevel";
+    textdomain "runlevel";
+    import "Progress";
+
+    /**
+     * One service is described by such map:
+      "servicename" : $[
+	"defstart" : [ "2", "3", "5", ], // Default-Start comment
+	"defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
+
+	"reqstart" : [ "$network", "portmap" ], // Required-Start comment
+	"reqstop"  : [ "$network", "portmap" ], // Required-Stop  comment
+
+	"description" : "text...",       // Description comment
+
+	"start" : [ "3", "5", ], // which runlevels service is really started/stopped in
+	"stop"  : [ "3", "5", ], // read from /etc/init.d/rc?.d/* links
+
+	"started" : 0, // return from rcservice status (integer)
+
+	"dirty" : false, // was the entry changed?
+      ]
+     */
+    //
+    //
+
+    /**
+     * Get service info without peeking if service runs.
+     * @param name name of the service
+     * @return service information
+     */
+    global define map ServiceInfo (string name) ``{
+	// Fhis is an info achieved just by a call of
+	// the 2 main agent calls. Nothing about service
+	// status is beeing obtained.
+	if (!SCR::Read (.init.scripts.exists, name))
+	    return $[];
+	map detail = lookup (SCR::Read (.init.scripts.runlevel, name), name, $[]);
+	map service = lookup (SCR::Read (.init.scripts.comment, name), name, $[]);
+	return add (
+	    add (service, "start", lookup (detail, "start", [])),
+	    "stop", lookup (detail, "stop", []));
+    }
+
+    /**
+     * Get service status. It is output from "rcservice status".
+     * It should conform to LSB. 0 means running.
+     * @param name name of the service
+     * @return init script exit status
+     */
+    global define integer ServiceStatus (string name) ``{
+	if (!SCR::Read (.init.scripts.exists, name))
+	    return -1;
+	return SCR::Execute (.target.bash, sformat ("/etc/init.d/%1 status", name), $["TERM":"raw"]);
+    }
+    /**
+     * Get service info and finds out whether service is running.
+     * @param name name of the service
+     * @return service map
+     */
+    global define map ServiceFullInfo (string name) ``{
+	if (!SCR::Read (.init.scripts.exists, name))
+	    return $[];
+	return add (ServiceInfo (name), "started", ServiceStatus (name));
+    }
+
+    /**
+     * Adjust runlevels in which service runs.
+     * @param name service name
+     * @param action "disable" -- remove links, "enable" -- if there are
+     *    no links, set default, otherwise do nothing, "default" -- set
+     *    defaults.
+     * @return success state
+     */
+    global define boolean ServiceAdjust (string name, string action) ``{
+	if (!SCR::Read (.init.scripts.exists, name))
+	{
+	    y2error ("Init script %s does not exist.", name);
+	    return false;
+	}
+	map service = ServiceInfo (name);
+	if ("disable" == action)
+	{
+	    if (size (lookup (service, "start", [])) != 0)
+	    {
+		if (0 != SCR::Execute (.target.bash, sformat ("/sbin/insserv -r %1", name)))
+		    return false;
+	    }
+	    return true;
+	}
+	if ("enable" == action)
+	{
+	    if (size (lookup (service, "start", [])) == 0)
+	    {
+		if (0 != SCR::Execute (.target.bash, sformat ("/sbin/insserv -d %1", name)))
+		    return false;
+	    }
+	    return true;
+	}
+	if ("default" == action)
+	{
+	    return ((0 != SCR::Execute (.target.bash, sformat ("/sbin/insserv -d %1", name))))
+		? false : true;
+	}
+	y2error ("ServiceAdjust: bad action %1", action);
+	return false;
+    }
+
+    /**
+     * Set service to run in selected runlevels.
+     * @param name name of service to adjust
+     * @param rl list of runlevels in which service should start
+     * @return success state
+     */
+    global define boolean ServiceFinetune (string name, list rl) ``{
+	if (!SCR::Read (.init.scripts.exists, name))
+	{
+	    y2error ("Init script %s does not exist.", name);
+	    return false;
+	}
+	string fill = "";
+	string out = "";
+	foreach (`i, rl, ``{
+	    out = out + fill + sformat ("%1", i);
+	    fill = ",";
+	});
+	if ("" == out)
+	    return SCR::Execute (.target.bash, sformat ("/sbin/insserv -r %1", name));
+	return 0 == SCR::Execute (.target.bash, sformat ("/sbin/insserv %1,start=%2", name, out));
+    }
+
+    /**
+     * Run init script.
+     * @param name init service name
+     * @param param init script argument
+     * @return integer exit value
+     */
+    global define integer RunInitScript (string name, string param) ``{
+	return SCR::Execute (.target.bash, sformat ("/etc/init.d/%1 %2", name, param), $[ "TERM" : "raw"]);
+    }
+
+
+    /*
+     * The above interface was very public. Now there is interface for
+     * package.
+     */
+
+    /**
+     * List of all services. Each item is a map described above.
+     */
+    global map services = $[];
+
+    /**
+     * List of all service names.
+     */
+    global list service_list = [];
+
+    /**
+     * Default runlevel (after boot)
+     */
+    global string default = "";
+    /**
+     * Backup of default runlevel.
+     */
+    string default_orig = "";
+
+    /**
+     * List of all runlevels available in the system.
+     */
+    global list runlevels = [];
+
+    /**
+     * Current runlevel
+     */
+    global string current = "";
+
+    /**
+     * Read settings
+     */
+    global define boolean Read () ``{
+	Progress::Simple (_("Initializing runlevel editor. Please wait."), " ", 6, "");
+	Progress::NextStep ();
+	runlevels= SCR::Read (.init.scripts.runlevel_list);
+	if (0 == size (runlevels))
+	{
+	    runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+	}
+	Progress::NextStep ();
+
+	current = SCR::Read (.init.scripts.current_runlevel);
+	Progress::NextStep ();
+
+	//..
+	default= SCR::Read (.init.scripts.default_runlevel);
+	default_orig = default;
+	Progress::NextStep ();
+
+	map details = SCR::Read (.init.scripts.runlevels);
+	Progress::NextStep ();
+	services = SCR::Read (.init.scripts.comments);
+	Progress::NextStep ();
+	services = mapmap (`k, `v, services, ``{
+	    // play tennis
+	    map second_service = lookup (details, k, $[]);
+	    service_list = add (service_list, k);
+	    v = add (v, "start", lookup (second_service, "start", []));
+	    v = add (v, "stop" , lookup (second_service, "stop",  []));
+	    return [ k, v ];
+	});
+	Progress::NextStep ();
+	return true;
+    }
+
+    /**
+     * FIXME: is it used somewhere? update comment.
+     * Is service disabled? Check "disabled" key which reflects whether service is disabled by some START_-like variable.
+     * Otherwise it checks if it is disabled by unchecking all checkboxes...
+     * @param service service to check
+     * @return boolean true if service is disabled
+     */
+    global define boolean isDisabled (map service) ``{
+	if (0 == size (lookup (service, "start", [])) &&
+	    0 != size (lookup (service, "defstart", [])))
+	{
+	    return true;
+	}
+	return false;
+    }
+
+    /**
+     * Save changed services into proper runlevels. Save also changed
+     * default runlevel.
+     */
+    global define void Write () ``{
+	integer prsize = size (services);
+	Progress::Simple (_("Saving changes to runlevels."), " ", prsize + 1, "");
+
+	if (default != default_orig)
+	    SCR::Write (.init.scripts.default_runlevel, new_default);
+	Progress::NextStep ();
+
+	foreach (`k, `v, services, ``{
+	    Progress::Title (sformat (_("Service %1"), k));
+	    if (lookup (v, "dirty", false))
+	    {
+		// save!
+		string add_comma = "";
+		list start = lookup (v, "start", []);
+		if (contains (lookup (v, "defstart", []), "B"))
+		{
+		    start = union (start, [ "B" ]);
+		}
+		string commandline = "";
+		if (size (start)>0)
+		{
+		    commandline = sformat ("/sbin/insserv %1,start=", k);
+		    foreach (`i, start, ``{
+			commandline = commandline + add_comma + i;
+			add_comma = ",";
+		    });
+		}
+		else
+		{
+		    commandline = sformat ("/sbin/insserv -r %1", k);
+		}
+		y2milestone ("%1 ===> Running %2", k, commandline);
+		SCR::Execute (.target.bash, commandline);
+	    }
+	    Progress::NextStep ();
+	});
+	Progress::NextStep ();
+    }
+
+    /**
+     * Were some settings changed?
+     * @return true if yes
+     */
+    global define boolean isDirty () ``{
+	if (default != default_orig)
+	    return true;
+
+	boolean dirty = false;
+	foreach (`k, `v, services, ``{
+	    if (dirty)
+	    {
+		return ;
+	    }
+	    if (lookup (v, "dirty", false))
+	    {
+		dirty = true;
+	    }
+	});
+	return dirty;
+    }
+
+}
