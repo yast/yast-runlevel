@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Jul 30 15:41:24 CEST 2004 - mvidner@suse.cz
+
+- Override proposal if ProductFeatures::runlevel is set (nashif).
+
+-------------------------------------------------------------------
 Thu Jun 17 10:59:29 CEST 2004 - mvidner@suse.cz
 
 - Added "testedfiles" to test cases to make it work with the new testsuite.
