@@ -11,3 +11,7 @@ config.h.in
 aclocal.m4
 Makefile.am
 configure.in
+autom4te.cache
+missing
+install-sh
+mkinstalldirs
