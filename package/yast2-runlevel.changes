@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Jan 28 09:54:22 CET 2005 - mlazar@suse.cz
+
+- fixed agent: don't dump error msg if service script isn't readable
+
+-------------------------------------------------------------------
 Wed Jan 26 13:52:45 CET 2005 - mlazar@suse.cz
 
 - fixed typing error: Coma -> Comma
