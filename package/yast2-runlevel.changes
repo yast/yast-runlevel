@@ -1,8 +1,10 @@
 -------------------------------------------------------------------
-Wed Jun 11 09:20:11 CEST 2003 - mvidner@suse.cz
+Thu Jun 12 18:15:31 CEST 2003 - mvidner@suse.de
 
+- Default is simple mode (#13789).	        	! Does not work yet
+- Fix service_status=enable in autoyast (#27169).
 - using Label and Popup
-- 2.8.0
+- 2.8.1
 
 -------------------------------------------------------------------
 Wed Mar 12 16:32:42 CET 2003 - mvidner@suse.de

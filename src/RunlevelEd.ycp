@@ -658,5 +658,36 @@ Further dependency checking will be disabled."));
 	}
 	return sum;
     }
+
+    // visualization helper
 
+    /**
+     * A buffer for @ref sprint
+     */
+    string sprint_buffer = "";
+
+    /**
+     * String print
+     * @param s a string to add to @ref sprint_buffer
+     */
+    define void sprint (string s) ``{
+	sprint_buffer = sprint_buffer + s;
+    }
+
+    /**
+     * @return a graphviz graph of the service dependencies
+     */
+    global define string DotRequires () ``{
+	sprint_buffer = "";
+	sprint ("digraph services {\n");
+	sprint ("\trankdir=LR;\n");
+	sprint ("\t\"!missing\"[rank=max];\n");
+	foreach (string n, list e, requires, ``{
+	    foreach (string target, e, ``{
+		sprint (sformat ("\t\"%1\" -> \"%2\";\n", n, target));
+	    });
+	});
+	sprint ("}\n");
+	return sprint_buffer;
+    }
 }
