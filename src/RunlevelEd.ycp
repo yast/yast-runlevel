@@ -292,7 +292,8 @@ Further dependency checking will be disabled."));
 							  boolean init_time,
 							  boolean run_time) ``{
 
-	boolean one = size (rls) == 1;
+	// one: exactly one runlevel. nil means (disable) in all runlevels
+	boolean one = rls != nil && size (rls) == 1;
 	if (init_time && !enable &&
 	    rls != nil && !one)
 	{
