@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Sun Aug 11 21:59:05 CEST 2002 - mvidner@suse.cz
+
+- Let the table keep the keyboard focus (#16116 workaround).
+- Testsuite adapted to Runlevel changes due to #17608.
+- 2.6.14
+
+-------------------------------------------------------------------
 Wed Jul 31 14:42:17 CEST 2002 - mvidner@suse.cz
 
 - Do not enable boot services in ordinary runlevels (#17234).
