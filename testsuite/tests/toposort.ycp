@@ -5,15 +5,15 @@
 
     DUMP ("TopologicalSort");
 
-    map g_empty = $[];
+    map<string, list<string> > g_empty = $[];
     DUMP (TopologicalSort (g_empty));
 
-    map g_loop = $[
+    map<string, list<string> > g_loop = $[
 	"v1": [ "v1", ],
 	];
     DUMP (TopologicalSort (g_loop));
 
-    map g = $[
+    map<string, list<string> > g = $[
 	"v1": [ "v2", "v3", ],
 	"v2": [ "v3", "v4", ],
 	"v3": [ "v6", ],

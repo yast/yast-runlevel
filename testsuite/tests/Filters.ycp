@@ -21,7 +21,7 @@
 	    "defstart" : [ "B" ],
 	    ],
 	];
-    list svcs = maplist (string name, any data, RunlevelEd::services, ``( name ));
+    list<string> svcs = (list<string>) maplist (string name, any data, RunlevelEd::services, ``( name ));
 
     DUMP ("enable");
     DUMP (svcs);
@@ -32,7 +32,7 @@
 
     // it does not make sense to disable a boot service automatically.
     // it would mean it requires a non-boot service, ie. broken service design
-    svcs = filter (string s, svcs, ``(
+    svcs = (list<string>) filter (string s, svcs, ``(
 		       RunlevelEd::services[s, "defstart"]:[] != [ "B" ]
 		       ));
 
