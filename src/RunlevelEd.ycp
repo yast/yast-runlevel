@@ -276,10 +276,19 @@ Further dependency checking will be disabled."));
     global define list(string) FilterStartStop (list(string) svcs,
 						boolean start) ``{
 	return filter (string service, svcs, ``{
-	    integer started = services[service, "started"]:-1;
+	    boolean started =
+		services[service, "started"]:-1 == 0 ||
+		// boot scripts are always considered to be started,
+		// even if they return 4 :(
+		services[service, "defstart"]:[] == [ "B" ] ||
+		// and while we're at it with kludges,
+		// pretend nfs is running (ie. /usr is available)
+		// because it reports 3 when no nfs imports are defined :(
+		// TODO resolve it better!
+		service == "nfs";
 	    // keep it in the list if the wanted result
 	    // is different from the current state
-	    return start != (started == 0);
+	    return start != started;
 	});
     }
     /**
