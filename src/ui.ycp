@@ -33,6 +33,7 @@
     define boolean LongContinueCancelHeadlinePopup (string headline, term richtext, integer hdim, integer vdim);
     define void setServiceToDefault (string service_name);
     define map<string, boolean> tomap_true (list<string> l);
+    define void updateServiceStatus (boolean use_func, string service_name);
 
     string current_service = "";
     boolean do_abort_now = false;
@@ -482,14 +483,25 @@
 	}
 	string service_name = RunlevelEd::service_list[fetching_service_index]:"";
 	fetching_service_index = fetching_service_index + 1;
-	map service = RunlevelEd::services[service_name]:$[];
-	integer started = Service::RunInitScript (service_name, "status");
 
-	RunlevelEd::services[service_name] = add (service, "started", started);
+        updateServiceStatus(use_func, service_name);
+    }
 
-	if (use_func)
-	{
-	    updateStatusInTable(service_name, service, started);
+    /**
+     * For specified service, determines its status and calls a supplied function.
+     * @param func function to call
+     * @see updateStatusInTable
+     */
+    define void updateServiceStatus (boolean use_func, string service_name) ``{
+	if (RunlevelEd::services[service_name, "started"]:-1 < 0) {
+            integer started = Service::RunInitScript (service_name, "status");
+
+            RunlevelEd::services[service_name, "started"] = started;
+
+            if (use_func)
+            {
+                updateStatusInTable(service_name, RunlevelEd::services[service_name]:$[], started);
+            }
 	}
     }
 
@@ -626,6 +638,11 @@ Please wait.</P>")
 	list<string> dep_s = RunlevelEd::ServiceDependencies (service_name, enable);
 	y2debug ("DEP: %1", dep_s);
 
+        // ensure we have already determined the service status (#36171)
+        foreach(string service_name, dep_s, {
+		updateServiceStatus(false, service_name);
+	});
+
 	// filter ones that are ok already
 	dep_s = RunlevelEd::FilterAlreadyDoneServices (dep_s, rls, enable,
 						       init_time, run_time);
@@ -753,9 +770,12 @@ and enabled, because it depends on them:
 
 		rich_message = rich_message + ret[1]:"";
 		Popup::LongText ("", `RichText(rich_message), 70, 5);
+
+                // don't enable the service if it can't be started, #36176
+                if (ret[0]:-1 != 0) return false;
 	    }
-	    // TODO only if the run succeeded (integrate with the above loop?
-	    if (init_time)
+
+            if (init_time)
 	    {
 		// set the variables and update the ui
 		SetService (service_name, rls, enable);
@@ -1301,14 +1321,13 @@ and the service itself and disables their start at system boot time.</p>")
 	    if (fetching_service_status)
 	    {
 		ret = UI::PollInput ();
-		UI::NormalCursor ();
+		UI::BusyCursor ();
 		if (nil == ret)
 		{
 //		    serviceStatusIterator (nil);
 		    serviceStatusIterator (false);
 		    continue ;
 		}
-		UI::BusyCursor ();
 	    }
 	    else
 	    {
