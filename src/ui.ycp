@@ -388,7 +388,7 @@
 
 	// filter out services that are too important to be messed with
 	// in the simple mode
-	map services = RunlevelEd::services;
+	map<string,map> services = RunlevelEd::services;
 	if (mix == `simple)
 	{
 	    services = filter (string s_name, map s, services, ``(
@@ -442,7 +442,7 @@
 		// runlevels
 		list rl = lookup (v, "start", []);
 		c_runlevels = col;
-		foreach (`i, RunlevelEd::runlevels, ``{
+		foreach (string i, RunlevelEd::runlevels, ``{
 		    runlevel2tableindex[i] = col;
 		    item = add (item, (contains (rl, i)? i : " "));
 		    col = col + 1;
@@ -1028,7 +1028,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	    _("Service"),
 	    // table header. is a service running?
 	    _("Running"));
-	foreach (`i, RunlevelEd::runlevels, ``{
+	foreach (string i, RunlevelEd::runlevels, ``{
 //	    header = add (header, `Center (" " + i + " "));
 	    header = add (header, `Center (i));
 	});
@@ -1518,7 +1518,7 @@ name or the name specified is already in use."));
 	    _("Service"),
 	    // table header. has the service state changed?
 	    _("Changed"));
-	foreach (`i, RunlevelEd::runlevels, ``{
+	foreach (string i, RunlevelEd::runlevels, ``{
 //	    header = add (header, `Center (" " + i + " "));
 	    header = add (header, `Center (i));
 	});

@@ -12,7 +12,7 @@
         "b" : $["start" : [ "1", ]],
         ];
     DUMP (RunlevelEd::isDirty ());
-    RunlevelEd::services = $[
+    RunlevelEd::services = (map<string,map>) $[
         "a" : $["dirty" : true ],
         "b" : $["start" : [ "1", ]],
         ];
