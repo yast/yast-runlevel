@@ -79,6 +79,16 @@ else if (func == "Reset") {
 }
 /* Change configuration (run AutoSequence) */
 else if (func == "Change") {
+    if (!RunlevelEd::GetModified()) {
+        RunlevelEd::runlevels = (list<string>) SCR::Read (.init.scripts.runlevel_list);
+	if (0 == size (RunlevelEd::runlevels))
+	{
+            RunlevelEd::runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+	}
+
+	//..
+        RunlevelEd::default = (string) SCR::Read (.init.scripts.default_runlevel);
+    }
 	Wizard::CreateDialog ();
         Wizard::SetDesktopIcon("runlevel");
         Wizard::DisableAbortButton ();
