@@ -108,6 +108,12 @@ else if (func == "Write") {
     ret = RunlevelEd::Write();
     Progress::on();
 }
+else if (func == "SetModified") {
+    ret = RunlevelEd::SetModified ();
+}
+else if (func == "GetModified") {
+    ret = RunlevelEd::GetModified ();
+}
 /* Unknown function */
 else {
 	y2error("Unknown function: %1", func);
