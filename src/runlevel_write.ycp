@@ -19,8 +19,8 @@
     import "Runlevel";
     import "Progress";
 
-    list args = Args ();
-    map settings = select (Args (), 0, $[]);
+    list args = WFM::Args ();
+    map settings = select (WFM::Args (), 0, $[]);
 
     Progress::off ();
     Runlevel::Read ();
