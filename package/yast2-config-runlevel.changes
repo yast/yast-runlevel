@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Dec  3 11:14:20 CET 2001 - pblahos@suse.cz
+
+- Uses y2autoconf and create-spec 
+
+-------------------------------------------------------------------
 Thu Nov 29 08:54:55 CET 2001 - pblahos@suse.cz
 
 - New function ServiceEnabled.
