@@ -1,3 +1,9 @@
+-------------------------------------------------------------------
+Tue Apr 16 09:50:07 CEST 2002 - pblahos@suse.cz
+
+- Fixed: insserv -r service must be called before 
+  insserv service,start=X,Y,Z because the latter only added service
+  to selected runlevels. (Bug #15694)
 - Fixed: multiple <p> in one string reported by check_ycp
 - Fixed: undefined or undocumented return values reported by ycpdoc
 
