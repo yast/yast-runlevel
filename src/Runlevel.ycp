@@ -21,6 +21,7 @@
     textdomain "runlevel";
     import "Progress";
     import "Summary";
+    import "Report";
 
     include "runlevel/toposort.ycp";
 
@@ -177,6 +178,7 @@
      */
     global define map RunInitScriptOutput (string name, string param) ``{
 	map env = $["TERM": "raw"];
+/*
 	// encoding problems - append .UTF-8 to LANG
 	if (lang == nil)
 	{
@@ -194,6 +196,7 @@
 	{
 	    env = add (env, "LANG", lang);
 	}
+*/
 	return SCR::Execute (.target.bash_output,
 			     // "/usr/bin/locale; " +
 			     sformat ("/etc/init.d/%1 %2 2>&1", name, param),
@@ -319,7 +322,10 @@
      * Used for stopping and disabling services.
      */
     map what_requires = $[];
-
+    /**
+     * If there's a dependency loop, dependency checking is disabled.
+     */
+    boolean dependencies_disabled = false;
     /**
      * Create requires from services, system_requires and what_provides.
      */
@@ -350,15 +356,33 @@
      * @return a list of services (excluding itself) required to start
      * a service (enable) or to be stopped because they require the
      * service (disable), ordered by their dependencies. Missing
-     * services are included, system facilities excluded.
+     * services are included, system facilities excluded.<br>
+     * If dependencies are disabled, returns an empty list, as if
+     * there were no dependencies.
      */
     global define list(string) ServiceDependencies (string service,
 						    boolean enable) ``{
+	if (dependencies_disabled)
+	{
+	    return [];
+	}
 	// make a dependency subgraph
 	map s_req = ReachableSubgraph (enable? requires: what_requires,
 				       service);
+	y2debug ("DEPGRAPH %1: %2", service, s_req);
 	// sort it
-	list sorted = TopologicalSort (s_req);
+	list r = TopologicalSort (s_req);
+	list sorted = r[0]:[];
+	list rest = r[1]:[];
+	if (size (rest) > 0)
+	{
+	    // TODO: localize the loop, disable it only locally
+	    // and say what scripts form it
+	    Report::Error (_("A dependency loop was detected.
+Further dependency checking will be disabled."));
+	    dependencies_disabled = true;
+	}
+
 	// filter system facilities
 	sorted = filter (string f, sorted, ``(substring (f, 0, 1) != "$"));
 	// remove the original service
