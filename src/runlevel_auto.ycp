@@ -1,8 +1,8 @@
 /**
- * File:	clients/RunlevelEd_auto.ycp
- * Package:	Configuration of RunlevelEd
+ * File:	clients/runlevel_auto.ycp
+ * Package:	Configuration of Runlevel
  * Summary:	Client for autoinstallation
- * Authors:	XXmaintainerXX <XXemailXX>
+ * Authors:	nashif@suse.de
  *
  * $Id$
  *
