@@ -1,0 +1,130 @@
+/**
+ * File:
+ *  runlevel.ycp
+ * Module:
+ *  Runlevel editor.
+ * Summary:
+ *  Main file of runlevel editor.
+ * Authors:
+ *  Petr Blahos <pblahos@suse.cz>, 2001
+ *
+ * $Id$
+ *
+ * Main file of runlevel editor.   
+ */
+{
+    textdomain "runlevel";
+
+    include "ui/wizard_dialog.ycp";
+    include "ui/progress.ycp";
+    include "wizard/sequencer.ycp";
+
+    // function for reading/manipulating services
+    include "runlevel/services.ycp";
+    include "runlevel/ui.ycp";
+    
+    include "browser.ycp";
+
+    //
+    // globals
+    //
+
+    // list of runlevels. e.g. [ "0", "1", "2", "S" ]
+    // taken from ls /etc/init.d/rc?.d
+    list runlevels = [];
+
+    string default_runlevel = "";
+    
+    // all services detected in /etc/init.d
+    // there is "service" : map
+    // map will be described later
+    /*
+      "servicename" : $[
+        "defstart" : [ "2", "3", "5", ], // Default-Start comment
+        "defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
+        
+        "reqstart" : [ "$network", "portmap" ], // Required-Start comment
+        "reqstop"  : [ "$network", "portmap" ], // Required-Stop  comment
+
+        "description" : "text...",       // Description comment
+
+        "start" : [ "3", "5", ], // which runlevels service is really started/stopped in
+        "stop"  : [ "3", "5", ], // read from /etc/init.d/rc?.d/* links
+
+        "started" : "0", // return from rcservice status
+
+        "START" : [ "START_ALSA", "START_ALSA_SEQ", ], // START_ variables used in this script
+
+        "dirty" : false, // was the entry changed?
+      ]
+     */
+    map services = $[];
+
+    // services that have been chaged in this run
+    // are placed to this map to 
+    map changed_services = $[];
+    
+    // currently selected service
+    string current_service = "";
+
+    readRunlevelList ();
+
+    UI (``{
+        CreateWizardDialog ();
+        DisableWizardAbortButton ();
+        ProgressSetupUI (_("Initializing runlevel editor. Please wait."),
+                         "",
+                         size (runlevels) + 3,
+                         [],
+                         // help text
+                         "");
+    });
+
+    integer current_step = 0;
+    readServiceList ();
+    current_step = current_step + 1;
+    ProgressStep (current_step);
+    getScriptsInfo ();
+    current_step = current_step + 1;
+    ProgressStep (current_step);
+    // fixme...
+    getStartedInfo ();
+    current_step = current_step + 1;
+    ProgressStep (current_step);
+
+    foreach (`i, runlevels, ``{
+        readServicesRL (i);
+        current_step = current_step + 1;
+        ProgressStep (current_step);
+    });
+
+    readDefaultRunlevel ();
+    
+    //
+    // define maps for sequencer
+    //
+    map aliases = $[
+        "start" :            ``(runMain ()),
+        "complex" :          ``(runServices ()),
+        "edit" :             ``(runEditService ()),
+        ];
+
+    map main_sequence = $[
+        "ws_start" : "start",
+        "start" : $[ `next : `finish , `abort : `abort, `edit : "complex", ],
+        "complex" : $[ `next : `finish, `abort : `abort, `edit : "edit" ],
+        "edit" : $[ `next : "complex", `abort : `abort , ],
+        ];
+
+    if (`finish == WizardSequencer (aliases, main_sequence))
+        {
+            // save changes...
+            foreach (`k, `v, services, ``{
+                if (lookup (v, "dirty", false))
+                    {
+                        y2error ("--- %1 was changed", k);
+                    }
+            });
+        }
+    UI (`CloseDialog ());
+}

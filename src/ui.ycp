@@ -1,0 +1,307 @@
+
+{
+    include "ui/common_popups.ycp";
+    
+    global define getHelp ()``{
+        return "<P><BIG><B>Dummy runlevel editor</B></BIG><BR>It works over test data.</P>";
+    }
+    
+
+    /**
+     * Create table items from services.
+     */
+    global define servicesToTable () ``{
+        list items = [];
+        foreach (`k, `v, services, ``{
+            term item = `item (`id (k));
+            // started?
+            string started = lookup (v, "started");
+            string started_text = "???";
+            if ("0" == started)
+                {
+                    started_text = "Yes";
+                }
+            else if (nil != started)
+                {
+                    started_text = "No";
+                }
+            item = add (item, started_text);
+            // service name
+            item = add (item, k);
+            // runlevels
+            list rl = lookup (v, "start", []);
+            foreach (`i, runlevels, ``{
+                item = add (item, (contains (rl, i)? "#" : ""));
+            });
+            items = add (items, item);
+        });
+        return items;
+    }
+
+    global define runMain () ``{
+        list levels = [];
+        foreach (`i, runlevels, ``{
+            if ("6" != i && "0" != i && "S" != i)
+                {
+                    levels = add (levels, `item (`id (i), i, default_runlevel == i));
+                }
+        });
+        return UI (``{
+            term contents = `VBox (
+                `VSpacing (1),
+                `Label (`opt (`hstretch), _("Current runlevel:\n5")),
+                `VSpacing (1),
+                `HBox (`ComboBox (_("Default runlevel: "), levels), `HStretch ()),
+                `VStretch (),
+                `PushButton (`id (`edit), _("Edit &runlevels...")),
+                `PushButton (`id (`overview), _("Services &overview...")),
+                `PushButton (`id (`rcconfig), _("&RC-config editor...")),
+                `VStretch ()
+                );
+            SetWizardContents (_("Runlevel editor"), contents, getHelp (), true, true);
+            ReplaceWizardNextButton (`PushButton (`id (`next), "&Finish"));
+            return UserInput ();
+        });
+    }
+
+    global define runServices () ``{
+        term header = `header ("Started", "Service");
+        foreach (`i, runlevels, ``{
+            header = add (header, i);
+        });
+        UI (``{
+            term contents = `VBox (
+                `Table (`id (`table),
+                        header,
+                        servicesToTable ()
+                    ),
+                `HBox (
+                    `PushButton (`id (`edit), "&Edit"),
+                    `HStretch (),
+                    `PushButton (`id (`start), "&Start"),
+                    `PushButton (`id (`start), "S&top")
+//                    `PushButton (`id (`switch), "Show &runlevels")
+                    )
+                );
+            SetWizardContents (_("Runlevel editor"), contents, getHelp (), true, true);
+        });
+        any ret = nil;
+        while (`next != ret && `back != ret && `abort != ret && `edit != ret)
+            {
+                ret = UI (`UserInput ());
+                if (`edit == ret)
+                    {
+                        current_service = UI (`QueryWidget (`id (`table), `CurrentItem));
+                        if (haskey (services, current_service))
+                            {
+                                break;
+                            }
+                    }
+            }
+        return ret;
+    }
+
+    global define runRunlevels () ``{
+        UI (``{
+            term contents = `VBox (
+                `RadioButtonGroup (`id (`runlevel),
+                                   `HBox(
+                                       `Label ("Runlevel:"),
+                                       `HStretch (),
+                                       `RadioButton ("0"),
+                                       `RadioButton ("1"),
+                                       `RadioButton ("2"),
+                                       `RadioButton ("3", true),
+                                       `RadioButton ("5"),
+                                       `RadioButton ("6"),
+                                       `HStretch ())
+                    ),
+                `HBox (
+                    `HWeight (1, `VBox (
+                        `Label (`opt (`hstretch), "Start:"),
+                        `Table (`id (`start),
+                                `header ("Service", "Order"),
+                                [
+                                    `item (`id (1), "ampd" , "01" ),
+                                    `item (`id (2), "dhclient" , "02" ),
+                                    `item (`id (3), "network" , "05" ),
+                                    `item (`id (4), "route" , "07" ),
+                                    `item (`id (5), "cups" , "10" ),
+                                    `item (`id (6), "gpm", "auto"),
+                                ]
+                            ),
+                        `HBox (`PushButton (`id (`startup), "Up"), `PushButton (`id (`startdown),"Down"), `HStretch())
+                        )),
+                    `HWeight (1, `VBox (
+                        `Label (`opt (`hstretch), "Stop:"),
+                        `Table (`id (`stop),
+                                `header ("Service", "Order"),
+                                [
+                                    `item (`id (1), "ampd" , "22" ),
+                                    `item (`id (2), "dhclient" , "21" ),
+                                    `item (`id (3), "network" , "18" ),
+                                    `item (`id (4), "route" , "16" ),
+                                    `item (`id (5), "cups" , "13" ),
+                                    `item (`id (6), "gpm", "auto"),
+                                ]
+                            ),
+                        `HBox (`PushButton (`id (`stopup), "Up"), `PushButton (`id (`stopdown),"Down"), `HStretch())
+                        ))
+                    ),
+                `HBox (
+                    `PushButton (`id (`edit), "&Edit"),
+                    `HStretch (),
+                    `PushButton (`id (`switch), "Show &services")
+                    )
+                );
+            SetWizardContents (_("Runlevel editor"), contents, getHelp (), true, true);
+            UserInput ();
+        });
+    }
+
+    global define runEditService () ``{
+        map work_services = services;
+
+        define changeService () ``{
+            map service = lookup (work_services, current_service, $[]);
+            string st = lookup (service, "started");
+            if (nil == st)
+                {
+                    st = serviceStatus (current_service);
+                }
+            UI (``{
+                list start = lookup (service, "start", []);
+                foreach (`i, runlevels, ``{
+                    ChangeWidget (`id (i), `Value, false);
+                    ChangeWidget (`id (i+i), `Value, false);
+                });
+                foreach (`i, start, ``{
+                    ChangeWidget (`id (i), `Value, true);
+                });
+                foreach (`i, lookup (service, "defstart"), ``{
+                    ChangeWidget (`id (i+i), `Value, true);
+                });
+                string richtext = "<UL><LI>" + lookup (service, "description") + "</LI>";
+                // add is running? here.
+                start = lookup (service, "START", []);
+                if (0 != size (start))
+                    {
+                        richtext = richtext + "<LI>Uses <B>Start-Variables:</B> ";
+                        foreach (`i, lookup (service, "START", []), ``{
+                            richtext = richtext + i + " ";
+                        });
+                        richtext = richtext + "</LI>";
+                    }
+                if ("0" == st)
+                    {
+                        richtext = richtext + "<LI>Service is <B>running</B> (status <B>0</B>)</LI>";
+                    }
+                else
+                    {
+                        richtext = richtext + sformat ("<LI>Service is <B>not running</B> (status <B>%1</B>)</LI>", st);
+                    }
+                ChangeWidget (`id (`description), `Value, richtext + "</LI>");
+            });
+        }
+        define grabData (map service) ``{
+            list start_in = [];
+            foreach (`i, runlevels, ``{
+                if (UI (`QueryWidget (`id (i), `Value)))
+                    {
+                        start_in = add (start_in, i);
+                    }
+            });
+            if (lookup (service, "start") != start_in)
+                {
+                    service = add (add (service, "start", start_in), "dirty", true);
+                    work_services = add (work_services, current_service, service);
+                }
+        }
+
+        list scripts = [];
+        foreach (`k, `v, work_services, ``{
+            scripts = add (scripts, `item (`id (k), k, k == current_service));
+        });
+        UI (``{
+            term rls = `HBox ();
+            term rlds = `HBox ();
+            foreach (`i, runlevels, ``{
+                rls = add (rls, `CheckBox (`id (i), i));
+                rlds = add (rlds, `CheckBox (`id (i+i), `opt (`disabled), i));
+            });
+            term contents = `VBox (
+                `HBox (
+                    `ComboBox (`id (`service), `opt (`notify), "Service:", scripts),
+                    `HStretch ()),
+                `RichText ( `id (`description),
+                            ""
+                    ),
+                `VSpacing (1),
+                `HBox (
+                    `HWeight (3,`Label (`opt (`hstretch), "Started in:")),
+                    `HWeight (7, rls)),
+                `HBox (
+                    `HWeight (3,`Label (`opt (`hstretch), "Default start:")),
+                    `HWeight (7, rlds)),
+                `VSpacing (1),
+                `HBox (
+                    `PushButton (`id (`start), _("&Overview")),
+                    `HStretch (),
+                    `PushButton (`id (`start), _("&Start")),
+                    `PushButton (`id (`stop), _("S&top"))
+                    ),
+                `VSpacing (1)
+                );
+            SetWizardContents (_("Runlevel editor"), contents, getHelp (), true, true);
+            ChangeWidget (`id (`service), `Value, current_service);
+        });
+        changeService ();
+        any ret = nil;
+        while (`next != ret && `back != ret && `abort != ret)
+            {
+                ret = UI (`UserInput ());
+                if (`service == ret)
+                    {
+                        // save ...
+                        grabData (lookup (work_services, current_service));
+                        // and show new service ...
+                        current_service = UI (`QueryWidget (`id (`service), `Value));
+                        changeService ();
+                    }
+                if (`next == ret)
+                    {
+                        // save ...
+                        grabData (lookup (work_services, current_service));
+                        // replace original services
+                        services = work_services;
+                    }
+                if (`start == ret || `stop == ret)
+                    {
+                        map out = runInitScript (current_service, `start == ret ? "start" : "stop");
+                        string message = "";
+                        if (0 == lookup (out, "exit"))
+                            {
+                                // show an output
+                                message = sformat ("Output from '/etc/init.d/%1 %2':\n\n",
+                                                          current_service,
+                                                          `start == ret ? "start" : "stop")
+                                    + lookup (out, "stdout");
+                            }
+                        else
+                            {
+                                // show an exit code
+                                message = sformat ("Output from '/etc/init.d/%1 %2':\n\n",
+                                                          current_service,
+                                                          `start == ret ? "start" : "stop")
+                                    + lookup (out, "stdout");
+                            }
+                        UI (`MessagePopup (message));
+                        // save ...
+                        grabData (lookup (work_services, current_service));
+                        // and show new service ...
+                        changeService ();
+                    }
+            }
+        return ret;
+    }
+}
