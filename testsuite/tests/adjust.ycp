@@ -190,6 +190,34 @@
         ];
     // lpd script exist
     TEST (`runlevel_adjust ("lpd", "disable"), [READ, WRITE, EXEC], false);
+
+    DUMP ("--- Test disable 4 ---");
+    // already enabled
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "xxx" : $[
+                        "start" : [ "3", "4", ],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "xxx" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ],
+            ],
+        "rc" : $[
+            "system" : "yes",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("xxx", "disable"), [READ, WRITE, EXEC], false);
     
     //
     // TEST SET DEFAULT

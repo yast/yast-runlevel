@@ -133,7 +133,23 @@
 	    {   // is already disabled
 		return ;
 	    }
-	string commandline = sformat ("/sbin/insserv %1,start=", service_name);
+	// has start variable?
+	string commandline = "";
+	if (haskey (start_variables_all, service_name))
+	    {
+		string add_comma = "";
+		list s = lookup (service, "defstart", []);
+		commandline = sformat ("/sbin/insserv %1,start=", service_name);
+		foreach (`i, s, ``{
+		    commandline = commandline + add_comma + i;
+		    add_comma = ",";
+		});
+		SCR::Write (add (.rc.system, lookup (start_variables_all, service_name)), "no");
+	    }
+	else
+	    {
+		commandline = sformat ("/sbin/insserv -r %1", service_name);
+	    }
 	y2milestone ("%1 ===> Running %2", service_name, commandline);
 	SCR::Execute (.target.bash, commandline);
     }

@@ -121,22 +121,34 @@
 		{
 		    // save!
 		    boolean disabled = isDisabled (v); //cache
-		    string commandline = sformat ("/sbin/insserv %1,start=", k);
 		    string add_comma = "";
-		    list start = disabled ? [] : lookup (v, "start", []);
+		    list start = lookup (v, "start", []);
+		    if (disabled)
+			{
+			    start = haskey (start_variables_all, k) ? lookup (v, "defstart", []) : [];
+			}
 		    if (contains (lookup (v, "defstart", []), "B"))
 			{
 			    start = union (start, [ "B" ]);
 			}
-		    foreach (`i, start, ``{
-			commandline = commandline + add_comma + i;
-			add_comma = ",";
-		    });
+		    string commandline = "";
+		    if (size (start)>0)
+			{
+			    commandline = sformat ("/sbin/insserv %1,start=", k);
+			    foreach (`i, start, ``{
+				commandline = commandline + add_comma + i;
+				add_comma = ",";
+			    });
+			}
+		    else
+			{
+			    commandline = sformat ("/sbin/insserv -r %1", k);
+			}
 		    y2milestone ("%1 ===> Running %2", k, commandline);
 		    SCR::Execute (.target.bash, commandline);
-		    if (!disabled && haskey (start_variables_all, k))
+		    if (haskey (start_variables_all, k))
 			{ // set its START variable
-			    SCR::Write (add (.rc.system, lookup (start_variables_all, k)), "yes");
+			    SCR::Write (add (.rc.system, lookup (start_variables_all, k)), disabled ? "no" : "yes");
 			    y2milestone ("%1 ===> Settings START_ variable %2 to yes", k, lookup (start_variables_all, k));
 			}
 		}

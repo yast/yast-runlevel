@@ -55,4 +55,21 @@
         "b" : "START_b",
         ];
     TEST (``(saveServices ()), [] , 0);
+
+    services = $[
+        "a" : $[
+            "dirty" : true,
+            "start" : [],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        "b" : $[
+            "dirty" : true,
+            "start" : [],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        ];
+    start_variables_all = $[
+        "a" : "START_a",
+        ];
+    TEST (``(saveServices ()), [] , 0);
 }
