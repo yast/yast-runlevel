@@ -366,7 +366,7 @@
 	if (!SCR::Read (.init.scripts.exists, name))
 	{
 	    y2error ("Service does not exist: %1", name);
-	    return $[];
+	    return false;
 	}
 	map detail = lookup (SCR::Read (.init.scripts.runlevel, name), name, $[]);
 	return 0 != size (lookup (detail, "start", []));
