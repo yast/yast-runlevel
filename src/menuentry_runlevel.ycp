@@ -49,7 +49,7 @@
                                 // 
                                 _("Launch this module to configure runlevels.")
                                 +
-                                _("<p>You need to be logged in as <i>root</i> in order to do this.</p>")), 
+                                _("<p>You need to be logged in as <i>root</i> to do this.</p>")), 
      
       ////////////////////////////////////////////////////////////////////////////////
       // explanation in YaST2 Control Center                                         //

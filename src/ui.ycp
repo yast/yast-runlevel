@@ -23,59 +23,50 @@
     global define getHelpProgress () ``{
         return
             // help text
-            _("<P><BIG><B>Runlevel editor</B></BIG><BR>
-You may change default runlevel and edit runlevel contents.</P>")
+            _("<P><BIG><B>Runlevel editor intialization</B></BIG><BR>
+Please wait.</P>")
             +
-            // warning in help text
-            _("<P><font color=red>This is an expert tool. Please make sure that you know what you are doing.</font></P>")
+            // warning
+            _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings in the next dialogs, your system may be out of order.</P>")
             ;
     }
 
     global define getHelpMain () ``{
         return
             // help text
-            _("<P><BIG><B>Runlevel editor</B></BIG><BR>
-You may change default runlevel here.
-If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
+            _("<P><BIG><B>Change of default runlevel and detailed start/stop behaviour of system services.</B></BIG></P>")
             +
-            // warning in help text
-            _("<P><font color=red>This is an expert tool. Please make sure that you know what you are doing.</font></P>")
+            // warning
+            _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings in the next dialogs, your system may be out of order.</P>")
+            +
+            // The change does not occure immediately. After reboot system boots into given runlevel.
+            _("<P>The change of <B>default runlevel after booting</B> will be executed after a reboot of your computer.</P>")
+            +
+            _("<P>The button <B>Edit runlevel details...</B>
+ will open a new dialog with full overview about
+ the available services and their actual status
+ with complete manipulation.</P>")
             ;
-        
     }
 
     global define getHelpComplex () ``{
         // help text
         return
             // help text
-            _("<P><BIG><B>Runlevel editor</B></BIG><BR>By clicking checkboxes
- you may select in what runlevels service will run.</P>")
+            _("<P><BIG><B>Changing the default behaviour of all available services</B></BIG></P>")
+            +
+            _("<P><B>Checkboxes 0 to S:</B> Select runlevels in which to run currently selected service in.</P>")
+            +
+            _("<P><B>Menubutton Start/Stop/Refresh:</B> You can start or stop selected service. You can also query its state.</P>")
             +
             // help text
-            _("<P><BIG><B>Set/Reset:</B></BIG><ul>
-<li><B>Reset to default</B><BR>will reset service to the state after fresh installation.</li>
-<li><B>Reset all to default</B><BR>will do the same for all services.</li>
-<li><B>Enable the service</B><BR>In case that service is disabled, this enables it
- and sets it to run in runlevels common for it.</li>
-</ul>The changes will take in effect when after you press <B>Finish</B></P>")
-            +
-            // help text
-            _("<P><BIG><B>Start/Stop now:</B></BIG><br> you will find options to start
- or stop service, or query its state here.
- These actions have immediate effect.</P>")
-            +
-            // warning in help text
-            _("<P><font color=red>This is an expert tool. Please make sure that you know what you are doing.</font></P>")
+            _("<P><B>Menubutton Set/Reset:</B>
+ Select runlevels you want to start currently selected service in.<ul>
+<li><B>Reset to default</B><BR>restores services to their original status upon initial installation.</li>
+<li><B>Reset all to default</B><BR>does the same for all services.</li>
+<li><B>Enable the service</B><BR>Enables deactivated services and sets them to run in common runlevels.</li>
+</ul></P>")
             ;
-    }
-
-    global define getRunlevelRich () ``{
-        // goes into help-text. %1 is replaced by one of S 0 1 2 3 5 6
-        return sformat (_("<P>Current runlevel is %1</P><HR>"), current_runlevel);
-    }
-
-    global define getServiceDescription (string service) ``{
-        return "<P><BIG><B>" + service + "</B></BIG><BR>"+ lookup (lookup (services, service), "description") + "</P><HR>";
     }
 
     /**
@@ -104,7 +95,8 @@ If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
             item = add (item, started_text);
             list rl = lookup (v, "start", []);
             foreach (`i, runlevels, ``{
-                item = add (item, (contains (rl, i)? "#" : ""));
+                item = add (item, (contains (rl, i)? i : " "));
+//                item = add (item, (contains (rl, i)? UI (`Glyph (`CheckMark)) : "   "));
             });
             if (first)
                 {
@@ -126,24 +118,50 @@ If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
                 }
         });
         term contents = `VBox (
-            `VSpacing (2),
+            `VStretch (),
             // label in dialog
-            `Label (`opt (`hstretch),_("Current runlevel is:")),
-            `Label (`opt (`outputField, `hstretch), getRunlevelDescr (current_runlevel)),
-            `VSpacing (2),
-            // combo box label
-            `ComboBox (`id (`default), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker ()),
+            `HBox (
+                `HSpacing (1),
+                `Frame (
+                    _("Changing default runlevel"),
+                    `HBox (
+                        `HSpacing (2),
+                        `VBox (
+                            `VSpacing (1),
+                            `Label (`opt (`hstretch),_("Current runlevel is:")),
+                            `Label (`opt (`outputField, `hstretch), getRunlevelDescr (current_runlevel)),
+                            `VSpacing (1),
+                            // combo box label
+                            `ComboBox (`id (`default), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker ()),
+                            `VSpacing (1)
+                            ),
+                        `HSpacing (2)
+                        )
+                    ),
+                `HSpacing (1)
+                ),
             `VStretch (),
             // pushbutton
-            `PushButton (`id (`edit), _("Edit &runlevels...")),
+            `PushButton (`id (`edit), _("Edit &runlevel details...")),
             `VStretch ()
             );
         // window label
-        UI (`SetWizardContents (_("Runlevel editor"), contents, getRunlevelRich () + getHelpMain (), true, true));
+        UI (`SetWizardContents (_("Runlevel editor"), contents, getHelpMain (), true, true));
         UI (`ReplaceWizardNextButton (`PushButton (`id (`next), FinishButtonLabel())));
         return UI (``{
             return UserInput ();
         });
+        do_abort_now = UI (`AnyQuestionPopup (
+            // abort question: label
+            _("Exit without saving"),
+            // abort question: text
+            _("All your changes in the setup procedure\nwill be lost if you continue."),
+            // abort question: exit button
+            _("&Exit without saving"),
+            // abort question: go back button
+            _("&Cancel abort"),
+            `focus_yes
+            ));
     }
     global define getRunlevelDescr (string rl) ``{
         return lookup ($[
@@ -207,7 +225,7 @@ If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
                         UI (`ChangeWidget (`id (i), `Value, true));
                     });
                 }
-            UI (`ChangeWidget (`id (`help), `Value, getRunlevelRich () + getServiceDescription (current_service) + getHelpComplex ()));
+            UI (`ChangeWidget (`id (`help), `Value, getHelpComplex ()));
 
             list menu_items = [
                 // menu item
@@ -240,7 +258,7 @@ If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
         // headers in table
         term header = `header (_("Service"), _("Running"));
         foreach (`i, runlevels, ``{
-            header = add (header, i);
+            header = add (header, `Center (i));
         });
         term rls = `HBox ();
         foreach (`i, runlevels, ``{
@@ -249,6 +267,12 @@ If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
         // headers in table
         header = add (header, _("Description"));
         term contents = `VBox (
+            `VSpacing (0.5),
+            `HBox (
+                // preserve 2 spaces at the end.
+                `Label (_("Current runlevel:  ")),
+                `Label (`opt (`outputField, `hstretch), getRunlevelDescr (current_runlevel))
+                ),
             `VSpacing (0.5),
             `Table (`id (`table), `opt (`notify, `immediate),
                     header,
@@ -279,13 +303,23 @@ If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
                 )
             );
         // dialog caption. 
-        UI (`SetWizardContents (_("Runlevel editor"), contents, getRunlevelRich () + getHelpComplex (), true, true));
+        UI (`SetWizardContents (_("Runlevel editor"), contents, getHelpComplex (), true, true));
         // this ChangeWidget causes next UserInput will return `table FIXME does not work in ncurses
         UI (`ChangeWidget (`id (`table), `CurrentItem, current_service));
         any ret = nil;
         while (`next != ret && `back != ret && `abort != ret)
             {
                 ret = UI (`UserInput ());
+                if (`next == ret)
+                    {
+                        // save changes...
+                        if (UI (`YesNoPopup (_("Now the changes to runlevels \nwill be saved."))))
+                            {
+                                UI (`MessagePopup (_("The new configuration \nwas stored successfully.")));
+                                break;
+                            }
+                        ret = nil;
+                    }
                 if (`table == ret)
                     {
                         current_service = UI (`QueryWidget (`id (`table), `CurrentItem));
@@ -300,6 +334,8 @@ If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
                     }
                 if (`to_all_default == ret)
                     {
+                        UI (`MessagePopup (_("Do you really want to restore all services to their\noriginal status upon initial installation?")));
+                        UI (`MessagePopup (_("All services restored to their original\nstatus upon initial installation.")));
                     }
                 if (`start == ret || `stop == ret || `status == ret)
                     {
@@ -329,7 +365,8 @@ If you want to edit runlevel contents, press <B>Edit runlevels</B></P>")
                     {
                         // checkbox pressed
                         // checked of unchecked?
-                        string checked = ((UI (`QueryWidget (`id (ret), `Value))) ? "#" : "");
+//                        string checked = ((UI (`QueryWidget (`id (ret), `Value))) ? UI (`Glyph (`CheckMark)) : "   ");
+                        string checked = ((UI (`QueryWidget (`id (ret), `Value))) ? ret : " ");
                         grabData ();
                         UI (`ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret)), checked));
                     }
