@@ -1,0 +1,6 @@
+Dump	TopologicalSort
+Dump	[]
+Dump	nil
+Dump	["v1", "v10", "v5", "v7", "v8", "v2", "v9", "v3", "v4", "v6"]
+Dump	ReachableSubgraph
+Dump	$["v1":["v2", "v3"], "v2":["v3", "v4"], "v3":["v6"], "v4":["v6"], "v6":[]]

@@ -1,0 +1,95 @@
+/**
+ * File:
+ *   toposort.ycp
+ *
+ * Module:
+ *   Runlevel Editor
+ *
+ * Summary:
+ *   Topological sorting for script dependencies
+ *
+ * Authors:
+ *   Martin Vidner <mvidner@suse.cz>
+ *
+ * $Id$
+ */
+
+{
+    /**
+     * (what if the graph is a multigraph??)
+     * @param g A directed acyclic graph as a map:
+     *  nodes are keys, values are lists of nodes that are reached
+     *  by an edge from the respective key.
+     * @return a list containing the keys of the map in topological order
+     *  or nil if the graph is cyclic
+     *  (or a partial result and an indication of where the cycle is?)
+     */
+    global define list(string) TopologicalSort (map g) ``{
+	list out = [];
+	map in_degree = mapmap (any vertex, list targets, g, ``([vertex, 0]));
+	foreach (any vertex, list targets, g, ``{
+	    foreach (any target, targets, ``{
+		in_degree[target] = in_degree[target]:0 + 1;
+	    });
+	});
+
+	// cycle
+	while (size (in_degree) > 0)
+	{
+	    // get the vertices that can go next because they have zero in degree
+	    map next_m = filter (any vertex, integer d, in_degree, ``(d == 0));
+	    if (size (next_m) == 0)
+	    {
+		// the graph is cyclic!
+		return nil;
+	    }
+	    foreach (any vertex, any dummy, next_m, ``{
+		out = add (out, vertex);
+	    });
+	    // remove the vertices
+	    in_degree = filter (any vertex, integer d, in_degree, ``(d != 0));
+	    // remove the edges that were leading from them
+	    foreach (any vertex, any dummy, next_m, ``{
+		foreach (any target, g[vertex]:[], ``{
+		    in_degree[target] = in_degree[target]:0 - 1;
+		});
+	    });
+	}
+	return out;
+    }
+
+    /**
+     * Make a subgraph of g, starting at start
+     */
+    global define map ReachableSubgraph (map g, any start) ``{
+	// a breadth-first search
+	map result = $[];
+	// seen and next_layer are sets, realized as maps with dummy values
+	map seen = $[];
+//	map next_layer = $[start: true]; //AARGH! YCP!! #16701
+	map next_layer = add ($[], start, true);
+	do
+	{
+	    map current_layer = next_layer;
+	    next_layer = $[];
+	    foreach (any node, any dummy, current_layer, ``{
+		// action: add the node and edges
+		result = add (result, node, g[node]:[]);
+
+		// next
+		seen = add (seen, node, true);
+		// targets from this node.
+		// filter the ones already seen (including itself)
+		list targets = filter (any target, g[node]:[],
+				       ``( !haskey (seen, target)));
+		foreach (any target, targets, ``{
+		    next_layer = add (next_layer, target, true);
+		});
+	    });
+	}
+	while (size (next_layer) > 0);
+	return result;
+    }
+
+
+}
