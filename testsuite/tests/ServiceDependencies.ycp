@@ -1,6 +1,8 @@
 // test for Read and related functions
 {
     map comments = SCR::Read (.target.ycp, "tests/scripts.ycp.out");
+    map insserv_conf = SCR::Read (.target.ycp, "tests/insserv_conf.ycp.out");
+
     include "testsuite.ycp";
     import "Progress";
     Progress::off ();
@@ -10,15 +12,6 @@
     include "runlevel/toposort.ycp";
 
     DUMP (size (comments));
-
-    map insserv_conf = $[
-	"$local_fs":["boot"],
-	"$named":["named"],
-	"$netdaemons":["portmap", "inetd"],
-	"$network":["network", "pcmcia", "hotplug"],
-	"$remote_fs":["$local_fs", "nfs"],
-	"$syslog":["syslog"],
-	];
 
     // assume all the services are enabled
     map all_enabled = mapmap (string service, map descr, comments, ``(
