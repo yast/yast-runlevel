@@ -1,0 +1,9 @@
+# -*- Makefile -*-
+depviz.ps: depviz.dot
+	dot -Tps -o$@ $<
+
+# make, make install into test area
+# run yast from test area
+depviz.dot: scripts.ycp.out depviz.ycp RunlevelEd.ycp
+	mmit
+	yt depviz.ycp > $@

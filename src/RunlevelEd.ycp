@@ -678,13 +678,22 @@ Further dependency checking will be disabled."));
      * @return a graphviz graph of the service dependencies
      */
     global define string DotRequires () ``{
+	map in_attr = $[
+	    "$remote_fs": "[color=yellow, minlen=2]",
+	    "$local_fs": "[color=green, minlen=2]",
+	    "$network": "[color=magenta, minlen=2]",
+	    "$syslog": "[color=cyan, minlen=2]",
+	    ];
 	sprint_buffer = "";
 	sprint ("digraph services {\n");
 	sprint ("\trankdir=LR;\n");
 	sprint ("\t\"!missing\"[rank=max];\n");
+	sprint ("\t\"$syslog\" -> \"$network\" [style=invis, minlen=10];\n");
+	sprint ("\t\"$remote_fs\" -> \"$syslog\" [style=invis, minlen=5];\n");
 	foreach (string n, list e, requires, ``{
 	    foreach (string target, e, ``{
-		sprint (sformat ("\t\"%1\" -> \"%2\";\n", n, target));
+		string attr = in_attr[target]:"";
+		sprint (sformat ("\t\"%1\" -> \"%2\"%3;\n", n, target, attr));
 	    });
 	});
 	sprint ("}\n");
