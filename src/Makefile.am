@@ -23,7 +23,7 @@ include_DATA =		\
 
 modules_DATA = Runlevel.ycp
 
-menu_DATA = menuentry_runlevel.ycp
+menu_DATA = menuentry_runlevel.y2cc
 
 EXTRA_DIST = $(clients_DATA) $(include_DATA) $(menu_DATA) $(agents_SCRIPTS) $(scrconf_DATA) $(modules_DATA)
 
