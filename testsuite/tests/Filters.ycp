@@ -25,9 +25,10 @@
 
     DUMP ("enable");
     DUMP (svcs);
-    TEST (``(RunlevelEd::FilterEnableDisable (svcs, "4", true)), [], nil);
-    TEST (``(RunlevelEd::FilterEnableDisable (svcs, "5", true)), [], nil);
-    TEST (``(RunlevelEd::FilterEnableDisableSet (svcs, ["4", "5"], true)), [], nil);
+    //args: svcs, rls, enable, init_time, run_time
+    TEST (``(RunlevelEd::FilterAlreadyDoneServices (svcs, ["4"], true, true, false)), [], nil);
+    TEST (``(RunlevelEd::FilterAlreadyDoneServices (svcs, ["5"], true, true, false)), [], nil);
+    TEST (``(RunlevelEd::FilterAlreadyDoneServices (svcs, ["4", "5"], true, true, false)), [], nil);
 
     // it does not make sense to disable a boot service automatically.
     // it would mean it requires a non-boot service, ie. broken service design
@@ -37,9 +38,9 @@
 
     DUMP ("disable");
     DUMP (svcs);
-    TEST (``(RunlevelEd::FilterEnableDisable (svcs, "4", false)), [], nil);
-    TEST (``(RunlevelEd::FilterEnableDisable (svcs, "5", false)), [], nil);
+    TEST (``(RunlevelEd::FilterAlreadyDoneServices (svcs, ["4"], false, true, false)), [], nil);
+    TEST (``(RunlevelEd::FilterAlreadyDoneServices (svcs, ["5"], false, true, false)), [], nil);
     // not implemented, will fail
-    TEST (``(RunlevelEd::FilterEnableDisableSet (svcs, ["4", "5"], false)), [], nil);
-    TEST (``(RunlevelEd::FilterEnableDisableSet (svcs, nil, false)), [], nil);
+    TEST (``(RunlevelEd::FilterAlreadyDoneServices (svcs, ["4", "5"], false, true, false)), [], nil);
+    TEST (``(RunlevelEd::FilterAlreadyDoneServices (svcs, nil, false, true, false)), [], nil);
 }

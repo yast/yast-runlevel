@@ -34,22 +34,11 @@
     // when fetching_service_status becomes false, we stop fetching services
     boolean fetching_service_status = true;
 
-    string current_service = "";
-
-    // index into table column for each runlevel
-    map runlevel2tableindex = $[];
-
     Wizard::CreateDialog ();
     Wizard::DisableAbortButton ();
     Wizard::RestoreHelp (getHelpProgress ());
 
     RunlevelEd::Read ();
-
-    integer id = 2;
-    foreach (`i, RunlevelEd::runlevels, ``{
-	runlevel2tableindex = add (runlevel2tableindex, i, id);
-	id = id + 1;
-    });
 
     //
     // maps for sequencer
@@ -82,9 +71,11 @@
 
     if (`finish == WizardSequencer (aliases, main_sequence))
     {
-	RunlevelEd::Write ();
-	// message popup
-	Popup::Message (_("The new configuration \nwas saved successfully."));
+	if (RunlevelEd::Write ())
+	{
+	    // message popup
+	    Popup::Message (_("The new configuration \nwas saved successfully."));
+	}
     }
     UI::CloseDialog ();
 }
