@@ -29,7 +29,7 @@
      *   and "out" is a partial result
      */
     define list< list<string> > TopologicalSort (map<string, list<string> > g) ``{
-	list out = [];
+	list<string> out = [];
 	map<string, integer> in_degree = (map<string, integer>) mapmap (string vertex, list<string> targets, g, ``($[vertex: 0]));
         foreach (string vertex, list<string> targets, g, ``{
 	    foreach (string target, targets, ``{
