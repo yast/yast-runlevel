@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Sep 10 12:32:39 CEST 2001 - pblahos@suse.cz
+
+- skips boot.orig 
+
+-------------------------------------------------------------------
 Fri Sep  7 11:41:01 CEST 2001 - pblahos@suse.cz
 
 - Use insserv -r service to remove service from all runlevels.
