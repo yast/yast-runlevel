@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon May 13 10:51:01 CEST 2002 - mvidner@suse.cz
+
+- Testsuite fixed.
+- Code cleanup (new maintainer).
+- 2.6.3
+
+-------------------------------------------------------------------
 Thu Apr 18 14:48:21 CEST 2002 - pblahos@suse.cz
 
 - Works with automake-1.6.1
