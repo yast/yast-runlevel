@@ -35,6 +35,7 @@
 	"reqstart" : [ "$network", "portmap" ], // Required-Start comment
 	"reqstop"  : [ "$network", "portmap" ], // Required-Stop  comment
 
+	"shortdescription" : "text...",       // Description comment
 	"description" : "text...",       // Description comment
 
 	// which runlevels service is really started/stopped in
@@ -69,6 +70,7 @@
 
     /**
      * List of all service names.
+     * Filled by Read, used to get all services' status.
      */
     global list service_list = [];
 
@@ -558,8 +560,8 @@ Further dependency checking will be disabled."));
 		{
 		    map info = Runlevel::ServiceInfo(name);
 		    y2milestone("service info for %1: %2", name, info);
-		    start = info["start"]:[];
-		    stop = info["stop"]:[];
+		    start = info["defstart"]:[];
+		    stop = info["defstop"]:[];
 		}
 		else if (service["service_status"]:"" == "disable")
 		{
