@@ -1,5 +1,7 @@
 // tests for FilterEnableDisable{,Set} and related functions
 {
+    // testedfiles: RunlevelEd.ycp Testsuite.ycp
+
     include "testsuite.ycp";
     import "RunlevelEd";
 

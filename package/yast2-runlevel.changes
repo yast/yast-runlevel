@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jun 17 10:59:29 CEST 2004 - mvidner@suse.cz
+
+- Added "testedfiles" to test cases to make it work with the new testsuite.
+- 2.10.0
+
+-------------------------------------------------------------------
 Sat May 22 17:21:08 CEST 2004 - nashif@suse.de
 
 - Always export runlevel for autoyast (#41340)

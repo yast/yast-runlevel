@@ -4,6 +4,8 @@
  * tests function saveServices
  */
 {
+    // testedfiles: RunlevelEd.ycp Service.ycp Testsuite.ycp
+
     include "testsuite.ycp";
     import "RunlevelEd";
     import "Progress";

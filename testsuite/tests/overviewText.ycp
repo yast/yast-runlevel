@@ -1,5 +1,7 @@
 // tests overviewText
 {
+    // testedfiles: ui.ycp Testsuite.ycp
+
     include "testsuite.ycp";
     import "RunlevelEd";
     include "runlevel/ui.ycp";

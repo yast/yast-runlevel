@@ -5,6 +5,8 @@
  * TODO to be replaced by real data when #16706 is resolved
  */
 {
+    // testedfiles: RunlevelEd.ycp Testsuite.ycp
+
     include "testsuite.ycp";
     import "RunlevelEd";
     import "Progress";
