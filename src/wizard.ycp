@@ -100,13 +100,23 @@ symbol RunlevelSequence() {
 
 symbol RunlevelAutoSequence() {
 
+    map aliases = $[
+	"auto" :          ``(AutoDialog ()),
+    ];
+
+    map auto_sequence = $[
+	"ws_start" : "auto",
+	"auto" : $[ `next : `finish, `abort : `abort ],
+    ];
+
+
     Wizard::CreateDialog ();
     Wizard::SetDesktopIcon("runlevel");
     Wizard::DisableAbortButton ();
     Wizard::RestoreHelp (getHelpProgress ());
 
-    symbol ret = MainSequence();
-
+    symbol ret = Sequencer::Run (aliases, auto_sequence);
+    
     UI::CloseDialog();
     return ret;
 

@@ -1271,7 +1271,7 @@ Likewise, <b>Deactivate</b> stops services that depend on a given service
 and the service itself and disables their start at system boot time.</p>")
 	    +
 	    // help text
-	    _("<p>An asterisk (*) after a service status means that the service is enabled but not running or is disabled but running now.")
+	    _("<p>An asterisk (*) after a service status means that the service is enabled but not running or is disabled but running now.</p>")
 	    +
 	    // help text
 	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Expert Mode</b>.</p>\n")
