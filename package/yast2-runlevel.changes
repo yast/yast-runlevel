@@ -1,9 +1,9 @@
 -------------------------------------------------------------------
-Mon Mar  8 15:33:22 CET 2004 - mvidner@suse.cz
+Mon Mar  8 15:34:55 CET 2004 - mvidner@suse.cz
 
 - do not cache the proposal of the default run level (#35292)
 - using Service instead of Runlevel
-- 2.9.7
+- 2.9.8
 
 -------------------------------------------------------------------
 Sun Mar  7 23:14:22 CET 2004 - kkaempf@suse.de
