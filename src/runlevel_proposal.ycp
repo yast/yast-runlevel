@@ -17,7 +17,6 @@ y2milestone("Runlevel proposal started");
 y2milestone("Arguments: %1", WFM::Args());
 
 import "Label";
-import "Progress";
 import "RunlevelEd";
 import "Summary";
 import "Arch";

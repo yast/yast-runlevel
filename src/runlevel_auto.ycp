@@ -29,7 +29,6 @@ import "RunlevelEd";
 import "Progress";
 import "Wizard";
 import "Sequencer";
-import "Progress";
 
 include "runlevel/wizard.ycp";
 
@@ -66,10 +65,10 @@ map main_sequence = $[
 
 /* Import Data*/
 if(func == "Import") {
-    Progress::off (); 
+    boolean po = Progress::set(false); 
     RunlevelEd::Read (); 
     ret = RunlevelEd::Import(param); 
-    Progress::on(); 
+    Progress::set(po); 
 }
 /* Create a  summary*/
 else if(func == "Summary") {
@@ -96,9 +95,9 @@ else if (func == "Change") {
 }
 /* Read Configuration  */
 else if (func == "Read") {
-    Progress::off();
+    boolean po = Progress::set(false);
     ret = RunlevelEd::Read();
-    Progress::on();
+    Progress::set(po);
 }
 /* Return actual state */
 else if (func == "Export") {
@@ -109,9 +108,9 @@ else if (func == "Packages") {
 }
 /* Write givven settings */
 else if (func == "Write") {
-    Progress::off();
+    boolean po = Progress::set(false);
     ret = RunlevelEd::Write();
-    Progress::on();
+    Progress::set(po);
 }
 else if (func == "SetModified") {
     ret = RunlevelEd::SetModified ();
