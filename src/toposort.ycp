@@ -28,7 +28,7 @@
      *   a superset of the nodes forming the cycle
      *   and "out" is a partial result
      */
-    global define list< list<string> > TopologicalSort (map<string, list<string> > g) ``{
+    define list< list<string> > TopologicalSort (map<string, list<string> > g) ``{
 	list out = [];
 	map<string, integer> in_degree = (map<string, integer>) mapmap (string vertex, list<string> targets, g, ``($[vertex: 0]));
         foreach (string vertex, list<string> targets, g, ``{
@@ -77,7 +77,7 @@
      * @param start starting node
      * @return the reachable subgraph
      */
-    global define map<string, list<string> > ReachableSubgraph (map<string, list<string> > g, string start) ``{
+    define map<string, list<string> > ReachableSubgraph (map<string, list<string> > g, string start) ``{
 	// a breadth-first search
 	map<string, list<string> >  result = $[];
 	// seen and next_layer are sets, realized as maps with dummy values
@@ -111,7 +111,7 @@
      * @param g a graph
      * @return reversed graph
      */
-    global define map<string, list<string> > ReverseGraph (map<string, list<string> > g) ``{
+    define map<string, list<string> > ReverseGraph (map<string, list<string> > g) ``{
 	// initialize, otherwise we miss nodes with zero in-degree
 	map<string, list<string> > rev = (map<string, list<string> >) mapmap (string node, list<string> dummy, g, ``( $[node: []] ));
 	foreach (string source, list<string> targets, g, ``{

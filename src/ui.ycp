@@ -26,38 +26,38 @@
     import "Label";
     import "Popup";
 
-    global define string StartedText (integer started);
-    global define list mapkeys (map m);
-    global define string formatLine (list<string> l, integer len);
-    global define list startStopService (string service_name, string command);
-    global define boolean LongContinueCancelHeadlinePopup (string headline, term richtext, integer hdim, integer vdim);
-    global define void setServiceToDefault (string service_name);
-    global define map<string, boolean> tomap_true (list<string> l);
+    define string StartedText (integer started);
+    define list mapkeys (map m);
+    define string formatLine (list<string> l, integer len);
+    define list startStopService (string service_name, string command);
+    define boolean LongContinueCancelHeadlinePopup (string headline, term richtext, integer hdim, integer vdim);
+    define void setServiceToDefault (string service_name);
+    define map<string, boolean> tomap_true (list<string> l);
 
-    global string current_service = "";
+    string current_service = "";
 
 
     // UI "slots"
     // update parts of the UI
 
-    global string CheckMark = UI::Glyph (`CheckMark);
+    string CheckMark = UI::Glyph (`CheckMark);
 
     // columns in the table where these items are located
     // -1 means it is not there
-    global integer c_dirty = -1;
-    global integer c_bstatus = -1;
-    global integer c_rstatus = -1;
-    global integer c_runlevels = -1;
-    global integer c_descr = -1;
+    integer c_dirty = -1;
+    integer c_bstatus = -1;
+    integer c_rstatus = -1;
+    integer c_runlevels = -1;
+    integer c_descr = -1;
     // index into table column for each runlevel
-    global map runlevel2tableindex = $[];
+    map runlevel2tableindex = $[];
 
 
     /**
      * Create term of checkboxes for runlevel selection.
      * @return HBox full of checkboxes.
      */
-    global define term getRlCheckBoxes () ``{
+    define term getRlCheckBoxes () ``{
 	term rls = `HBox (`opt (`hstretch));
 	foreach (string i, RunlevelEd::runlevels, ``{
 	    if (size (rls) > 1)
@@ -72,7 +72,7 @@
      * @param service @ref service
      * @param rl which runlevel
      */
-    global define void updateRlCheckBox (map service, string rl) ``{
+    define void updateRlCheckBox (map service, string rl) ``{
 	list start = service["start"]:[];
 	boolean old_notify = (boolean) UI::QueryWidget (`id (rl), `Notify);
 	UI::ChangeWidget (`id (rl), `Notify, false);
@@ -83,7 +83,7 @@
      * Changes values of runlevel checkboxes.
      * @param service @ref service
      */
-    global define void updateRlCheckBoxes (map service) ``{
+    define void updateRlCheckBoxes (map service) ``{
 	foreach (string i, RunlevelEd::runlevels, ``{
 	    updateRlCheckBox (service, i);
 	});
@@ -92,7 +92,7 @@
      * Update the long description text box
      * @param service @ref service
      */
-    global define void updateDescription (map service) ``{
+    define void updateDescription (map service) ``{
 	// For the box, use the long description.
 	// The short one as a fallback. #20853
 	string descr = service["description"]:"";
@@ -108,7 +108,7 @@
      * @param service @ref service
      * @param rls which columns to update, nil == all
      */
-    global define void updateRlColumns (string service_name, map service,
+    define void updateRlColumns (string service_name, map service,
 					list<string> rls) ``{
 	if (c_runlevels == -1)
 	{
@@ -133,7 +133,7 @@
      * @param service @ref service
      * @param started status or -1 (unknown yet)
      */
-    global define void updateSimpleStatusColumn (string service_name,
+    define void updateSimpleStatusColumn (string service_name,
 						 map service) ``{
 	if (c_bstatus == -1)
 	{
@@ -148,7 +148,7 @@
      * @param service_name which line
      * @param started status or -1 (unknown yet)
      */
-    global define void updateStatusColumn (string service_name,
+    define void updateStatusColumn (string service_name,
 					   integer started) ``{
 	if (c_rstatus == -1)
 	{
@@ -163,7 +163,7 @@
      * @param service @ref service
      * @param started status or -1 (unknown yet)
      */
-    global define void updateStatusInTable (string service_name, map service,
+    define void updateStatusInTable (string service_name, map service,
 				     integer started) ``{
 	// just translate the arguments. the callback is generic
 	// because of the future simple UI, bug #13789
@@ -174,7 +174,7 @@
      * Changes values of runlevel checkboxes.
      * Get the status if not known yet.
      */
-    global define void changeService1 (map service) ``{
+    define void changeService1 (map service) ``{
 	if (service["started"]:-1 < 0)
 	{
 	    integer started = Runlevel::RunInitScript (current_service,
@@ -194,7 +194,7 @@
      * @param service @ref service
      * @return @ref service
      */
-    global define map queryRlCheckBoxes (string service_name, map service) ``{
+    define map queryRlCheckBoxes (string service_name, map service) ``{
 	list start_in = [];
 	foreach (string i, RunlevelEd::runlevels, ``{
 	    if ((boolean) UI::QueryWidget (`id (i), `Value))
@@ -219,7 +219,7 @@
      * @param exit exit value
      * @return string help text
      */
-    global define string getActionReturnHelp (integer exit) ``{
+    define string getActionReturnHelp (integer exit) ``{
 	return lookup (
 	    $[
 		// Init script non-status-command return codes
@@ -249,7 +249,7 @@
      * @param exit exit value
      * @return string help text
      */
-    global define string getStatusReturnHelp (integer exit) ``{
+    define string getStatusReturnHelp (integer exit) ``{
 	return lookup (
 	    $[
 		// Init script "status" command return codes
@@ -275,7 +275,7 @@
      * @param mode if `auto, adds Unchanged
      * @return list List of items. Default is selected.
      */
-    global define list getDefaultPicker (symbol mode) ``{
+    define list getDefaultPicker (symbol mode) ``{
 	list items = [];
 	list<string> rls = RunlevelEd::runlevels;
 	if (mode == `auto)
@@ -298,7 +298,7 @@
      * @param	rll	a list of runlevels or nil, meaning "all"
      * @return		"in [these] runlevels" (translated)
      */
-    global define string getInRunlevels (list<string> rll) ``{
+    define string getInRunlevels (list<string> rll) ``{
 	if (rll == nil)
 	{
 	    // translators: substituted into a message like
@@ -321,7 +321,7 @@
      * @param started status or -1 (unknown yet)
      * @return "Yes", "No" or "???"
      */
-    global define string StartedText (integer started) ``{
+    define string StartedText (integer started) ``{
 	return (0 == started ?
 		// is the service started?
 		_("Yes") :
@@ -338,7 +338,7 @@
      * Ask if really abort. Uses boolean changed_settings. Sets boolean do_abort_now.
      * @return boolean true if user really wants to abort
      */
-    global define boolean reallyAbort ()``{
+    define boolean reallyAbort ()``{
 	if (do_abort_now || !RunlevelEd::isDirty ())
 	    {
 		do_abort_now = true;
@@ -360,7 +360,7 @@
      *</pre>
      * @return list List of items for table.
      */
-    global define list servicesToTable (symbol mix) ``{
+    define list servicesToTable (symbol mix) ``{
 	boolean m_dirty = mix == `auto;
 	boolean m_bstatus = mix == `simple;
 	boolean m_rstatus = mix == `complex;
@@ -462,7 +462,7 @@
      * @param func function to call
      * @see updateStatusInTable
      */
-/*    global define void serviceStatusIterator (term func) ``{
+/*    define void serviceStatusIterator (term func) ``{
 	if (!fetching_service_status)
 	{
 	    return;
@@ -489,7 +489,7 @@
     }
 */
     // This is only patch for new interpreter -- we don't like use uncompatible changes to old interpreter
-    global define void serviceStatusIterator (boolean use_func) ``{
+    define void serviceStatusIterator (boolean use_func) ``{
 	if (!fetching_service_status)
 	{
 	    return;
@@ -516,7 +516,7 @@
      * help text for progress
      * @return help text
      */
-    global define string getHelpProgress () ``{
+    define string getHelpProgress () ``{
 	return
 	    // help text
 	    _("<P><BIG><B>Runlevel editor initialization</B></BIG><BR>
@@ -535,7 +535,7 @@ Please wait.</P>")
      * @param rls	which runlevels, nil == disable in all
      * @param enable	enabling or disabling?
      */
-    global define void SetService (string service_name,
+    define void SetService (string service_name,
 				   list<string> rls, boolean enable) ``{
 	map service = RunlevelEd::services[service_name]:$[];
 	list<string> start_in = nil;
@@ -573,7 +573,7 @@ Please wait.</P>")
      * @param services a service list
      * @return [continue?, filtered list]
      */
-    global define list CheckMissingServices (list<string> services) ``{
+    define list CheckMissingServices (list<string> services) ``{
 	list<string> missing = [];
 	boolean ok = true;
 	services = filter (string s, services, ``{
@@ -627,7 +627,7 @@ Please wait.</P>")
      * @param run_time		do start/stop
      * @return success (may have been canceled because of dependencies)
      */
-    global define boolean ModifyServiceDep (string service_name,
+    define boolean ModifyServiceDep (string service_name,
 					    list<string> rls,
 					    boolean enable,
 					    boolean init_time,
@@ -792,7 +792,7 @@ and enabled, because it depends on them:
      * @param rls		in which run levels, nil == all
      * @return success (may have been canceled because of dependencies)
      */
-    global define boolean SimpleSetServiceDep (string service_name,
+    define boolean SimpleSetServiceDep (string service_name,
 					       boolean enable) ``{
 	list<string> rls = enable?
 	    RunlevelEd::services[current_service, "defstart"]:[] :
@@ -809,7 +809,7 @@ and enabled, because it depends on them:
      * @param enable		enable/disable
      * @return success (may have been canceled because of dependencies)
      */
-    global define boolean EnableDisableServiceDep (string service_name,
+    define boolean EnableDisableServiceDep (string service_name,
 						   list<string> rls,
 						   boolean enable) ``{
 	return ModifyServiceDep (service_name, rls, enable, true, false);
@@ -822,7 +822,7 @@ and enabled, because it depends on them:
      * @param enable		start/stop
      * @return success (may have been canceled because of dependencies)
      */
-    global define boolean StartStopServiceDep (string service_name,
+    define boolean StartStopServiceDep (string service_name,
 					       boolean enable) ``{
 	return ModifyServiceDep (service_name, [], enable, false, true);
     }
@@ -834,7 +834,7 @@ and enabled, because it depends on them:
      * @param command "start" or "stop" or "status"
      * @return [integer exit_status, string rich_message]
      */
-    global define list startStopService (string service_name,
+    define list startStopService (string service_name,
 					 string command) ``{
 	UI::OpenDialog (`Label (service_name + " " + command));
 	map out = Runlevel::RunInitScriptOutput (service_name, command);
@@ -876,7 +876,7 @@ and enabled, because it depends on them:
      * @param len minimal length of line
      * @return string formated string
      */
-    global define string formatLine (list<string> l, integer len) ``{
+    define string formatLine (list<string> l, integer len) ``{
 	string s = "";
 	string line = "     ";
 	string add_sep = "";
@@ -907,7 +907,7 @@ and enabled, because it depends on them:
      * or what services run but should not run.
      * @return string overview text
      */
-    global define string overviewText () ``{
+    define string overviewText () ``{
 	list<string> should_not_run = [];
 	list<string> should_run = [];
 	foreach (string k, map v, RunlevelEd::services, ``{
@@ -954,7 +954,7 @@ and enabled, because it depends on them:
      * @param mode `simple or `complex, which one are we in
      * @return RadioButtonGroup term
      */
-    global define term ModeTabs (symbol mode) ``{
+    define term ModeTabs (symbol mode) ``{
 	term rbg =
 	    // fake tabs using radio buttons
 	    `RadioButtonGroup (
@@ -977,7 +977,7 @@ and enabled, because it depends on them:
      * help text services dialog
      * @return help text
      */
-    global define string getHelpComplex () ``{
+    define string getHelpComplex () ``{
 	// help text
 	return
 	    // help text
@@ -1006,7 +1006,7 @@ Select runlevels in which to run the currently selected service.<ul>
      * Main dialog for changing services.
      * @return symbol for wizard sequencer
      */
-    global define symbol ComplexDialog () ``{
+    define symbol ComplexDialog () ``{
 	Wizard::SetScreenShotName ("runlevel-2-services");
 
 	// currently selected service we are working with
@@ -1258,7 +1258,7 @@ both of them?")))
      * Main dialog for changing services.
      * @return symbol for wizard sequencer
      */
-    global define symbol SimpleDialog () ``{
+    define symbol SimpleDialog () ``{
 	Wizard::SetScreenShotName ("runlevel-2-simple");
 	map service = $[];
 
@@ -1405,7 +1405,7 @@ both of them?")))
      * Help text for auto-complex-screen
      * @return help text
      */
-    global define string getHelpAuto () ``{
+    define string getHelpAuto () ``{
 	return
 	    // help text
 	    _("<p><b>Prepare data for autoinstallation.</b></p>")
@@ -1421,7 +1421,7 @@ both of them?")))
      * Add service by hand.
      * @return new service name (already added to RunlevelEd::services) or ""
      */
-    global define string addService () ``{
+    define string addService () ``{
 	UI::OpenDialog (`VBox (
 			    // dialog heading
 		    `Heading (`opt (`hstretch), _("Add service")),
@@ -1487,7 +1487,7 @@ name or the name specified is already in use."));
      * Main dialog for changing services.
      * @return symbol for wizard sequencer
      */
-    global define symbol AutoDialog () ``{
+    define symbol AutoDialog () ``{
 	Wizard::SetScreenShotName ("runlevel-2-auto");
 	// currently selected service we are working with
 	map service = $[];
@@ -1674,7 +1674,7 @@ disabled?\n"), nfs_adj)))
      * @param vdim	popup height
      * @return continue?
      */
-    global define boolean LongContinueCancelHeadlinePopup (
+    define boolean LongContinueCancelHeadlinePopup (
 	string headline, term richtext, integer hdim, integer vdim) ``{
 
 	UI::OpenDialog (
@@ -1713,7 +1713,7 @@ disabled?\n"), nfs_adj)))
      * Disable the service. Changes global services.
      * @param service_name name of the service.
      */
-    global define void setServiceDisable (string service_name) ``{
+    define void setServiceDisable (string service_name) ``{
 	map service = lookup (RunlevelEd::services, service_name, $[]);
 	RunlevelEd::services[service_name] = union (service,
 			       $[
@@ -1729,7 +1729,7 @@ disabled?\n"), nfs_adj)))
      * Changes global services.
      * @param service_name Name of service to process.
      */
-    global define void setServiceToDefault (string service_name) ``{
+    define void setServiceToDefault (string service_name) ``{
 	map service = lookup (RunlevelEd::services, service_name, $[]);
 	RunlevelEd::services[service_name] = union (service,
 			       $[
@@ -1744,7 +1744,7 @@ disabled?\n"), nfs_adj)))
      * @param l a list
      * @return a map
      */
-    global define map<string, boolean> tomap_true (list<string> l) ``{
+    define map<string, boolean> tomap_true (list<string> l) ``{
 	return (map<string, boolean>) listmap (string i, l, ``( $[i: true] ));
     }
 
@@ -1752,7 +1752,7 @@ disabled?\n"), nfs_adj)))
      * @param m a map
      * @return keys of the map
      */
-    global define list mapkeys (map m) ``{
+    define list mapkeys (map m) ``{
 	return maplist (any k, any v, m, ``( k ));
     }
 
