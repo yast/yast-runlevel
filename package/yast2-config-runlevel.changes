@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Sep 10 14:23:00 CEST 2001 - lnussel@suse.de
+
+- moved icon in Control Center from Group "Misc" to "System"
+  (Bug #10256)
+
+-------------------------------------------------------------------
 Mon Sep 10 12:32:39 CEST 2001 - pblahos@suse.cz
 
 - skips boot.orig 
