@@ -109,7 +109,7 @@ else if (func == "Change") {
 
 }
 /* Return actual state */
-else if (func == "Result") {
+else if (func == "Export") {
 	ret = RunlevelEd::Export();
 }
 /* Write givven settings */
