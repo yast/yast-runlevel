@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Jul 25 21:35:48 CEST 2002 - arvin@suse.de
+
+- fixed file list
+
+-------------------------------------------------------------------
 Wed Jul 24 19:32:17 CEST 2002 - jsuchome@suse.cz
 
 - Files used by other modules moved to yast2/runlevel
