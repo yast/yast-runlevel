@@ -30,6 +30,8 @@
     // UI "slots"
     // update parts of the UI
 
+    global string CheckMark = UI::Glyph (`CheckMark);
+
     /**
      * Create term of checkboxes for runlevel selection.
      * @return HBox full of checkboxes.
@@ -312,11 +314,22 @@
 
     /**
      * Create table items from services.
-     * For Expert mode.
+     * For Expert mode:
      * Mixin: started, start, (short)description.
+     * @param mix which items to mix in:<pre>
+     *`simple:	id=name, name, bstatus,            (short)description
+     *`complex:	id=name, name, rstatus, runlevels, (short)description
+     *`auto:	id=name, name, dirty,   runlevels, ?(short)description
+     *</pre>
      * @return list List of items for table.
      */
-    global define list servicesToTable () ``{
+    global define list servicesToTable (symbol mix) ``{
+	boolean m_dirty = mix == `auto;
+	boolean m_bstatus = mix == `simple;
+	boolean m_rstatus = mix == `complex;
+	boolean m_runlevels = mix != `simple;
+	boolean m_descr = true;
+
 	list items = [];
 	boolean first = true;
 	foreach (`k, `v, RunlevelEd::services, ``{
@@ -325,21 +338,48 @@
 		first = false;
 		current_service = k;
 	    }
+	    // id=name, name
 	    term item = `item (`id (k), k);
-	    integer started = lookup (v, "started", -1);
-	    item = add (item, StartedText (started));
-	    list rl = lookup (v, "start", []);
-	    foreach (`i, RunlevelEd::runlevels, ``{
-		item = add (item, (contains (rl, i)? i : " "));
-	    });
-	    // For the table, use the short description.
-	    // The long one as a fallback. #20853
-	    string descr = v["shortdescription"]:"";
-	    if (descr == "")
+	    if (m_dirty)
 	    {
-		descr = v["description"]:"";
+		// dirty
+		item = add (item, v["dirty"]:false ? CheckMark : " ");
 	    }
-	    item = add (item, descr);
+	    if (m_bstatus)
+	    {
+		// boot status
+		string state = RunlevelEd::isDisabled (v)?
+		    _("Disabled"):
+		    _("Enabled");
+		item = add (item, state);
+	    }
+	    if (m_rstatus)
+	    {
+		// runtime status
+		integer started = lookup (v, "started", -1);
+		item = add (item, StartedText (started));
+	    }
+	    if (m_runlevels)
+	    {
+		// runlevels
+		list rl = lookup (v, "start", []);
+		foreach (`i, RunlevelEd::runlevels, ``{
+		    item = add (item, (contains (rl, i)? i : " "));
+		});
+	    }
+	    if (m_descr)
+	    {
+		// (short)description
+		// For the table, use the short description.
+		// The long one as a fallback. #20853
+		string descr = v["shortdescription"]:"";
+		if (descr == "")
+		{
+		    descr = v["description"]:"";
+		}
+		item = add (item, descr);
+	    }
+	    // next
 	    items = add (items, item);
 	});
 	return items;
@@ -845,6 +885,30 @@ because they depend on it:
     }
 
     /**
+     * Radio buttons (faking tabs) for switching modes
+     * @param mode `simple or `complex, which one are we in
+     * @return RadioButtonGroup term
+     */
+    global define term ModeTabs (symbol mode) ``{
+	term rbg =
+	    // fake tabs using radio buttons
+	    `RadioButtonGroup (
+		`id (`rbg),
+		`HBox (
+		    `RadioButton (`id (`simple), `opt (`notify),
+				  // radio button label
+				  _("&Simple mode"), mode == `simple),
+		    `HSpacing (3),
+		    `RadioButton (`id (`complex), `opt (`notify),
+				  // radio button label
+				  _("&Expert mode"), mode == `complex)
+		    )
+		);
+	return `Left (rbg);
+    }
+
+
+    /**
      * help text services dialog
      * @return help text
      */
@@ -895,6 +959,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	header = add (header, _("Description"));
 	term contents = `VBox (
 	    `VSpacing (0.4),
+	    ModeTabs (`complex),
 	    `HBox (
 		// preserve 2 spaces at the end.
 		`Label (_("Current runlevel:  ")),
@@ -903,7 +968,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
 		    header,
-		    servicesToTable ()
+		    servicesToTable (`complex)
 		),
 	    `VSquash (
 		`HBox (
@@ -947,7 +1012,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	service = lookup (RunlevelEd::services, current_service, $[]);
 	changeService1 (service);
 	any ret = nil;
-	while (`next != ret && `back != ret && `abort != ret)
+	while (`next != ret && `back != ret && `abort != ret && `simple != ret)
 	    {
 		// Kludge, because a `Table still does not have a shortcut.
 		// #16116
@@ -1051,7 +1116,7 @@ both of them?")))
 			foreach (`k, `v, RunlevelEd::services, ``{
 			    setServiceToDefault (k);
 			});
-			UI::ChangeWidget (`id (`table), `Items, servicesToTable ());
+			UI::ChangeWidget (`id (`table), `Items, servicesToTable (`complex));
 			// message popup
 			Popup::Message (_("Each service was enabled\nin the appropriate runlevels."));
 		    }
@@ -1087,6 +1152,115 @@ both of them?")))
 	Wizard::RestoreScreenShotName ();
 	return ret;
     }
+
+    // simple mode
+    /**
+     * Main dialog for changing services.
+     * @return symbol for wizard sequencer
+     */
+    global define symbol SimpleDialog () ``{
+	map service = $[];
+
+	term contents = `VBox (
+	    `VSpacing (0.4),
+	    ModeTabs (`simple),
+	    `HBox (
+		// preserve 2 spaces at the end.
+		`Label (_("Current runlevel:  ")),
+		`Label (`opt (`outputField, `hstretch), getRunlevelDescr (RunlevelEd::current))
+		),
+	    `VSpacing (0.4),
+	    `Table (`id (`table), `opt (`notify, `immediate),
+		    `header (_("Service"), _("Status"), _("Description")),
+		    servicesToTable (`simple)
+		),
+	    `HBox (
+		`PushButton (`id (`enable),  _("&Activate")),
+		`PushButton (`id (`disable), _("&Deactivate"))
+		)
+	    );
+	// dialog caption.
+	Wizard::SetContents (_("Runlevel editor: services"), contents, _("<p>TODO</p>"), true, true);
+	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
+	service = lookup (RunlevelEd::services, current_service, $[]);
+	any ret = nil;
+	while (`next != ret && `back != ret && `abort != ret && `complex != ret)
+	{
+	    // Kludge, because a `Table still does not have a shortcut.
+	    // #16116
+	    UI::SetFocus (`id (`table));
+
+	    if (fetching_service_status)
+	    {
+		ret = UI::PollInput ();
+		UI::NormalCursor ();
+		if (nil == ret)
+		{
+		    serviceStatusIterator (nil);
+		    continue ;
+		}
+		UI::BusyCursor ();
+	    }
+	    else
+	    {
+		ret = UI::UserInput ();
+	    }
+	    if (ret == `cancel)
+	    {
+		ret = `abort;
+	    }
+
+	    if (`abort == ret)
+	    {
+		if (!reallyAbort ())
+		{
+		    ret = nil;
+		    continue;
+		}
+	    }
+	    else if (`next == ret)
+	    {
+		// FIXME copied from allInOne, make it a function
+		// Misaligned for consistency with the original
+		    if (RunlevelEd::CheckXInetd () && !Popup::YesNoHeadline (
+			    // yes-no popup headline
+				_("Both inetd and xinetd are selected!"),
+			    // yes-no popup
+				_("Services inetd and xinetd need extra configuration
+to run simultaneously. Do you really want to run
+both of them?")))
+		    {
+			ret = nil;
+			continue;
+		    }
+
+		    // TODO: check dependencies of all services? (on demand?)
+		    // string nfs_adj = RunlevelEd::CheckPortmap ();
+		    // ...
+
+		    if (RunlevelEd::isDirty ())
+		    {
+			// yes-no popup
+			if (!Popup::YesNo (_("Now the changes to runlevels \nwill be saved.")))
+			{
+			    ret = nil;
+			    continue;
+			}
+		    }
+		    break;
+	    }
+	    else if (`disable == ret)
+	    { //FIXME...
+		y2milestone ("%1", ret);
+	    }
+	    else if (`enable == ret)
+	    { //FIXME...
+		y2milestone ("%1", ret);
+	    }
+	}
+	return ret;
+    }
+
 
     // Autoyast UI
     /**
@@ -1170,6 +1344,7 @@ name or the name specified is already in use."));
 	UI::CloseDialog ();
 	return name;
     }
+
     /**
      * Main dialog for changing services.
      * @return symbol for wizard sequencer
@@ -1177,33 +1352,6 @@ name or the name specified is already in use."));
     global define symbol runAutoDialog () ``{
 	// currently selected service we are working with
 	map service = $[];
-
-	string CheckMark = UI::Glyph (`CheckMark);
-	/**
-	 * Create table items from services.
-	 * @return list List of items for table.
-	 */
-	define list servicesToTable2 () ``{
-	    list items = [];
-	    boolean first = true;
-	    foreach (`k, `v, RunlevelEd::services, ``{
-		if (first)
-		{
-		    first = false;
-		    current_service = k;
-		}
-		term item = `item (`id (k), k);
-
-		item = add (item, v["dirty"]:false ? CheckMark : " ");
-		list rl = lookup (v, "start", []);
-		foreach (`i, RunlevelEd::runlevels, ``{
-		    item = add (item, (contains (rl, i)? i : " "));
-		});
-		item = add (item, lookup (v, "description", ""));
-		items = add (items, item);
-	    });
-	    return items;
-	}
 
 	/**
 	 * Sets columns 0-S (runlevels) in table so they are synchronized with checkboxes.
@@ -1230,7 +1378,7 @@ name or the name specified is already in use."));
 	    `VSpacing (0.5),
 	    `Table (`id (`table), `opt (`notify, `immediate),
 		    header,
-		    servicesToTable2 ()
+		    servicesToTable (`auto)
 		),
 	    `VBox (
 		// label above checkboxed
@@ -1316,7 +1464,7 @@ disabled?\n"), nfs_adj)))
 		    string name = addService ();
 		    if ("" != name)
 		    {
-			UI::ChangeWidget (`id (`table), `Items, servicesToTable2 ());
+			UI::ChangeWidget (`id (`table), `Items, servicesToTable (`auto));
 			UI::ChangeWidget (`id (`table), `CurrentItem, name);
 			// qt and curses behave differently:
 			// one of them sends notification after changewidget
@@ -1344,7 +1492,7 @@ disabled?\n"), nfs_adj)))
 		else if (`clear_all == ret)
 		{
 		    RunlevelEd::ClearServices ();
-		    UI::ChangeWidget (`id (`table), `Items, servicesToTable2 ());
+		    UI::ChangeWidget (`id (`table), `Items, servicesToTable (`auto));
 		    ret = `table;
 		}
 		else if (nil != ret && is (ret, string))

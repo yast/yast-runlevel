@@ -18,7 +18,7 @@
             "start" : ["1", "2", ],
             ],
         ];
-    DUMP (servicesToTable ());
+    DUMP (servicesToTable (`complex));
 
     RunlevelEd::services = $[
         "a" : $[
@@ -30,7 +30,7 @@
             "start" : ["1", "2", "3", ],
             ],
         ];
-    DUMP (servicesToTable ());
+    DUMP (servicesToTable (`complex));
 
     RunlevelEd::services = $[
         "a" : $[
@@ -44,5 +44,5 @@
             "defstart" : ["1", "2", "S", "b" ],
             ],
 	];
-    DUMP (servicesToTable ());
+    DUMP (servicesToTable (`complex));
 }
