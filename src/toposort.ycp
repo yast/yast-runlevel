@@ -112,11 +112,12 @@
      * @return reversed graph
      */
     define map<string, list<string> > ReverseGraph (map<string, list<string> > g) ``{
+	list<string> elist = [];
 	// initialize, otherwise we miss nodes with zero in-degree
 	map<string, list<string> > rev = (map<string, list<string> >) mapmap (string node, list<string> dummy, g, ``( $[node: []] ));
 	foreach (string source, list<string> targets, g, ``{
 	    foreach (string target, targets, ``{
-		rev[target] = add (rev[target]:[], source);
+		rev[target] = add (rev[target]:elist, source);
 	    });
 	});
 	return rev;
