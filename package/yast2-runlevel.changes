@@ -1,8 +1,7 @@
 -------------------------------------------------------------------
-Mon Jul  1 15:27:22 CEST 2002 - msvec@suse.cz
+Thu Jul 04 20:47:26 CEST 2002 - arvin@suse.de
 
-- new version
-- 2.6.6
+- moved non binary files to /usr/share/YaST2
 
 -------------------------------------------------------------------
 Fri Jun 28 10:05:20 CEST 2002 - mvidner@suse.cz
@@ -35,7 +34,7 @@ Thu Apr 18 14:48:21 CEST 2002 - pblahos@suse.cz
 -------------------------------------------------------------------
 Tue Apr 16 09:50:07 CEST 2002 - pblahos@suse.cz
 
-- Fixed: insserv -r service must be called before 
+- Fixed: insserv -r service must be called before
   insserv service,start=X,Y,Z because the latter only added service
   to selected runlevels. (Bug #15694)
 - Fixed: multiple <p> in one string reported by check_ycp
@@ -90,7 +89,7 @@ Fri Feb  1 08:52:09 CET 2002 - pblahos@suse.cz
 
 - portmap is not enabled for nfsserver only but for any service
   that requires it (Bug #12985)
-- After service is started/stopped/refreshed, its status is 
+- After service is started/stopped/refreshed, its status is
   correctly displayed now. (Bug #12964)
 
 -------------------------------------------------------------------
@@ -114,7 +113,7 @@ Thu Dec  6 11:14:04 CET 2001 - pblahos@suse.cz
 -------------------------------------------------------------------
 Mon Dec  3 11:14:20 CET 2001 - pblahos@suse.cz
 
-- Uses y2autoconf and create-spec 
+- Uses y2autoconf and create-spec
 
 -------------------------------------------------------------------
 Thu Nov 29 08:54:55 CET 2001 - pblahos@suse.cz
@@ -136,13 +135,13 @@ Fri Nov 16 08:31:09 CET 2001 - pblahos@suse.cz
 -------------------------------------------------------------------
 Wed Nov  7 10:06:40 CET 2001 - pblahos@suse.cz
 
-- Fixed duplicate keyboard shortcut: &Start/Stop/Refresh, 
+- Fixed duplicate keyboard shortcut: &Start/Stop/Refresh,
   Runlevel &S (Bug 12196)
 
 -------------------------------------------------------------------
 Tue Nov  6 15:27:53 CET 2001 - pblahos@suse.cz
 
-- If service start/stop/status was unsuccessful (!=0), shows 
+- If service start/stop/status was unsuccessful (!=0), shows
   textual description of exit value.
 - If service start/stop was unsuccessful, it shows its state as
   not running.
@@ -160,7 +159,7 @@ Tue Oct 16 10:47:51 CEST 2001 - pblahos@suse.cz
 -------------------------------------------------------------------
 Thu Sep 20 18:39:06 CEST 2001 - gs@suse.de
 
-- new icon for YaST2 Control Center 
+- new icon for YaST2 Control Center
 
 -------------------------------------------------------------------
 Mon Sep 17 08:34:47 CEST 2001 - pblahos@suse.cz
@@ -177,7 +176,7 @@ Mon Sep 10 14:23:00 CEST 2001 - lnussel@suse.de
 -------------------------------------------------------------------
 Mon Sep 10 12:32:39 CEST 2001 - pblahos@suse.cz
 
-- skips boot.orig 
+- skips boot.orig
 
 -------------------------------------------------------------------
 Fri Sep  7 11:41:01 CEST 2001 - pblahos@suse.cz
