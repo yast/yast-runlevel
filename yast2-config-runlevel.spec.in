@@ -18,7 +18,6 @@ Summary:	Configuration of runlevel
 
 %files
 %defattr(-,root,root)
-%dir @YAST2DIR@/include/runlevel
 %dir @YAST2DIR@/menuentries
 %dir @YAST2DIR@/servers_non_y2
 %dir @YAST2DIR@/scrconf
