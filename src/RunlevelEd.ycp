@@ -667,7 +667,7 @@ Further dependency checking will be disabled."));
 	    // runlevel description
 	    "4" : _("4: User defined"),
 	    // runlevel description
-	    "5" : _("5: Full multiuser with network and xdm"),
+	    "5" : _("5: Full multiuser with network and display manager"),
 	    // runlevel description
 	    "6" : _("6: System reboot"),
 	    // runlevel description

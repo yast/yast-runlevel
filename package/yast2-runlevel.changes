@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Nov 16 14:22:37 CET 2004 - mlazar@suse.cz
+
+- fixed #46793 - Runlevel selection in Network Proposal
+
+-------------------------------------------------------------------
 Wed Nov  3 15:11:43 CET 2004 - mvidner@suse.cz
 
 - Fixed a type error.
