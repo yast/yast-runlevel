@@ -57,12 +57,26 @@
     map aliases = $[
 	"start" :            ``(runMain ()),
 	"complex" :          ``(allInOne ()),
+	"simple" :	``(SimpleDialog ()),
 	];
 
     map main_sequence = $[
 	"ws_start" : "start",
-	"start" : $[ `next : `finish , `abort : `abort, `edit : "complex", ],
-	"complex" : $[ `next : `finish, `abort : `abort ],
+	"start" : $[
+	    `next : `finish,
+	    `abort : `abort,
+	    `edit : "simple",
+	    ],
+	"simple" : $[
+	    `next : `finish,
+	    `abort : `abort,
+	    `complex : "complex",
+	    ],
+	"complex" : $[
+	    `next : `finish,
+	    `abort : `abort,
+	    `simple : "simple",
+	    ],
 	];
 
     if (`finish == WizardSequencer (aliases, main_sequence))
