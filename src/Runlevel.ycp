@@ -163,17 +163,41 @@
      * @return integer exit value
      */
     global define integer RunInitScript (string name, string param) ``{
-	return SCR::Execute (.target.bash, sformat ("/etc/init.d/%1 %2", name, param), $[ "TERM" : "raw"]);
+	return SCR::Execute (.target.bash,
+			     sformat ("/etc/init.d/%1 %2", name, param),
+			     $[ "TERM" : "raw"]);
     }
 
+    string lang = nil;
     /**
-     * Run init script and return also its output.
+     * Run init script and return also its output (stdout and stderr merged).
      * @param name init service name
      * @param param init script argument
      * @return map of $[ "stdout" : "...", "stderr" : "...", "exit" : int,]
      */
     global define map RunInitScriptOutput (string name, string param) ``{
-	return SCR::Execute (.target.bash_output, sformat ("/etc/init.d/%1 %2", name, param), $[ "TERM" : "raw"]);
+	map env = $["TERM": "raw"];
+	// encoding problems - append .UTF-8 to LANG
+	if (lang == nil)
+	{
+	    lang = lookup (SCR::Execute (.target.bash_output, "echo -n $LANG"),
+			   "stdout", "");
+	    list ll = splitstring (lang, ".");
+	    lang = ll[0]:"";
+	    if (lang != "")
+	    {
+		lang = lang + ".UTF-8";
+	    }
+	    y2internal ("LANG: %1", lang);
+	}
+	if (lang != "")
+	{
+	    env = add (env, "LANG", lang);
+	}
+	return SCR::Execute (.target.bash_output,
+			     // "/usr/bin/locale; " +
+			     sformat ("/etc/init.d/%1 %2 2>&1", name, param),
+			     env);
     }
 
     /* ------------------------------------------------------------ */
@@ -280,6 +304,7 @@
 	    return [ k, v ];
 	});
 	buildRequires ();
+	what_requires = ReverseGraph (requires);
 	Progress::NextStep ();
 	return true;
     }
@@ -289,6 +314,11 @@
      * but not normal facilities (ie. provides are solved).
      */
     map requires = $[];
+    /**
+     * Like "requires" but in reverse direction.
+     * Used for stopping and disabling services.
+     */
+    map what_requires = $[];
 
     /**
      * Create requires from services, system_requires and what_provides.
@@ -314,18 +344,124 @@
     }
 
     /**
+     * Resolve which services need to be enabled/disabled
      * @param service a service
-     * @return a list of services required to start a service, ordered
-     * by their dependencies. Missing services are included, system
-     * facilities excluded.
+     * @param enable enabling or disabling a service?
+     * @return a list of services (excluding itself) required to start
+     * a service (enable) or to be stopped because they require the
+     * service (disable), ordered by their dependencies. Missing
+     * services are included, system facilities excluded.
      */
-    global define list(string) RequiredServices (string service) ``{
+    global define list(string) ServiceDependencies (string service,
+						    boolean enable) ``{
 	// make a dependency subgraph
-	map s_req = ReachableSubgraph (requires, service);
+	map s_req = ReachableSubgraph (enable? requires: what_requires,
+				       service);
 	// sort it
 	list sorted = TopologicalSort (s_req);
 	// filter system facilities
-	return filter (string f, sorted, ``(substring (f, 0, 1) != "$"));
+	sorted = filter (string f, sorted, ``(substring (f, 0, 1) != "$"));
+	// remove the original service
+	sorted = remove (sorted, 0);
+	// reverse it so that the required services are first
+	return reverse (sorted);
+    }
+
+    /**
+     * Argh, not a builtin
+     * @param l a list
+     * @return reversed list
+     */
+    define list reverse (list l) ``{
+	if (l == nil)
+	{
+	    return nil;
+	}
+	list result = [];
+	foreach (any item, l, ``{
+	    result = prepend (result, item);
+	});
+	return result;
+    }
+    /**
+     * Filter out already started/stopped services.
+     * @param svcs	service list to be started/stopped
+     * @param start	start/stop
+     * @return a list of scripts that must really be started/stopped
+     */
+    global define list(string) FilterStartStop (list(string) svcs,
+						boolean start) ``{
+	return filter (string service, svcs, ``{
+	    integer started = services[service, "started"]:-1;
+	    // keep it in the list if the wanted result
+	    // is different from the current state
+	    return start != (started == 0);
+	});
+    }
+    /**
+     * Filter out already enabled/disabled services.
+     * @param svcs	service list to be enabled/disabled
+     * @param rl	which runlevel
+     * @param enable	enabling or disabling?
+     * @return a list of scripts that must really be enabled/disabled
+     */
+    global define list(string) FilterEnableDisable (list(string) svcs,
+						    string rl,
+						    boolean enable) ``{
+	return filter (string service, svcs, ``{
+	    list start = services[service, "start"]:[];
+	    // keep it in the list if the wanted result
+	    // is different from the current state
+	    return enable != contains (start, rl);
+	});
+    }
+    /**
+     * Filter out already enabled/disabled services.
+     * @param svcs	service list to be enabled/disabled
+     * @param rls	which runlevels (all of them).
+     *  For disabling, must be nil, meaning disable in all.
+     * @param enable	enabling or disabling?
+     * @return a list of scripts that must really be enabled/disabled
+     */
+    global define list(string) FilterEnableDisableSet (list(string) svcs,
+						    list(string) rls,
+						    boolean enable) ``{
+	if (enable)
+	{
+	    return filter (string service, svcs, ``{
+		list start = services[service, "start"]:[];
+		// keep it in the list
+		// if it should start in a bigger set than now
+		return !subset (rls, start);
+	    });
+	}
+	else
+	{
+	    if (rls != nil)
+	    {
+		// should not happen
+		y2error ("Disabling in a nontrivial set of runlevels (%1) not implemented.", rls);
+		return nil;
+	    }
+	    else
+	    {
+		return filter (string service, svcs, ``{
+		    list start = services[service, "start"]:[];
+		    // keep it in the list
+		    // if it is enabled now
+		    return start != [];
+		});
+	    }
+	}
+    }
+
+    /**
+     * @param a a set
+     * @param b a set
+     * @return a \subseteq b
+     */
+    define boolean subset (list a, list b) ``{
+	return size (union (a, b)) <= size (b);
     }
 
     /**

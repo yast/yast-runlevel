@@ -36,26 +36,44 @@
 	return rls;
     }
     /**
+     * Changes value of a runlevel checkbox.
+     * Prevents triggering userinput by disabling notify.
+     * @param service @ref service
+     * @param rl which runlevel
+     */
+    global define void updateRlCheckBox (map service, string rl) ``{
+	list start = service["start"]:[];
+	boolean old_notify = UI::QueryWidget (`id (rl), `Notify);
+	UI::ChangeWidget (`id (rl), `Notify, false);
+	UI::ChangeWidget (`id (rl), `Value, contains (start, rl));
+	UI::ChangeWidget (`id (rl), `Notify, old_notify);
+    }
+    /**
      * Changes values of runlevel checkboxes.
      * @param service @ref service
      */
     global define void updateRlCheckBoxes (map service) ``{
-	list start = service["start"]:[];
 	foreach (`i, Runlevel::runlevels, ``{
-	    UI::ChangeWidget (`id (i), `Value, contains (start, i));
+	    updateRlCheckBox (service, i);
 	});
     }
     /**
      * Sets runlevel columns in the table.
      * @param service_name which line
      * @param service @ref service
+     * @param rls which columns to update, nil == all
      */
-    global define void updateRlColumns (string service_name, map service) ``{
+    global define void updateRlColumns (string service_name, map service,
+					list(string) rls) ``{
 	list start = service["start"]:[];
-	foreach (`i, Runlevel::runlevels, ``{
+	if (rls == nil)
+	{
+	    rls = Runlevel::runlevels;
+	}
+	foreach (string rl, rls, ``{
 	    UI::ChangeWidget (`id (`table),
-			      `Item (service_name, runlevel2tableindex[i]:0),
-			      contains (start, i) ? i : " ");
+			      `Item (service_name, runlevel2tableindex[rl]:0),
+			      contains (start, rl) ? rl : " ");
 	});
     }
     /**
@@ -85,9 +103,12 @@
 	});
 	if (service["start"]:[] != start_in)
 	{
-	    service = add (add (service, "start", start_in), "dirty", true);
-	    Runlevel::services = add (Runlevel::services, service_name,
-				      service);
+	    service = union (service, $[
+				 "start": start_in,
+				 "dirty": true
+				 ]);
+	    Runlevel::services = add (Runlevel::services,
+				      service_name, service);
 	}
 	return service;
     }
@@ -400,6 +421,28 @@ Select runlevels in which to run currently selected service.<ul>
     }
 
     /**
+     * @param	rll	a list of runlevels or nil, meaning "all"
+     * @return		"in [these] runlevels" (translated)
+     */
+    global define string getInRunlevels (list(string) rll) ``{
+	if (rll == nil)
+	{
+	    // translators: substituted into a message like
+	    // "To enable/disable foo IN ALL RUNLEVELS, this must be done..."
+	    // (do not include the trailing comma here)
+	    return _("in all runlevels");
+	}
+	else
+	{
+	    string s = mergestring (rll, ", ");
+	    // translators: substituted into a message like
+	    // "To enable/disable foo IN RUNLEVELS 3, 5, this must be done..."
+	    // (do not include the trailing comma here)
+	    return sformat (_("in runlevel %1", "in runlevels %1",
+			      size (rll)), s);
+	}
+    }
+    /**
      * Disable the service. Changes global services.
      * @param service_name name of the service.
      */
@@ -428,44 +471,308 @@ Select runlevels in which to run currently selected service.<ul>
     }
 
     /**
-     * Starts/stops/checks status of a service
-     * @param service_name service to start/stop
-     * @param service @ref service other service info
-     * @param command "start" or "stop" or "status"
-     * @return @ref service updated status
+     * Converts a list to a map with values of true
+     * @param l a list
+     * @return a map
      */
-    global define map startStopService (string service_name, string command) ``{
-	map out = Runlevel::RunInitScriptOutput (service_name, command);
-	string message = "";
-	integer exit = lookup (out, "exit", -1);
-	if (0 == exit)
+    global define map tomap (list l) ``{
+	return listmap (any i, l, ``( [i, true] ));
+    }
+
+    /**
+     * @param m a map
+     * @return keys of the map
+     */
+    global define list mapkeys (map m) ``{
+	return maplist (any k, any v, m, ``( k ));
+    }
+
+    /**
+     * Enable or disable a service in some runlevels.
+     * Set the variables and update the ui (rl columns).
+     * @param service_name	a service
+     * @param rls	which runlevels, nil == disable in all
+     * @param enable	enabling or disabling?
+     */
+    global define void SetService (string service_name,
+				   list (string) rls, boolean enable) ``{
+	map service = Runlevel::services[service_name]:$[];
+	list(string) start_in = nil;
+	if (rls == nil)
 	{
-	    // show the command output
-	    message = sformat (_("Output from '/etc/init.d/%1 %2':\n\n"),
-			       service_name, command)
-		+ lookup (out, "stdout", "");
+	    start_in = [];
 	}
 	else
 	{
-	    // show the exit code
-	    message = sformat (_("'/etc/init.d/%1 %2' returned %3:\n%4"),
-			       service_name, command,
-			       exit,
-			       (command == "status" ?
-				getStatusReturnHelp (exit) :
-				getActionReturnHelp (exit))
-		);
+	    map start = tomap (service["start"]:[]);
+	    foreach (string rl, rls, ``{
+		start = add (start, rl, enable);
+	    });
+	    start = filter (any k, boolean v, start, ``( v == true));
+	    start_in = mapkeys (start);
 	}
+
+	if (service["start"]:[] != start_in)
+	{
+	    service = union (service, $[
+				 "start": start_in,
+				 "dirty": true
+				 ]);
+	    Runlevel::services = add (Runlevel::services,
+				      service_name, service);
+
+	    updateRlColumns (service_name, service, rls);
+	}
+    }
+
+    /**
+     * Check that all the services exist (in Runlevel::services).
+     * If not, popup a list of the missing ones and ask whether
+     * continue or not. Filter out the missing ones.
+     * @param services a service list
+     * @return [continue?, filtered list]
+     */
+    global define boolean CheckMissingServices (list(string) services) ``{
+	list(string) missing = [];
+	boolean ok = true;
+	services = filter (string s, services, ``{
+	    if (haskey (Runlevel::services, s))
+	    {
+		return true;
+	    }
+	    else
+	    {
+		missing = add (missing, s);
+		return false;
+	    }
+	});
+	if (size (missing) > 0)
+	{
+	    // missing services only occur when enabling
+	    ok = UI::ContinueCancelPopup (
+		sformat (
+		    _("These required services are missing:\n%1."),
+		    formatLine (missing, 40)));
+	}
+	return [ok, services];
+    }
+
+    /**
+     * Used for enabling/disabling a service and services depending on
+     * it in a runlevel or a set of runlevels.
+     * @param service_name	name of service
+     * @param rls		in which run levels, nil == all
+     * @param enable		enable/disable
+     * @return success (may have been canceled because of dependencies)
+     */
+    global define boolean EnableDisableServiceDep (string service_name,
+						   list(string) rls,
+						   boolean enable) ``{
+	y2debug (1, "RL: %1 %2 %3", service_name, rls, enable);
+	boolean one = size (rls) == 1;
+
+	list dep_s = Runlevel::ServiceDependencies (service_name, enable);
+	y2debug ("DEP: %1", dep_s);
+	if (one)
+	{
+	    string rl = rls[0]:"";
+	    dep_s = Runlevel::FilterEnableDisable (dep_s, rl, enable);
+	}
+	else
+	{
+	    dep_s = Runlevel::FilterEnableDisableSet (dep_s, rls, enable);
+	}
+	y2debug ("DEP filtered: %1", dep_s);
+
+	boolean doit = size (dep_s) == 0 ||
+	    UI::ContinueCancelPopup (
+		sformat (
+		    enable ?
+		    // translators: %2 is "in runlevel(s) 3, 5"
+		    // or "in all runlevels"
+		    _("To enable service %1 %2,
+these services must be additionally enabled,
+because it depends on them:
+%3.")
+		    :
+		    // translators: %2 is "in runlevel(s) 3, 5"
+		    // or "in all runlevels"
+		    _("To disable service %1 %2,
+these services must be additionally disabled,
+because they depend on it:
+%3."),
+		    service_name, getInRunlevels (rls), formatLine (dep_s, 40)
+		    )
+		);
+	// check for missing services
+	if (doit)
+	{
+	    list r = CheckMissingServices (dep_s);
+	    doit = r[0]:false;
+	    dep_s = r[1]:[];
+	}
+
+	if (doit)
+	{
+	    foreach (string s, add (dep_s, service_name), ``{
+		// set the variables and update the ui
+		SetService (s, rls, enable);
+	    });
+	    service = Runlevel::services[current_service]:$[];
+	}
+	return doit;
+    }
+
+    /**
+     * Used for starting/stopping a service and services depending on it.
+     * Displays result popups.
+     * @param service_name	name of service
+     * @param enable		start/stop
+     * @return success (may have been canceled because of dependencies)
+     */
+    global define boolean StartStopServiceDep (string service_name,
+					       boolean enable) ``{
+	y2debug (1, "RUN: %1 %2", service_name, enable);
+	string command = enable? "start": "stop";
+
+	list dep_s = Runlevel::ServiceDependencies (service_name, enable);
+	y2debug ("DEP: %1", dep_s);
+	dep_s = Runlevel::FilterStartStop (dep_s, enable);
+	y2debug ("DEP filtered: %1", dep_s);
+
+	boolean doit = size (dep_s) == 0 ||
+	    UI::ContinueCancelPopup (
+		sformat (
+		    enable ?
+		    _("To start service %1,
+these services must be additionally started,
+because it depends on them:
+%2.")
+		    :
+		    _("To stop service %1,
+these services must be additionally stopped,
+because they depend on it:
+%2."),
+		    service_name, formatLine (dep_s, 40)
+		    )
+		);
+	// check for missing services
+	if (doit)
+	{
+	    list r = CheckMissingServices (dep_s);
+	    doit = r[0]:false;
+	    dep_s = r[1]:[];
+	}
+
+	string rich_message = "";
+	if (doit)
+	{
+	    // iterate dep_s, not including service_name
+	    // because we will ask "continue?" on error
+	    foreach (string s, dep_s, ``{
+		list ret = startStopService (s, command);
+
+		rich_message = rich_message + ret[1]:"";
+		integer exit = ret[0]:-1;
+		if (exit != 0)
+		{
+		    doit = LongContinueCancelHeadlinePopup (
+			_("An error has occurred"), `RichText (rich_message),
+			70, 10);
+		    // don't show what we've already seen
+		    rich_message = "";
+		    if (!doit)
+		    {
+			return; // break(foreach)
+		    }
+		}
+	    });
+	}
+	if (doit)
+	{
+	    // only for service_name
+	    list ret = startStopService (service_name, command);
+
+	    rich_message = rich_message + ret[1]:"";
+	    UI::LongTextPopup ("", `RichText(rich_message), 70, 5);
+	    service = Runlevel::services[current_service]:$[];
+	}
+	return doit;
+    }
+
+    /**
+     * Like UI::LongTextPopup
+     * @param headline	a headline
+     * @param richtext	`RichText(_("&lt;p>foo...&lt;/p>"))
+     * @param hdim	popup width
+     * @param vdim	popup height
+     * @return continue?
+     */
+    global define boolean LongContinueCancelHeadlinePopup (
+	string headline, term richtext, integer hdim, integer vdim) ``{
+
+	UI::OpenDialog (
+	    `opt (`decorated),
+	    `HBox (
+		`VSpacing (vdim),
+		`VBox (
+		    `HSpacing (hdim),
+		    `Left (`Heading (headline)),
+		    `VSpacing (0.2),
+		    richtext,	// scrolled text
+		    `HBox (
+			`PushButton (
+			    `id (`continue),
+			    `opt (`default),
+			    ContinueButtonLabel ()),
+			`PushButton (
+			    `id (`cancel),
+			    CancelButtonLabel ())
+			)
+		    )
+		)
+	    );
+
+	UI::SetFocus (`id (`continue));
+
+	boolean ret = UI::UserInput() == `continue;
+	UI::CloseDialog();
+	return ret;
+    }
+
+    /**
+     * Starts/stops/checks status of a service
+     * @param service_name service to start/stop
+     * @param command "start" or "stop" or "status"
+     * @return [exit_status, rich_message]
+     */
+    global define map startStopService (string service_name,
+					string command) ``{
+	UI::OpenDialog (`Label (service_name + " " + command));
+	map out = Runlevel::RunInitScriptOutput (service_name, command);
+	UI::CloseDialog ();
+	integer exit = lookup (out, "exit", -1);
+	string rich_message = sformat (
+	    // %1 service, %2 command,
+	    // %3 exit status, %4 status description, %5 stdout
+	    _("<p><b>/etc/init.d/%1 %2</b> returned %3 (%4)<br>%5</p>"),
+	    service_name, command, exit,
+	    (command == "status" ?
+	     getStatusReturnHelp (exit) :
+	     getActionReturnHelp (exit)),
+	    sformat ("<pre>%1</pre>", out["stdout"]:"")
+	    );
 	// succesful stop => status: program not running
-	// TODO: broken scripts may violate this
-	exit = command == "stop" ? 3 : 0;
+	integer started = (exit == 0 && command == "stop")? 3: exit;
 	// normally "started" has the exit code of "status",
 	// and we may be adding output of a different command
-	// but is is only tested angainst zero anyway
-	service = add (service, "started", exit);
+	// but it is only tested against zero anyway
+	map service = Runlevel::services[service_name]:$[];
+	service = add (service, "started", started);
+	Runlevel::services = add (Runlevel::services, service_name, service);
 	updateStatusColumn (service_name, service["started"]:-1);
-	UI::MessagePopup (message);
-	return service;
+//	UI::MessagePopup (message);
+	return [exit, rich_message];
     }
 
     /**
@@ -477,12 +784,12 @@ Select runlevels in which to run currently selected service.<ul>
      * @param len minimal length of line
      * @return string formated string
      */
-    global define string formatLine (list l, integer len) ``{
+    global define string formatLine (list(string) l, integer len) ``{
 	string s = "";
 	string line = "     ";
 	string add_sep = "";
 	string line_sep = "";
-	foreach (`i, l, ``{
+	foreach (string i, l, ``{
 	    if (size (line) > len)
 		{
 		    s = s + line_sep + line;
@@ -677,31 +984,10 @@ both of them?")))
 			continue;
 		    }
 
-		    // TODO: genenric dependency checking
-		    string nfs_adj = Runlevel::CheckPortmap ();
-		    if (nil != nfs_adj)
-		    {
-			UI::ChangeWidget (`id (`table), `CurrentItem, "portmap");
-			current_service = "portmap";
-			service = lookup (Runlevel::services, "portmap", $[]);
-			changeService1 ();
-			// qt and curses behave differently:
-			// one of them sends notification after changewidget
-			// and the other does not.
-			// So eat it.
-			while (nil != UI::PollInput ()) {}
-			if (!UI::YesNoPopup (sformat (_("Service portmap, which is required by
-%1 is disabled. You should enable
-portmap if you want to run %1.
+		    // TODO: check dependencies of all services? (on demand?)
+		    // string nfs_adj = Runlevel::CheckPortmap ();
+		    // ...
 
-Do you really want to leave portmap
-disabled?
-"), nfs_adj)))
-			{
-			    ret = nil;
-			    continue;
-			}
-		    }
 		    if (Runlevel::isDirty ())
 		    {
 			if (!UI::YesNoPopup (_("Now the changes to runlevels \nwill be saved.")))
@@ -718,21 +1004,32 @@ disabled?
 		    service = Runlevel::services[current_service]:$[];
 		    changeService1 ();
 		}
-		else if (`to_disable == ret)
+		else if (nil != ret && is (ret, string))
 		{
-		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
-		    setServiceDisable (current_service);
-		    service = Runlevel::services[current_service]:$[];
-		    changeService1 ();
-		    updateRlColumns (current_service);
+		    // checkbox pressed
+		    // - enable/disable current_service in one runlevel
+		    boolean enable = UI::QueryWidget (`id (ret), `Value);
+		    list(string) rls = [ret];
+		    if (!EnableDisableServiceDep (current_service, [ret], enable))
+		    {
+			// restore the check box
+			updateRlCheckBox (service, ret);
+		    }
 		}
 		else if (`to_enable == ret)
 		{
 		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
-		    setServiceToDefault (current_service);
+		    list(string) default = Runlevel::services[current_service, "defstart"]:[];
+		    EnableDisableServiceDep (current_service, default, true);
 		    service = Runlevel::services[current_service]:$[];
 		    changeService1 ();
-		    updateRlColumns (current_service);
+		}
+		else if (`to_disable == ret)
+		{
+		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
+		    EnableDisableServiceDep (current_service, nil, false);
+		    service = Runlevel::services[current_service]:$[];
+		    changeService1 ();
 		}
 		else if (`to_all_enable == ret)
 		{
@@ -757,9 +1054,7 @@ disabled?
 		    }
 		    if (really)
 		    {
-			string command = ""+ ret; // drops `
-			service = startStopService (current_service, service,
-						    command);
+			StartStopServiceDep (current_service, ret == `start);
 		    }
 		}
 		else if (`status == ret)
@@ -769,16 +1064,8 @@ disabled?
 
 		    //TODO: find a place for it
 		    //UI::MessagePopup (overviewText ());
-		    service = startStopService (current_service, service,
-						"status");
-		}
-		else if (nil != ret && is (ret, string))
-		{
-		    // checkbox pressed
-		    // checked of unchecked?
-		    string checked = ((UI::QueryWidget (`id (ret), `Value)) ? ret : " ");
-		    service = queryRlCheckBoxes (current_service, service);
-		    UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret, 0)), checked);
+		    list r = startStopService (current_service, "status");
+		    UI::LongTextPopup ("", `RichText(r[1]:""), 70, 5);
 		}
 	    }
 	return ret;
@@ -968,6 +1255,10 @@ disabled?
 		    {
 			UI::ChangeWidget (`id (`table), `Items, servicesToTable2 ());
 			UI::ChangeWidget (`id (`table), `CurrentItem, name);
+			// qt and curses behave differently:
+			// one of them sends notification after changewidget
+			// and the other does not.
+			// So eat it.
 			while (nil != UI::PollInput ()) {}
 			ret = `table;
 		    }
