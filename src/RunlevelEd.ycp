@@ -24,6 +24,8 @@
 
     include "runlevel/toposort.ycp";
 
+    global boolean proposal_valid = false;
+
     /**
      * Like "requires" but in reverse direction.
      * Used for stopping and disabling services.
@@ -42,7 +44,7 @@
     global define boolean StartContainsImplicitly (list<string> rls, string rl);
     define boolean ImplicitlySubset (list<string> rls_a, list<string> rls_b);
     define boolean subset (list a, list b);
-    
+
     /**
      * @struct service
      * One service is described by such map: <pre>
@@ -97,6 +99,7 @@
      * Default runlevel (after boot)
      */
     global string default = "";
+
     /**
      * Backup of default runlevel.
      */
