@@ -1,0 +1,17 @@
+// test for getDefaultPicker
+{
+    include "testsuite.ycp";
+    include "runlevel/ui.ycp";
+
+    list runlevels = [ "S", "0", "1", "2", "3", "4", "5", "6", ];
+    string default_runlevel = "3";
+    DUMP (getDefaultPicker ());
+
+    runlevels = [ "1", "2", "7", "8" ];
+    default_runlevel = "2";
+    DUMP (getDefaultPicker ());
+
+    runlevels = [ "1", "2", "7", "8" ];
+    default_runlevel = "3";
+    DUMP (getDefaultPicker ());
+}

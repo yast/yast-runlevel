@@ -1,0 +1,76 @@
+// test for serServiceToEnabled
+{
+    include "testsuite.ycp";
+    include "runlevel/ui.ycp";
+
+    map start_variables_disabled = $[];
+    map services = $[];
+
+    // has not START_ variable
+    start_variables_disabled = $[];
+    services = $[
+	"a" : $[
+	    "start" : [ "1", "2" ],
+	    "defstart" : [ "3", "4" ],
+	    ]
+	];
+    setServiceToEnabled ("a");
+    DUMP (services);
+
+    start_variables_disabled = $[];
+    services = $[
+	"a" : $[
+	    "START" : true,
+	    "start" : [ "1", "2" ],
+	    "defstart" : [ "3", "4" ],
+	    ]
+	];
+    setServiceToEnabled ("a");
+    DUMP (services);
+
+    start_variables_disabled = $[];
+    services = $[
+	"a" : $[
+	    "START" : false,
+	    "start" : [ "1", "2" ],
+	    "defstart" : [ "3", "4" ],
+	    ]
+	];
+    setServiceToEnabled ("a");
+    DUMP (services);
+
+    // has START_ variable
+    start_variables_disabled = $["a" : "START_a"];
+    services = $[
+	"a" : $[
+	    "start" : [ "1", "2" ],
+	    "defstart" : [ "3", "4" ],
+	    ]
+	];
+    setServiceToEnabled ("a");
+    DUMP (services);
+
+    start_variables_disabled = $["a" : "START_a"];
+    services = $[
+	"a" : $[
+	    "START" : true,
+	    "start" : [ "1", "2" ],
+	    "defstart" : [ "3", "4" ],
+	    ]
+	];
+    setServiceToEnabled ("a");
+    DUMP (services);
+
+    start_variables_disabled = $["a" : "START_a"];
+    services = $[
+	"a" : $[
+	    "START" : false,
+	    "start" : [ "1", "2" ],
+	    "defstart" : [ "3", "4" ],
+	    ]
+	];
+    setServiceToEnabled ("a");
+    DUMP (services);
+
+
+}
