@@ -26,6 +26,14 @@
     import "Label";
     import "Popup";
 
+    global define string StartedText (integer started);
+    global define list mapkeys (map m);
+    global define string formatLine (list<string> l, integer len);
+    global define list startStopService (string service_name, string command);
+    global define boolean LongContinueCancelHeadlinePopup (string headline, term richtext, integer hdim, integer vdim);
+    global define void setServiceToDefault (string service_name);
+    global define map tomap_true (list l);
+    
     global string current_service = "";
 
 
@@ -51,7 +59,7 @@
      */
     global define term getRlCheckBoxes () ``{
 	term rls = `HBox (`opt (`hstretch));
-	foreach (`i, RunlevelEd::runlevels, ``{
+	foreach (string i, RunlevelEd::runlevels, ``{
 	    if (size (rls) > 1)
 		rls = add (rls, `HStretch ());
 	    rls = add (rls, `CheckBox (`id (i), `opt (`notify), "&" + i));
@@ -66,7 +74,7 @@
      */
     global define void updateRlCheckBox (map service, string rl) ``{
 	list start = service["start"]:[];
-	boolean old_notify = UI::QueryWidget (`id (rl), `Notify);
+	boolean old_notify = (boolean) UI::QueryWidget (`id (rl), `Notify);
 	UI::ChangeWidget (`id (rl), `Notify, false);
 	UI::ChangeWidget (`id (rl), `Value, contains (start, rl));
 	UI::ChangeWidget (`id (rl), `Notify, old_notify);
@@ -76,7 +84,7 @@
      * @param service @ref service
      */
     global define void updateRlCheckBoxes (map service) ``{
-	foreach (`i, RunlevelEd::runlevels, ``{
+	foreach (string i, RunlevelEd::runlevels, ``{
 	    updateRlCheckBox (service, i);
 	});
     }
@@ -101,7 +109,7 @@
      * @param rls which columns to update, nil == all
      */
     global define void updateRlColumns (string service_name, map service,
-					list(string) rls) ``{
+					list<string> rls) ``{
 	if (c_runlevels == -1)
 	{
 	    return;
@@ -188,8 +196,8 @@
      */
     global define map queryRlCheckBoxes (string service_name, map service) ``{
 	list start_in = [];
-	foreach (`i, RunlevelEd::runlevels, ``{
-	    if (UI::QueryWidget (`id (i), `Value))
+	foreach (string i, RunlevelEd::runlevels, ``{
+	    if ((boolean) UI::QueryWidget (`id (i), `Value))
 	    {
 		start_in = add (start_in, i);
 	    }
@@ -270,13 +278,13 @@
      */
     global define list getDefaultPicker (symbol mode) ``{
 	list items = [];
-	list (string) rls = RunlevelEd::runlevels;
+	list<string> rls = RunlevelEd::runlevels;
 	if (mode == `auto)
 	{
 	    rls = prepend (rls, "");
 	}
 
-	foreach (`i, rls, ``{
+	foreach (string i, rls, ``{
 	    if ("0" != i && "6" != i && "S" != i && "B" != i)
 	    {
 		items = add (items, `item (`id (i),
@@ -291,7 +299,7 @@
      * @param	rll	a list of runlevels or nil, meaning "all"
      * @return		"in [these] runlevels" (translated)
      */
-    global define string getInRunlevels (list(string) rll) ``{
+    global define string getInRunlevels (list<string> rll) ``{
 	if (rll == nil)
 	{
 	    // translators: substituted into a message like
@@ -380,7 +388,7 @@
 
 	list items = [];
 	boolean first = true;
-	foreach (`k, `v, services, ``{
+	foreach (string k, map v, services, ``{
 	    if (first)
 	    {
 		first = false;
@@ -505,16 +513,16 @@ Please wait.</P>")
      * @param enable	enabling or disabling?
      */
     global define void SetService (string service_name,
-				   list (string) rls, boolean enable) ``{
+				   list<string> rls, boolean enable) ``{
 	map service = RunlevelEd::services[service_name]:$[];
-	list(string) start_in = nil;
+	list<string> start_in = nil;
 	if (rls == nil)
 	{
 	    start_in = [];
 	}
 	else
 	{
-	    map start = tomap (service["start"]:[]);
+	    map start = tomap_true (service["start"]:[]);
 	    foreach (string rl, rls, ``{
 		start = add (start, rl, enable);
 	    });
@@ -543,8 +551,8 @@ Please wait.</P>")
      * @param services a service list
      * @return [continue?, filtered list]
      */
-    global define boolean CheckMissingServices (list(string) services) ``{
-	list(string) missing = [];
+    global define list CheckMissingServices (list<string> services) ``{
+	list<string> missing = [];
 	boolean ok = true;
 	services = filter (string s, services, ``{
 	    if (haskey (RunlevelEd::services, s))
@@ -598,7 +606,7 @@ Please wait.</P>")
      * @return success (may have been canceled because of dependencies)
      */
     global define boolean ModifyServiceDep (string service_name,
-					    list(string) rls,
+					    list<string> rls,
 					    boolean enable,
 					    boolean init_time,
 					    boolean run_time) ``{
@@ -764,7 +772,7 @@ and enabled, because it depends on them:
      */
     global define boolean SimpleSetServiceDep (string service_name,
 					       boolean enable) ``{
-	list(string) rls = enable?
+	list<string> rls = enable?
 	    RunlevelEd::services[current_service, "defstart"]:[] :
 	    nil;
 	return ModifyServiceDep (service_name, rls, enable, true, true);
@@ -780,7 +788,7 @@ and enabled, because it depends on them:
      * @return success (may have been canceled because of dependencies)
      */
     global define boolean EnableDisableServiceDep (string service_name,
-						   list(string) rls,
+						   list<string> rls,
 						   boolean enable) ``{
 	return ModifyServiceDep (service_name, rls, enable, true, false);
     }
@@ -846,7 +854,7 @@ and enabled, because it depends on them:
      * @param len minimal length of line
      * @return string formated string
      */
-    global define string formatLine (list(string) l, integer len) ``{
+    global define string formatLine (list<string> l, integer len) ``{
 	string s = "";
 	string line = "     ";
 	string add_sep = "";
@@ -880,18 +888,18 @@ and enabled, because it depends on them:
     global define string overviewText () ``{
 	list should_not_run = [];
 	list should_run = [];
-	foreach (`k, `v, RunlevelEd::services, ``{
+	foreach (string k, map v, RunlevelEd::services, ``{
 	    if (RunlevelEd::StartContainsImplicitly  (v["start"]:[],
 						      RunlevelEd::current))
 		{   // it should run
-		    if (0 != lookup (v, "started", ""))
+		    if (0 != v["started"]:-1)
 			{
 			    should_run = add (should_run, k);
 			}
 		}
 	    else
 		{
-		    if (0 == lookup (v, "started", ""))
+		    if (0 == v["started"]:-1)
 			{
 			    should_not_run = add (should_not_run, k);
 			}
@@ -1101,7 +1109,7 @@ Select runlevels in which to run the currently selected service.<ul>
 		    ret = `abort;
 		}
 
-		current_service = UI::QueryWidget (`id (`table), `CurrentItem);
+		current_service = (string) UI::QueryWidget (`id (`table), `CurrentItem);
 
 		if (`abort == ret)
 		{
@@ -1138,7 +1146,7 @@ both of them?")))
 			    continue;
 			}
 		    }
-		    RunlevelEd::default = UI::QueryWidget (`id (`default_rl), `Value);
+		    RunlevelEd::default = (string) UI::QueryWidget (`id (`default_rl), `Value);
 		    break;
 		}
 		else if (`table == ret)
@@ -1150,12 +1158,12 @@ both of them?")))
 		{
 		    // checkbox pressed
 		    // - enable/disable current_service in one runlevel
-		    boolean enable = UI::QueryWidget (`id (ret), `Value);
-		    list(string) rls = [ret];
-		    if (!EnableDisableServiceDep (current_service, [ret], enable))
+		    boolean enable = (boolean) UI::QueryWidget (`id (ret), `Value);
+		    list<string> rls = (list<string>) [ret];
+		    if (!EnableDisableServiceDep (current_service, (list<string>) [ret], enable))
 		    {
 			// restore the check box
-			updateRlCheckBox (service, ret);
+			updateRlCheckBox (service, (string) ret);
 		    }
 		}
 		else if (`depviz == ret)
@@ -1166,7 +1174,7 @@ both of them?")))
 		}
 		else if (`to_enable == ret)
 		{
-		    list(string) default = RunlevelEd::services[current_service, "defstart"]:[];
+		    list<string> default = RunlevelEd::services[current_service, "defstart"]:[];
 		    EnableDisableServiceDep (current_service, default, true);
 		    service = RunlevelEd::services[current_service]:$[];
 		    changeService1 (service);
@@ -1182,7 +1190,7 @@ both of them?")))
 		    // yes-no popup
 		    if (Popup::YesNo (_("Really enable all services?")))
 		    {
-			foreach (`k, `v, RunlevelEd::services, ``{
+			foreach (string k, map v, RunlevelEd::services, ``{
 			    setServiceToDefault (k);
 			});
 			UI::ChangeWidget (`id (`table), `Items, servicesToTable (`complex));
@@ -1306,7 +1314,7 @@ and the service itself and disables their start at system boot time.</p>")
 		ret = `abort;
 	    }
 
-	    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
+	    current_service = (string) UI::QueryWidget (`id (`table), `CurrentItem);
 
 	    if (`abort == ret)
 	    {
@@ -1364,7 +1372,7 @@ both of them?")))
 	    }
 	}
 	Wizard::RestoreScreenShotName ();
-	return ret;
+	return (symbol) ret;
     }
 
 
@@ -1417,7 +1425,7 @@ both of them?")))
 	    ret = UI::UserInput ();
 	    if (`ok == ret)
 	    {
-		name = UI::QueryWidget (`id (`name), `Value);
+		name = (string) UI::QueryWidget (`id (`name), `Value);
 		if (nil == name || "" == name || haskey (RunlevelEd::services, name))
 		{
 		    // message popup
@@ -1426,8 +1434,8 @@ name or the name specified is already in use."));
 		    continue;
 		}
 		list def = [];
-		foreach (`i, RunlevelEd::runlevels, ``{
-		    if (UI::QueryWidget (`id (i), `Value))
+		foreach (string i, RunlevelEd::runlevels, ``{
+		    if ((boolean) UI::QueryWidget (`id (i), `Value))
 		    {
 			def = add (def, i);
 		    }
@@ -1571,7 +1579,7 @@ disabled?\n"), nfs_adj)))
 			    continue;
 			}
 		    }
-		    RunlevelEd::default = UI::QueryWidget (`id (`default_rl), `Value);
+		    RunlevelEd::default = (string) UI::QueryWidget (`id (`default_rl), `Value);
 		    break;
 		}
 		else if (`add == ret)
@@ -1614,7 +1622,7 @@ disabled?\n"), nfs_adj)))
 		{
 		    // checkbox pressed
 		    // checked or unchecked?
-		    string checked = ((UI::QueryWidget (`id (ret), `Value)) ? ret : " ");
+		    string checked = (((boolean) UI::QueryWidget (`id (ret), `Value)) ? (string) ret : " ");
 		    service = queryRlCheckBoxes (current_service, service);
 		    UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret, -1)), checked);
 		    UI::ChangeWidget (`id (`table), `Item (current_service, c_dirty), CheckMark);
@@ -1623,14 +1631,14 @@ disabled?\n"), nfs_adj)))
 		// not a part of the else-if chain above!
 		if (`table == ret)
 		{
-		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
+		    current_service = (string) UI::QueryWidget (`id (`table), `CurrentItem);
 		    service = lookup (RunlevelEd::services, current_service, $[]);
 		    updateRlCheckBoxes (service);
 		    while (nil != UI::PollInput ()) {}
 		}
 	    }
 	Wizard::RestoreScreenShotName ();
-	return ret;
+	return (symbol) ret;
     }
 
     // generic ui helpers
@@ -1714,8 +1722,8 @@ disabled?\n"), nfs_adj)))
      * @param l a list
      * @return a map
      */
-    global define map tomap (list l) ``{
-	return listmap (any i, l, ``( [i, true] ));
+    global define map tomap_true (list<string> l) ``{
+	return listmap (string i, l, ``( $[i: true] ));
     }
 
     /**

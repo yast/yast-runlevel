@@ -25,6 +25,25 @@
     include "runlevel/toposort.ycp";
 
     /**
+     * Like "requires" but in reverse direction.
+     * Used for stopping and disabling services.
+     */
+    map what_requires = $[];
+
+    /**
+     * A graph where nodes are scripts or system facilities
+     * but not normal facilities (ie. provides are solved).
+     */
+    map<string, list<string> >  requires = $[];
+
+    define void buildRequires ();
+    define void addRequires (string service, list<string> req_facilities);
+    define list reverse (list l);
+    global define boolean StartContainsImplicitly (list<string> rls, string rl);
+    define boolean ImplicitlySubset (list<string> rls_a, list<string> rls_b);
+    define boolean subset (list a, list b);
+    
+    /**
      * @struct service
      * One service is described by such map: <pre>
       "servicename" : $[
@@ -86,7 +105,7 @@
     /**
      * List of all runlevels available in the system.
      */
-    global list runlevels = [];
+    global list<string> runlevels = [];
 
     /**
      * Current runlevel
@@ -122,27 +141,27 @@
 	// progress caption
 	Progress::Simple (_("Initializing runlevel editor. Please wait."), " ", 7, "");
 	Progress::NextStep ();
-	runlevels= SCR::Read (.init.scripts.runlevel_list);
+	runlevels= (list) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))
 	{
 	    runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
 	}
 	Progress::NextStep ();
 
-	current = SCR::Read (.init.scripts.current_runlevel);
+	current = (string) SCR::Read (.init.scripts.current_runlevel);
 	Progress::NextStep ();
 
 	//..
-	default= SCR::Read (.init.scripts.default_runlevel);
+	default = (string) SCR::Read (.init.scripts.default_runlevel);
 	default_orig = default;
 	Progress::NextStep ();
 
-	system_requires = SCR::Read (.init.insserv_conf);
+	system_requires = (map) SCR::Read (.init.insserv_conf);
 	Progress::NextStep ();
 
-	map details = SCR::Read (.init.scripts.runlevels);
+	map details = (map) SCR::Read (.init.scripts.runlevels);
 	Progress::NextStep ();
-	services = SCR::Read (.init.scripts.comments);
+	services = (map) SCR::Read (.init.scripts.comments);
 	Progress::NextStep ();
 	services = mapmap (string k, map v, services, ``{
 	    foreach (string f, v["provides"]:[], ``{
@@ -160,7 +179,7 @@
 	    map second_service = lookup (details, k, $[]);
 	    v = add (v, "start", lookup (second_service, "start", []));
 	    v = add (v, "stop" , lookup (second_service, "stop",  []));
-	    return [ k, v ];
+	    return $[ k: v ];
 	});
 	buildRequires ();
 	what_requires = ReverseGraph (requires);
@@ -168,16 +187,6 @@
 	return true;
     }
 
-    /**
-     * A graph where nodes are scripts or system facilities
-     * but not normal facilities (ie. provides are solved).
-     */
-    map requires = $[];
-    /**
-     * Like "requires" but in reverse direction.
-     * Used for stopping and disabling services.
-     */
-    map what_requires = $[];
     /**
      * If there's a dependency loop, dependency checking is disabled.
      */
@@ -187,7 +196,7 @@
      */
     define void buildRequires () ``{
 	foreach (string service, map comments, services, ``{
-	    addRequires (service, comments["reqstart"]:[]);
+	    addRequires (service, (list<string>) (comments["reqstart"]:[]));
 	});
 	foreach (string sys_f, list req, system_requires, ``{
 	    addRequires (sys_f, req);
@@ -200,11 +209,11 @@
      * @param service a service
      * @param req_facilities its required facilities
      */
-    define void addRequires (string service, list(string) req_facilities) ``{
-	list req_s = filter (string f, req_facilities,
+    define void addRequires (string service, list<string> req_facilities) ``{
+	list<string> req_s = filter (string f, req_facilities,
 			     ``( substring (f, 0, 1) != "+"));
 	req_s = maplist (string f, req_s, ``( what_provides[f]:f ));
-	requires = add (requires, service, req_s);
+	requires = (map<string, list<string> > ) add (requires, service, req_s);
     }
 
     /**
@@ -218,14 +227,14 @@
      * If dependencies are disabled, returns an empty list, as if
      * there were no dependencies.
      */
-    global define list(string) ServiceDependencies (string service,
+    global define list<string> ServiceDependencies (string service,
 						    boolean enable) ``{
 	if (dependencies_disabled)
 	{
 	    return [];
 	}
 	// make a dependency subgraph
-	map s_req = ReachableSubgraph (enable? requires: what_requires,
+	map<string, list<string> > s_req = ReachableSubgraph (enable? requires: what_requires,
 				       service);
 	y2debug ("DEPGRAPH %1: %2", service, s_req);
 	// sort it
@@ -277,8 +286,8 @@ Further dependency checking will be disabled."));
      * @param init_time enable/disable
      * @param run_time  start/stop
      */
-    global define list(string) FilterAlreadyDoneServices (list(string) svcs,
-							  list(string) rls,
+    global define list<string> FilterAlreadyDoneServices (list<string> svcs,
+							  list<string> rls,
 							  boolean enable,
 							  boolean init_time,
 							  boolean run_time) ``{
@@ -355,7 +364,7 @@ Further dependency checking will be disabled."));
      * @param rl  which runlevel is tested
      * @return should it be running in rl?
      */
-    global define boolean StartContainsImplicitly (list(string) rls,
+    global define boolean StartContainsImplicitly (list<string> rls,
 						   string rl) ``{
 	return contains (rls, "B") || contains (rls, rl);
     }
@@ -363,8 +372,8 @@ Further dependency checking will be disabled."));
      * Whether a set of runlevels is a subset of another set of runlevels.
      * But expands "B" to the whole set
      */
-    define boolean ImplicitlySubset (list(string) rls_a,
-					    list(string) rls_b) ``{
+    define boolean ImplicitlySubset (list<string> rls_a,
+					    list<string> rls_b) ``{
 	return contains (rls_b, "B") || subset (rls_a, rls_b);
     }
 
@@ -382,16 +391,16 @@ Further dependency checking will be disabled."));
      * original "start"/"stop" for them.
      */
     global define void ClearServices () ``{
-	services = mapmap (`k, `v, services, ``{
-	    if (lookup (v, "dirty", false))
+	services = mapmap (string k, map v, services, ``{
+	    if (v["dirty"]:false)
 	    {
 		v = add (v, "dirty", false);
-		map r = SCR::Read (.init.scripts.runlevel, k);
-		r = lookup (r, k, $[]);
-		v = add (v, "start", lookup (r, "start", []));
-		v = add (v, "stop", lookup (r, "stop", []));
+		map r = (map) SCR::Read (.init.scripts.runlevel, k);
+		r = r[k]:$[];
+		v = add (v, "start", r["start"]:[]);
+		v = add (v, "stop", r["stop"]:[]);
 	    }
-	    return [k, v];
+	    return $[k: v];
 	});
     }
 
@@ -411,14 +420,14 @@ Further dependency checking will be disabled."));
      * @return string name of the first enabled service that requires portmap
      */
     global define string CheckPortmap () ``{
-	if (!isDisabled (lookup (services, "portmap", $[])))  // if portmap is enabled, there is no problem
+	if (!isDisabled (services["portmap"]:$[]))  // if portmap is enabled, there is no problem
 	    return nil;
 	string req = nil;
 	list in = [];
-	foreach (`k, `v, services, ``{
-	    if (contains (lookup (v, "reqstart", []), "portmap") && size (lookup (v, "start", [])) > 0)
+	foreach (string k, map v, services, ``{
+	    if (contains (v["reqstart"]:[], "portmap") && size (v["start"]:[]) > 0)
 	    {
-		in = union (in, toset (lookup (v, "start", [])));
+		in = union (in, toset (v["start"]:[]));
 		if (nil == req)
 		    req = k;
 	    }
@@ -447,9 +456,9 @@ Further dependency checking will be disabled."));
 	    SCR::Write (.init.scripts.default_runlevel, default);
 	Progress::NextStep ();
 
-	map failed = filter (`k, `v, services, ``{
+	map failed = filter (string k, map v, services, ``{
 	    boolean fail = false;
-	    if (lookup (v, "dirty", false))
+	    if (v["dirty"]:false)
 	    {
 		// progress item, %1 is a service (init script) name
 		Progress::Title (sformat (_("Service %1"), k));
@@ -465,7 +474,7 @@ Further dependency checking will be disabled."));
 	    return fail;
 	});
 	Progress::NextStep ();
-	string failed_s = mergestring (maplist (`k, `v, failed, ``(k)), ", ");
+	string failed_s = mergestring ((list<string>) maplist (string k, any v, failed, ``(k)), ", ");
 	if (size (failed_s) > 0)
 	{
 	    Report::Error (sformat (_("Failed services: %1."), failed_s));
@@ -483,12 +492,12 @@ Further dependency checking will be disabled."));
 	    return true;
 
 	boolean dirty = false;
-	foreach (`k, `v, services, ``{
+	foreach (string k, map v, services, ``{
 	    if (dirty)
 	    {
 		return ;
 	    }
-	    if (lookup (v, "dirty", false))
+	    if (v["dirty"]:false)
 	    {
 		dirty = true;
 	    }
@@ -504,12 +513,12 @@ Further dependency checking will be disabled."));
      *]</pre>
      */
     global define map Export () ``{
-	map svc = filter (`k, `v, services, ``{
-	    return lookup (v, "dirty", false);
+	map svc = filter (string k, map v, services, ``{
+	    return v["dirty"]:false;
 	});
 	list tmp_services = maplist(string service_name, map service_data, svc, ``{
-	    string  service_start = mergestring(lookup(service_data,"start",[]), " ");
-	    string service_stop = mergestring(lookup(service_data,"stop",[]), " ");
+	    string  service_start = mergestring(service_data["start"]:[], " ");
+	    string service_stop = mergestring(service_data["stop"]:[], " ");
 
 	    map service_map = $[];
 	    service_map["service_name"] = service_name;
@@ -538,14 +547,14 @@ Further dependency checking will be disabled."));
      * @return success state
      */
     global define boolean Import (map s) ``{
-	runlevels= SCR::Read (.init.scripts.runlevel_list);
+	runlevels= (list) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))
 	{
 	    runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
 	}
 
 	//..
-	default= SCR::Read (.init.scripts.default_runlevel);
+	default = (string) SCR::Read (.init.scripts.default_runlevel);
 	default_orig = default;
 
 	// and finaly process map being imported
@@ -580,12 +589,12 @@ Further dependency checking will be disabled."));
 	    service_map = add(service_map,"start",start);
 	    if (size(stop) > 0 )
 	    service_map = add(service_map,"stop",stop);
-	    return([name,service_map]);
+	    return($[name:service_map]);
 	});
 
 	if (size (tmp_services) > 0)
 	{
-	    foreach (`k, `v, tmp_services, ``{
+	    foreach (string k, map v, tmp_services, ``{
 		if (nil == lookup (services, k, nil))
 		{
 		    y2milestone ("Service %1 is not installed on target system, adding it by hand.", k);
