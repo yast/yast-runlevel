@@ -26,6 +26,19 @@
     include "ui/common_popups.ycp";
 
     /**
+     * Create term of checkboxes for runlevel selection.
+     * @return HBox full of checkboxes.
+     */
+    global define getRlCheckBoxes () ``{
+	term rls = `HBox (`opt (`hstretch));
+	foreach (`i, Runlevel::runlevels, ``{
+	    if (size (rls) > 1)
+		rls = add (rls, `HStretch ());
+	    rls = add (rls, `CheckBox (`id (i), `opt (`notify), "&" + i));
+	});
+	return rls;
+    }
+    /**
      * Get help text for rcscript start|stop command exit value.
      * @param exit exit value
      * @return string help text
@@ -33,9 +46,9 @@
     global define string getActionReturnHelp (integer exit) ``{
 	return lookup ($[
 		0: _("Success."),  // this is not used but in case someone called this function with bad input
-		2: _("Invalid or excess argument(s)."),
+		2: _("Invalid or excess arguments."),
 		3: _("Unimplemented feature."),
-		4: _("User had insufficient privilege."),
+		4: _("User had insufficient privileges."),
 		5: _("Program is not installed."),
 		6: _("Program is not configured."),
 		7: _("Program is not running."),
@@ -87,8 +100,9 @@ Please wait.</P>")
 	    // The change does not occur immediately. After a reboot the system boots into the specified runlevel.
 	    _("<p>Changes to the <b>default runlevel</b> will take effect next time you boot your computer.</p>")
 	    +
-	    _("<p>To change the behaviour of runlevels and system services in detail, click <b>Runlevel properties</b>.
- You will also be able to start and stop services directly.</p>")
+	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Runlevel properties</b>.
+ You will also be able to start and stop services directly.</p>
+")
 	    ;
     }
 
@@ -99,8 +113,9 @@ Please wait.</P>")
 	// help text
 	return
 	    // help text
-	    _("<p>You can assign system services to runlevels by selecting the list entry of the resp. service and
- then ticking or unticking the <b>checkboxes B - S</b> for the runlevel.</p>")
+	    _("<p>Assign system services to runlevels by selecting the list entry of the respective service then
+checking or unchecking the <b>check boxes B-S</b> for the runlevel.</p>
+")
 	    +
 	    _("<p><b>Start/Stop/Refresh:</b> Use this to start or stop services individually.</p>")
 	    +
@@ -417,19 +432,6 @@ Select runlevels in which to run currently selected service.<ul>
 	    foreach (`i, Runlevel::runlevels, ``{
 		UI::ChangeWidget (`id (i), `Value, contains (start, i));
 	    });
-	    list menu_items = [
-		// menu item
-		`item (`id (`to_default), _("Reset to &default")),
-		];
-	    if (Runlevel::isDisabled (service))
-	    {
-		// menu item
-		menu_items = add (menu_items, `item (`id (`to_enable), _("&Enable the service")));
-	    }
-	    // menu item
-	    menu_items = add (menu_items, `item (`id (`to_all_default), _("Reset &all services to default")));
-	    // menu button label
-	    UI::ReplaceWidget (`id (`menubutton), `MenuButton (_("Set/&Reset"), menu_items));
 	}
 	/**
 	 * Reads data from checkboxes and updates service and services maps.
@@ -494,10 +496,6 @@ Select runlevels in which to run currently selected service.<ul>
 	foreach (`i, Runlevel::runlevels, ``{
 	    header = add (header, `Center (" " + i + " "));
 	});
-	term rls = `HBox ();
-	foreach (`i, Runlevel::runlevels, ``{
-	    rls = add (rls, `CheckBox (`id (i), `opt (`notify), "&" + i));
-	});
 	// headers in table
 	header = add (header, _("Description"));
 	term contents = `VBox (
@@ -515,7 +513,7 @@ Select runlevels in which to run currently selected service.<ul>
 	    `VBox (
 		// label above checkboxed
 		`Label (`id (`service_label), `opt (`hstretch), _("Service will be started in following runlevels:")),
-		`HBox (rls)
+		getRlCheckBoxes ()
 		),
 	    `HBox (
 		// menubutton label
@@ -528,7 +526,7 @@ Select runlevels in which to run currently selected service.<ul>
 		`ReplacePoint (
 		    `id (`menubutton),
 		    // menubutton label
-		    `MenuButton (_("Set/&Reset"), [
+		    `MenuButton (_("Set/&Reset"), [	// FIXME:after 8.0 remove Enable! (and remove it from help text too)
 			`item (`id (`to_default), _("Reset to &default")),
 			`item (`id (`to_enable), _("&Enable the service")),
 			`item (`id (`to_all_default), _("Reset &all services to default")),
@@ -569,6 +567,15 @@ Select runlevels in which to run currently selected service.<ul>
 		}
 		if (`next == ret)
 		{
+		    if (Runlevel::CheckXInetd () && !UI::YesNoHeadlinePopup (
+				_("Both inetd and xinetd are selected!"),
+				_("Services inetd and xinetd need extra configuration
+to run simultaneously. Do you really want to run
+both of them?")))
+		    {
+			ret = nil;
+			continue;
+		    }
 		    string nfs_adj = Runlevel::AdjustNfsserver ();
 		    if (nil != nfs_adj)
 		    {
@@ -687,16 +694,12 @@ Select runlevels in which to run currently selected service.<ul>
      * @return new service
      */
     global define map addService () ``{
-	term rls = `HBox ();
-	foreach (`i, Runlevel::runlevels, ``{
-	    rls = add (rls, `CheckBox (`id (i), "&" + i));
-	});
 	UI::OpenDialog (`VBox (
 		    `Heading (`opt (`hstretch), _("Add service")),
 		    `VSpacing (1),
 		    `TextEntry (`id (`name), _("Service &name")),
 		    `Label (`opt (`hstretch), _("Starts in these runlevels by default:")),
-		    rls,
+		    getRlCheckBoxes (),
 		    `VSpacing (1),
 		    `TextEntry (`id (`des), _("&Description (optional)"), ""),
 		    `VSpacing (1),
@@ -713,7 +716,8 @@ Select runlevels in which to run currently selected service.<ul>
 		name = UI::QueryWidget (`id (`name), `Value);
 		if (nil == name || "" == name || haskey (Runlevel::services, name))
 		{
-		    UI::MessagePopup (_("Invalid service name. You did not specify service\nname or the name you specified is already in use."));
+		    UI::MessagePopup (_("Invalid service name. You did not specify service
+name or the name specified is already in use."));
 		    continue;
 		}
 		list def = [];
@@ -818,10 +822,6 @@ Select runlevels in which to run currently selected service.<ul>
 	foreach (`i, Runlevel::runlevels, ``{
 	    header = add (header, `Center (" " + i + " "));
 	});
-	term rls = `HBox ();
-	foreach (`i, Runlevel::runlevels, ``{
-	    rls = add (rls, `CheckBox (`id (i), `opt (`notify), "&" + i));
-	});
 	// headers in table
 	header = add (header, _("Description"));
 	term contents = `VBox (
@@ -833,7 +833,7 @@ Select runlevels in which to run currently selected service.<ul>
 	    `VBox (
 		// label above checkboxed
 		`Label (`id (`service_label), `opt (`hstretch), _("Service will be started in following runlevels:")),
-		`HBox (rls)
+		getRlCheckBoxes ()
 		),
 	    `HBox (
 		`PushButton (`id (`add), _("A&dd")),
@@ -862,6 +862,14 @@ Select runlevels in which to run currently selected service.<ul>
 		}
 		if (`next == ret)
 		{
+		    if (Runlevel::CheckXInetd () && !UI::YesNoHeadlinePopup (
+				_("Both inetd and xinetd are selected!"),
+				_("Services inetd and xinetd need extra configuration
+to run simultaneously. Do you really want to run
+both of them?")))
+		    {
+			continue;
+		    }
 		    string nfs_adj = Runlevel::AdjustNfsserver ();
 		    if (nil != nfs_adj)
 		    {

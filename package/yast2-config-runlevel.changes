@@ -1,4 +1,31 @@
 -------------------------------------------------------------------
+Thu Mar 21 09:40:13 CET 2002 - pblahos@suse.cz
+
+- Check for collision of inetd and xinetd didn't work. (Bug #15266)
+
+-------------------------------------------------------------------
+Wed Mar 13 15:15:02 CET 2002 - pblahos@suse.cz
+
+- Improved spaces between checkboxes in details dialog. (Bug #14942)
+
+-------------------------------------------------------------------
+Tue Mar 12 13:06:51 CET 2002 - pblahos@suse.cz
+
+- Added warning when user selects both inetd and xinetd. (Bug #14840)
+
+-------------------------------------------------------------------
+Thu Mar  7 10:56:47 CET 2002 - pblahos@suse.cz
+
+- Flickering in ncurses mode was fixed by removing ReplaceWidget
+  call (Bug #14534)
+
+-------------------------------------------------------------------
+Wed Mar  6 15:13:14 CET 2002 - pblahos@suse.cz
+
+- _auto module returns $[] if there is no change (Back or Abort
+  pressed) (Bug #14526)
+
+-------------------------------------------------------------------
 Wed Feb 13 08:19:21 CET 2002 - pblahos@suse.cz
 
 - Fixed typo (Runlevels 0 - S --> B - S)

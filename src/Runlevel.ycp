@@ -267,12 +267,7 @@
      * @return boolean true if service is disabled
      */
     global define boolean isDisabled (map service) ``{
-	if (0 == size (lookup (service, "start", [])) &&
-	    0 != size (lookup (service, "defstart", [])))
-	{
-	    return true;
-	}
-	return false;
+	return 0 == size (lookup (service, "start", []));
     }
 
     /**
@@ -305,6 +300,13 @@
 	    return req;
 	}
 	return nil;
+    }
+    /**
+     * If inetd and xinetd are enabled together, show a warning.
+     * @return are both of them enabled?
+     */
+    global define boolean CheckXInetd () ``{
+	return !isDisabled (lookup (services, "inetd", $[])) && !isDisabled (lookup (services, "xinetd", $[]));
     }
 
     /**
