@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Sep 26 21:56:53 EDT 2002 - nashif@suse.de
+
+- Fix: ServiceInfo is part of the Runlevel module
+- 2.6.16
+
+-------------------------------------------------------------------
 Sat Sep  7 12:00:22 EDT 2002 - nashif@suse.de
 
 - added 'service_status' to enable/disable a service with default 
