@@ -520,6 +520,7 @@ Further dependency checking will be disabled."));
      *]</pre>
      */
     global define map Export () ``{
+        y2debug("services: %1", services);
 	map<string,map> svc = (map<string, map>)filter (string k, map v, services, ``{
 	    return v["dirty"]:false;
 	});
@@ -540,8 +541,12 @@ Further dependency checking will be disabled."));
 
 	    return (service_map);
 	});
-	map ret = $[ "services" : tmp_services ];
-	if (default != default_orig && default != "")
+        map ret = $[];
+        if (size(tmp_services)>0)
+        {
+	    ret = $[ "services" : tmp_services ];
+        }
+	if ( default != "")
 	{
 	    ret["default"] = default;
 	}
