@@ -279,7 +279,7 @@
     /**
      * Returns items for default runlevel combo box.
      * (Excludes 0, 6, S and B)
-     * @param mode if `auto, adds Unchanged
+     * @param mode if `auto, adds Unchanged. if `proposal, only 3 and 5
      * @return list List of items. Default is selected.
      */
     define list getDefaultPicker (symbol mode) ``{
@@ -288,6 +288,10 @@
 	if (mode == `auto)
 	{
 	    rls = prepend (rls, "");
+	}
+	else if (mode == `proposal)
+	{
+	    rls = ["3", "5"];
 	}
 
 	foreach (string i, rls, ``{
