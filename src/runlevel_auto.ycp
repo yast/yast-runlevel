@@ -50,18 +50,6 @@ y2debug("param=%1", param);
 // We take data from underlying system
 // RunlevelEd::Read ();
 
-//
-// maps for sequencer
-//
-map aliases = $[
-	"auto" :          ``(AutoDialog ()),
-	];
-
-map main_sequence = $[
-	"ws_start" : "auto",
-	"auto" : $[ `next : `finish, `abort : `abort ],
-	];
-
 
 /* Import Data*/
 if(func == "Import") {
