@@ -24,8 +24,6 @@ Summary:	Configuration of runlevel
 
 %files
 %defattr(-,root,root)
-%dir @configdir@
-@configdir@/runlevel.y2cc
 %dir @desktopdir@
 @desktopdir@/runlevel.desktop
 %dir @scrconfdir@
