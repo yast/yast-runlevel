@@ -29,11 +29,16 @@
  * stop and enable but I do not see much use of it).
  *      CallModule ("runlevel_adjust", [ "service", "start", "enable" ]);
  *      CallModule ("runlevel_adjust", [ "service", "stop", "disable" ]);
+ *      CallModule ("runlevel_adjust", [ "service", "ask"]);
+ *                -->returns `enabled or `disabled
  *
  * script_name is name of the init script.
  *
  * action is one of:
  *
+ * "ask"     :  Tells if service is disabled or enabled.
+ *              Module returns `disabled if service is disabled and `enabled
+ *              if service is enabled.
  * "disable" :  If service is not disabled, it disables it by calling
  *              insserv service,start=
  *              If service is disabled (START_*!=yes or there are no links),
@@ -49,7 +54,8 @@
  * "start" :    Starts service.
  * "stop"  :    Stops service.
  * "restart" :  Restarts service.
- *              
+ *
+ * You should not combine "ask" with anything else.
  * You should not combine "enable", "disable", "default".
  * You should not combine "start", "stop", "restart".
  *
@@ -60,6 +66,7 @@
  * </pre>
  */
 
+// FIXME: add `ask to tests.
 {
     integer len = size (Args ());
 
@@ -160,12 +167,17 @@
 	}
     y2milestone ("Service %1 current state: %2", service_name, service);
 
+    symbol ret = `ok;
     integer i = 1;
     while (i < len)
 	{
 	    y2milestone ("%1 %2", service_name, Args (i));
 
-	    if ("enable" == Args (i))
+	    if ("ask" == Args (i))
+		{
+		    ret = isDisabled (service) ? `disabled : `enabled;
+		}
+	    else if ("enable" == Args (i))
 		{
 		    if (isDisabled (service))
 			{
@@ -192,5 +204,5 @@
 		}
 	    i = i + 1;
 	}
-    return 0;
+    return ret;
 }

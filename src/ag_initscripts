@@ -221,8 +221,8 @@ while true ; do
         "Read (.comment,"*)
             rootpart=$(echo "$COMMAND" | sed 's/^Read (.comment, *"\(.*\)")/\1/')
             echo '$['
+            cd /etc/init.d
             if [ -f $rootpart ] ; then
-                cd /etc/init.d
                 get_script_info $rootpart
             else
                 echo "\"$rootpart\" : \$[ ]"
