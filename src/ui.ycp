@@ -11,6 +11,7 @@
  * Authors:
  *   Martin Vidner <mvidner@suse.cz>
  *   Petr Blahos <pblahos@suse.cz>
+ *   Martin Lazar <mlazar@suse.cz>
  *
  * $Id$
  *
@@ -45,11 +46,6 @@
     integer fetching_service_index = 0;
     // when fetching_service_status becomes false, we stop fetching services
     boolean fetching_service_status = true;
-
-    // UI "slots"
-    // update parts of the UI
-
-    string CheckMark = UI::Glyph (`CheckMark);
 
     // columns in the table where these items are located
     // -1 means it is not there
@@ -314,8 +310,7 @@
 	    // translators: substituted into a message like
 	    // "To enable/disable foo IN RUNLEVELS 3, 5, this must be done..."
 	    // (do not include the trailing comma here)
-	    return sformat (_("in runlevel %1", "in runlevels %1",
-			      size (rll)), s);
+	    return size(rll)>1 ? sformat(_("in runlevels %1"), s) : sformat(_("in runlevel %1"), s);
 	}
     }
 
@@ -421,7 +416,7 @@
 	    {
 		// dirty
 		c_dirty = col;
-		item = add (item, v["dirty"]:false ? CheckMark : " ");
+		item = add (item, v["dirty"]:false ? UI::Glyph(`CheckMark) : " ");
 		col = col + 1;
 	    }
 	    if (m_bstatus)
@@ -1482,7 +1477,7 @@ name or the name specified is already in use."));
 	define void refreshTableLine2 () ``{
 	    updateRlColumns (current_service, service, nil);
 	    UI::ChangeWidget (`id (`table), `Item (current_service, c_dirty),
-			      service["dirty"]:false ? CheckMark : " ");
+			      service["dirty"]:false ? UI::Glyph(`CheckMark) : " ");
 	}
 
 	// headers in table
@@ -1622,7 +1617,7 @@ disabled?\n"), nfs_adj)))
 		    string checked = (((boolean) UI::QueryWidget (`id (ret), `Value)) ? (string) ret : " ");
 		    service = queryRlCheckBoxes (current_service, service);
 		    UI::ChangeWidget (`id (`table), `Item (current_service, runlevel2tableindex[ret]:-1), checked);
-		    UI::ChangeWidget (`id (`table), `Item (current_service, c_dirty), CheckMark);
+		    UI::ChangeWidget (`id (`table), `Item (current_service, c_dirty), UI::Glyph(`CheckMark));
 		}
 
 		// not a part of the else-if chain above!

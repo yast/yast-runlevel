@@ -8,11 +8,11 @@
      * Coerce the dummy agent to return v when asked for p.
      * No temporary files needed ;-)
      */
-    define SCRTorture (path p, any v) ``{
+    define void SCRTorture (path p, any v) ``{
 	SCR::RegisterAgent(
 	    p, `ag_dummy (
 		``{
-		    global define term MakeDataMap (any V) ``{
+		    define term MakeDataMap (any V) ``{
 			y2debug ("MDM");
 			term DM = ``(DataMap ());
 			// root path: use the default value

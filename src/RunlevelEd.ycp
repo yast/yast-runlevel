@@ -9,6 +9,7 @@
  * Authors:
  *   Martin Vidner <mvidner@suse.cz>
  *   Petr Blahos <pblahos@suse.cz>
+ *   Martin Lazar <mlazar@suse.cz>
  *
  * $Id$
  */
@@ -758,4 +759,141 @@ Further dependency checking will be disabled."));
 	sprint ("}\n");
 	return sprint_buffer;
     }
+
+/*** LiMaL API PART I. - Runlevels in /etc/inittab File ***/
+
+global string GetCurrentRunlevel() {
+    return current == "" ? "unknown" : current;
+}
+global string GetDefaultRunlevel() {
+    return default;
+}
+
+global integer SetDefaultRunlevel(string rl) {
+    default = rl;
+    return 0;
+}
+
+global define list<string> GetAvailableRunlevels() {
+    return runlevels;
+}
+
+/*** LiMaL API PART II. - Files and/or Symlinks in /etc/init.d and /etc/rc?.d ***/
+global boolean ServiceAvailable(string service_name)
+{
+    return (boolean)SCR::Read(.init.scripts.exists, service_name);
+}
+
+global list<string> GetAvailableServices(boolean simple)
+{
+    list<string> s = (list<string>)maplist(string service_name, map opts, RunlevelEd::services, {return service_name;});
+    if (simple) {
+	s = filter(string service_name, s, {return !contains(services[service_name,"defstart"]:[], "B");});
+    }
+    return s;
+}
+
+global list<string> GetServiceCurrentStartRunlevels(string service_name)
+{
+    return services[service_name,"start"]:[];
+}
+
+global list<string> GetServiceCurrentStopRunlevels(string service_name)
+{
+    return services[service_name,"stop"]:[];
+}
+
+/*** LiMaL API PART III. - LSB Comments in Init Scripts ***/
+
+//string GetServiceLSBCommentValue(string service_name, string key); // return particular LSB comment
+//list_of_strings GetServiceLSBCommentKeys(string service_name); // return list of presented LSB comment keys
+
+global list<string> GetServiceDefaultStartRunlevels(string service_name)
+{
+    return services[service_name,"defstart"]:[];
+}
+
+global list<string> GetServiceDefaultStopRunlevels(string service_name)
+{
+    return services[service_name,"defstop"]:[];
+}
+
+//boolean GetServiceDefaultEnabled(string service_name); // not in LSB?
+
+global string GetServiceShortDescription(string service_name)
+{
+    return services[service_name, "shortdescription"]:"";
+}
+
+global string GetServiceDescription(string service_name)
+{
+    return services[service_name, "description"]:"";
+}
+
+//list_of_strings GetServiceProvides(string service_name);
+//list_of_strings GetServiceRequiredStart(string service_name);
+//list_of_strings GetServiceRequiredStop(string service_name);
+//list_of_strings GetServiceShouldStart(string service_name);
+//list_of_strings GetServiceShouldStop(string service_name);
+
+/*** LiMaL API PART V. - Installation and Removal of init.d Files ***/
+global integer ServiceInstall(string service, list<string> rls)
+{
+    if (rls == nil) {
+	rls = GetServiceDefaultStartRunlevels(service);
+    }
+    services[service,"start"] = union(rls, services[service,"start"]:[]);
+    services[service,"dirty"] = true;
+    return 0;
+}
+
+global integer ServiceRemove(string service, list<string> rls)
+{
+    if (rls == nil) {
+	rls = GetServiceDefaultStartRunlevels(service);
+    }
+    services[service,"start"] = filter(string i, services[service,"start"]:[], {return !contains(rls, i);});
+    services[service,"dirty"] = true;
+    return 0;
+}
+
+/*** GIZO ***/
+global void ServiceInstallDep(string service_name, list<string> rls)
+{
+    if (rls == nil) {
+	rls = GetServiceDefaultStartRunlevels(service_name);
+    }
+    list<string> dep_s = RunlevelEd::ServiceDependencies(service_name, true);
+    dep_s = RunlevelEd::FilterAlreadyDoneServices(dep_s, rls, true, true, false);
+    if (dep_s != nil) {
+	foreach(string i, dep_s, {
+	    list<string> default_rls = GetServiceDefaultStartRunlevels(i);
+	    if (contains(default_rls, "B")) {
+		ServiceInstall(i, ["B"]);
+	    } else {
+		ServiceInstall(i, rls);
+	    }
+	});
+    }
+    ServiceInstall(service_name, rls);
+}
+
+global void ServiceRemoveDep(string service_name, list<string> rls)
+{
+    if (rls == nil) {
+	rls = GetServiceDefaultStartRunlevels(service_name);
+    }
+    list<string> dep_s = RunlevelEd::ServiceDependencies(service_name, false);
+    foreach(string rl, (list<string>)union(rls, ["B"]), {
+	list<string> dep_s1 = RunlevelEd::FilterAlreadyDoneServices(dep_s, [rl], false, true, false);
+	if (dep_s1 != nil) {
+	    foreach(string i, dep_s, {
+    		ServiceRemove(i, [rl]);
+	    });
+	}
+    });
+    ServiceRemove(service_name, rls);
+}
+
+
 }

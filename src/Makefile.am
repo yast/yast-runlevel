@@ -20,6 +20,7 @@ client_DATA =			\
 	runlevel_proposal.ycp 
 
 myynclude_DATA =		\
+	wizard.ycp		\
 	toposort.ycp		\
 	ui.ycp
 

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 19 16:59:00 CET 2005 - mlazar@suse.cz
+
+- added command line
+
+-------------------------------------------------------------------
 Wed Jan 12 14:12:06 CET 2005 - mlazar@suse.cz
 
 - fixed #36178 - status of services not correctly displayed after runlevel change

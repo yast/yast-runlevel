@@ -92,13 +92,7 @@ else if (func == "Change") {
 	//..
         RunlevelEd::default = (string) SCR::Read (.init.scripts.default_runlevel);
     }
-	Wizard::CreateDialog ();
-        Wizard::SetDesktopIcon("runlevel");
-        Wizard::DisableAbortButton ();
-	Wizard::RestoreHelp (getHelpProgress ());
-	ret = Sequencer::Run (aliases, main_sequence);
-	UI::CloseDialog ();
-
+    ret = RunlevelAutoSequence();
 }
 /* Read Configuration  */
 else if (func == "Read") {
