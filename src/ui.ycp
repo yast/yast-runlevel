@@ -20,7 +20,7 @@
 {
     textdomain "runlevel";
 
-    import "Runlevel";
+    import "Service";
     import "RunlevelEd";
     import "Wizard";
     import "Label";
@@ -184,7 +184,7 @@
     define void changeService1 (map service) ``{
 	if (service["started"]:-1 < 0)
 	{
-	    integer started = Runlevel::RunInitScript (current_service,
+	    integer started = Service::RunInitScript (current_service,
 						       "status");
 	    service["started"] = started;
 	    RunlevelEd::services[current_service] = service;
@@ -473,33 +473,6 @@
      * @param func function to call
      * @see updateStatusInTable
      */
-/*    define void serviceStatusIterator (term func) ``{
-	if (!fetching_service_status)
-	{
-	    return;
-	}
-	if (fetching_service_index >= size (RunlevelEd::service_list))
-	{
-	    fetching_service_status = false;
-	    return;
-	}
-	string service_name = RunlevelEd::service_list[fetching_service_index]:"";
-	fetching_service_index = fetching_service_index + 1;
-	map service = RunlevelEd::services[service_name]:$[];
-	integer started = Runlevel::RunInitScript (service_name, "status");
-
-	RunlevelEd::services = add (RunlevelEd::services, service_name,
-				  add (service, "started", started));
-	if (func != nil)
-	{
-	    func = add (func, service_name);
-	    func = add (func, service);
-	    func = add (func, started);
-	    eval (func);
-	}
-    }
-*/
-    // This is only patch for new interpreter -- we don't like use uncompatible changes to old interpreter
     define void serviceStatusIterator (boolean use_func) ``{
 	if (!fetching_service_status)
 	{
@@ -513,7 +486,7 @@
 	string service_name = RunlevelEd::service_list[fetching_service_index]:"";
 	fetching_service_index = fetching_service_index + 1;
 	map service = RunlevelEd::services[service_name]:$[];
-	integer started = Runlevel::RunInitScript (service_name, "status");
+	integer started = Service::RunInitScript (service_name, "status");
 
 	RunlevelEd::services[service_name] = add (service, "started", started);
 
@@ -848,7 +821,7 @@ and enabled, because it depends on them:
     define list startStopService (string service_name,
 					 string command) ``{
 	UI::OpenDialog (`Label (service_name + " " + command));
-	map out = Runlevel::RunInitScriptOutput (service_name, command);
+	map out = Service::RunInitScriptOutput (service_name, command);
 	UI::CloseDialog ();
 
 	integer exit = lookup (out, "exit", -1);
@@ -1642,7 +1615,7 @@ disabled?\n"), nfs_adj)))
 		else if (`clear == ret)
 		{
 		    // re-read from SCR
-		    service = Runlevel::ServiceInfo (current_service);
+		    service = Service::Info (current_service);
 		    RunlevelEd::services[current_service] = service;
 		    refreshTableLine2 ();
 		    ret = `table;

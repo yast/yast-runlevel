@@ -17,7 +17,7 @@
     module "RunlevelEd";
     textdomain "runlevel";
 
-    import "Runlevel";
+    import "Service";
     import "Progress";
     import "Summary";
     import "Report";
@@ -469,7 +469,7 @@ Further dependency checking will be disabled."));
 		// save!
 		list start = lookup (v, "start", []);
 		y2milestone ("Setting %1: %2", k, start);
-		fail = ! Runlevel::ServiceFinetune (k, start);
+		fail = ! Service::Finetune (k, start);
 	    }
 	    else
 		// progress item, %1 is a service (init script) name
@@ -571,7 +571,7 @@ Further dependency checking will be disabled."));
 	    {
 		if (service["service_status"]:"" == "enable")
 		{
-		    map info = Runlevel::ServiceInfo(name);
+		    map info = Service::Info(name);
 		    y2milestone("service info for %1: %2", name, info);
 		    start = info["defstart"]:[];
 		    stop = info["defstop"]:[];
