@@ -1,5 +1,11 @@
 -------------------------------------------------------------------
-Mon Jan 31 13:34:18 CET 2005 - gizo@suse.cz
+Thu Feb  3 14:07:35 CET 2005 - mlazar@suse.cz
+
+- 2.11.5
+- fixed bug 50266 - TAB doesn't work in system services (runlevel)
+
+-------------------------------------------------------------------
+Mon Jan 31 13:34:18 CET 2005 - mlazar@suse.cz
 
 - 2.11.4
 
