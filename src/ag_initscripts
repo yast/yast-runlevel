@@ -80,6 +80,7 @@
 export LC_ALL=C
 exec 2>/dev/null
 
+INITD="/etc/init.d"
 
 get_script_info () {
 /usr/bin/awk '
@@ -197,7 +198,7 @@ get_script_info () {
 }
 
 process_all_scripts () {
-    cd /etc/init.d
+    cd $INITD
     for i in * ; do
         if [ -f $i ] ; then
             case "$i" in
@@ -212,7 +213,7 @@ process_all_scripts () {
 
 # Read (.runlevels)
 read_runlevels () {
-    /usr/bin/find /etc/init.d -name "*$1" | /usr/bin/awk -F / '
+    /usr/bin/find $INITD -name "*$1" | /usr/bin/awk -F / '
     BEGIN { SUBSEP = ":"; }
     $4 ~ /^rc.\.d$/ && $5 ~ /^[SK][0-9][0-9]/ {
         scripts [substr ($5, 4)] = 1;
@@ -255,6 +256,11 @@ while true ; do
 	    exit
 	    ;;
 
+        "InitScripts ("*)
+            INITD=$(echo "$COMMAND" | sed 's/^InitScripts ("\(.*\)")/\1/')
+	    echo nil
+	    ;;
+
 	'Read (.comments)')
             echo '$['
             process_all_scripts 
@@ -264,7 +270,7 @@ while true ; do
         "Read (.comment,"*)
             rootpart=$(echo "$COMMAND" | sed 's/^Read (.comment, *"\(.*\)")/\1/')
             echo '$['
-            cd /etc/init.d
+            cd $INITD
             if [ -f $rootpart ] ; then
                 get_script_info $rootpart
             else
@@ -284,7 +290,7 @@ while true ; do
 
         "Read (.exists,"*)
             rootpart=$(echo "$COMMAND" | sed 's/^Read (.exists, *"\(.*\)")/\1/')
-            if [ -f /etc/init.d/$rootpart ] ; then
+            if [ -f $INITD/$rootpart ] ; then
                 echo true
             else
                 echo false
