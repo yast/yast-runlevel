@@ -26,7 +26,7 @@
      * Create term of checkboxes for runlevel selection.
      * @return HBox full of checkboxes.
      */
-    global define getRlCheckBoxes () ``{
+    global define term getRlCheckBoxes () ``{
 	term rls = `HBox (`opt (`hstretch));
 	foreach (`i, Runlevel::runlevels, ``{
 	    if (size (rls) > 1)
@@ -68,6 +68,7 @@
     }
     /**
      * help text for progress
+     * @return help text
      */
     global define string getHelpProgress () ``{
 	return
@@ -83,6 +84,7 @@ Please wait.</P>")
 
     /**
      * help text for main dialog
+     * @return help text
      */
     global define string getHelpMain () ``{
 	return
@@ -105,6 +107,7 @@ Please wait.</P>")
 
     /**
      * help text services dialog
+     * @return help text
      */
     global define string getHelpComplex () ``{
 	// help text
@@ -119,9 +122,9 @@ checking or unchecking the <b>check boxes B-S</b> for the runlevel.</p>
 	    // help text
 	    _("<P><B>Set/Reset:</B>
 Select runlevels in which to run currently selected service.<ul>
-<li><p><b>Enable the service</b><br>Activates the service in the standard runlevels.</p></li>
-<li><p><b>Disable the service</b><br>Deactivates service.</p></li>
-<li><p><b>Enable all services</b><br>Activates all services in their standard runlevels.</p></li>
+<li><b>Enable the service:</b> Activates the service in the standard runlevels.</li>
+<li><b>Disable the service:</b> Deactivates service.</li>
+<li><b>Enable all services:</b> Activates all services in their standard runlevels.</li>
 </ul></p>")
 	    ;
     }

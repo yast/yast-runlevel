@@ -1,3 +1,6 @@
+- Fixed: multiple <p> in one string reported by check_ycp
+- Fixed: undefined or undocumented return values reported by ycpdoc
+
 -------------------------------------------------------------------
 Mon Apr  8 16:38:00 CEST 2002 - pblahos@suse.cz
 
