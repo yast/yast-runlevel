@@ -41,7 +41,7 @@
      * @param new_default New default runlevel.
      * @return integer 0 on success, -1 otherwise.
      */
-    global define setDefaultRunlevel (string new_default) ``{
+    global define saveDefaultRunlevel (string new_default) ``{
         string tmp = SCR (`Read (.target.tmpdir)) + "/inittab";
         if (0 == SCR (`Execute (
             .target.bash,
@@ -89,11 +89,6 @@
         foreach (`k, `v, services, ``{
             script = script + sformat ("/etc/init.d/%1 status\necho $? %1 >> %2\n", k, temp_out);
         });
-        foreach (`k, `v, services, ``{
-            script = script + sformat (
-                "/usr/bin/grep START_ /etc/init.d/%1 2> /dev/null | sed 's/.*START_/START_/g' | sed 's/[^A-Z_].*/ %1/g' >> %2\n",
-                k, temp_out);
-        });
         SCR (`Write (.target.string, temp_script, script));
         SCR (`Execute (.target.bash, "source " + temp_script));
         script = SCR (`Read (.target.string, temp_out));
@@ -108,14 +103,7 @@
                 {
                     return 0;
                 }
-            if ("START_" == substring (select (pair, 0), 0, 6))
-                {
-                    m = add (m, "START", toset (add (lookup (m, "START", []), select (pair, 0))));
-                }
-            else
-                {
-                    m = add (m, "started", select (pair, 0));
-                }
+            m = add (m, "started", select (pair, 0));
             services = add (services, select (pair, 1), m);
         });
     }
@@ -286,17 +274,27 @@
         string temp_script = temp_out + "/servinfo";
         temp_out = temp_out + "/servinfo.out";
         string script = sformat ("#!/bin/bash\n/bin/rm %1\n", temp_out);
-        foreach (`k, `v, services, ``{
+        services = mapmap (`k, `v, services, ``{
+            if (haskey (start_variables_all, k))
+                {
+                    string start_val = SCR (`Read (add (.rc.system, lookup (start_variables_all, k))));
+                    v = add (v, "START", "yes" == start_val ? true : false);
+                }
+            else
+                {
+                    v = add (v, "START", true);
+                }
             script = script + sformat ("/bin/echo %1 >> %2\n", k, temp_out);
             script =
                 script + sformat
                 ("/bin/awk 'BEGIN {wr=0} /### BEGIN INIT INFO/ {wr=1;} /### END INIT INFO/ {wr=0;} { if(wr) print $0; } ' /etc/init.d/%1 >> %2\n",
                  k, temp_out);
+            return [ k, v ];
         });
         SCR (`Write (.target.string, temp_script, script));
         SCR (`Execute (.target.bash, "source " + temp_script));
         script = SCR (`Read (.target.string, temp_out));
-        getScriptInfo2 (splitstring (script, "\n"));
+        getScriptInfo (splitstring (script, "\n"));
     }
     
     /**
@@ -365,5 +363,54 @@
             runlevel2tableindex = add (runlevel2tableindex, i, id);
             id = id + 1;
         });
+    }
+
+    /**
+     * Save changed services into proper runlevels.
+     */
+    global define saveServices () ``{
+        foreach (`k, `v, services, ``{
+            if (lookup (v, "dirty", false))
+                {
+                    // save!
+                    boolean disabled = isDisabled (v); //cache
+                    string commandline = sformat ("/sbin/insserv %1,start=", k);
+                    string add_comma = "";
+                    list start = disabled ? [] : lookup (v, "start", []);
+                    if (contains (lookup (v, "defstart"), "B"))
+                        {
+                            start = union (start, [ "B" ]);
+                        }
+                    foreach (`i, start, ``{
+                        commandline = commandline + add_comma + i;
+                        add_comma = ",";
+                    });
+                    y2milestone ("%1 ===> Running %2", k, commandline);
+                    SCR (`Execute (.target.bash, commandline));
+                    if (!disabled && haskey (start_variables_all, k))
+                        { // set its START variable
+                            SCR (`Write (add (.rc.system, lookup (start_variables_all, k)), "yes"));
+                            y2milestone ("%1 ===> Settings START_ variable %2 to yes", k, lookup (start_variables_all, k));
+                        }
+                }
+        });
+    }
+
+    /**
+     * Is service disabled? Check "disabled" key which reflects whether service is disabled by some START_-like variable.
+     * Otherwise it checks if it is disabled by unchecking all checkboxes...
+     * @param service service to check
+     * @return boolean true if service is disabled
+     */
+    global define isDisabled (map service) ``{
+        if (!lookup (service, "START", true))
+            {
+                return true;
+            }
+        if (0 == size (lookup (service, "start", [])) && lookup (service, "start") != lookup (service, "defstart"))
+            {
+                return true;
+            }
+        return false;
     }
 }

@@ -11,7 +11,8 @@ clients_DATA =		\
 
 include_DATA =		\
 	ui.ycp		\
-	services.ycp
+	services.ycp	\
+	starts.ycp
 
 menu_DATA = menuentry_runlevel.ycp
 

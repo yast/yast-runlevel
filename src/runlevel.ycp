@@ -23,6 +23,11 @@
     include "runlevel/services.ycp";
     include "runlevel/ui.ycp";
 
+    
+    map start_variables_disabled = $[];
+    map start_variables_all = $[];
+    include "runlevel/starts.ycp";
+    
     //
     // globals
     //
@@ -57,7 +62,7 @@
 
         "started" : "0", // return from rcservice status
 
-        "START" : [ "START_ALSA", "START_ALSA_SEQ", ], // START_ variables used in this script
+        "START" : true, // enabled(true)/disabled(false) by START_VARIABLE?
 
         "dirty" : false, // was the entry changed?
       ]
@@ -79,7 +84,12 @@
         DisableWizardAbortButton ();
     });
 
+    // read list of runlevels
     readRunlevelList ();
+    // read current runlevel
+    readCurrentRunlevel ();
+    // read default runlevel
+    readDefaultRunlevel ();
 
     ProgressSetup (_("Initializing runlevel editor. Please wait."),
                      "",
@@ -89,7 +99,6 @@
                      getHelpProgress ());
 
     integer current_step = 0;
-    readCurrentRunlevel ();
     readServiceList ();
     current_step = current_step + 1;
     ProgressStep (current_step);
@@ -106,7 +115,6 @@
         ProgressStep (current_step);
     });
 
-    readDefaultRunlevel ();
 
     //
     // define maps for sequencer
@@ -122,15 +130,6 @@
         "complex" : $[ `next : `finish, `abort : `abort ],
         ];
 
-    if (`finish == WizardSequencer (aliases, main_sequence))
-        {
-            // save changes...
-            foreach (`k, `v, services, ``{
-                if (lookup (v, "dirty", false))
-                    {
-                        y2error ("--- %1 was changed", k);
-                    }
-            });
-        }
+    WizardSequencer (aliases, main_sequence);
     UI (`CloseDialog ());
 }

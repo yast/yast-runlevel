@@ -17,7 +17,7 @@
  */
 {
     textdomain "runlevel";
-
+    
     include "ui/common_popups.ycp";
 
     global define getHelpProgress () ``{
@@ -105,7 +105,7 @@ Select runlevels in which to run currently selected service.<ul>
         foreach (`k, `v, services, ``{
             term item = `item (`id (k), k);
             // started?
-            string started = lookup (v, "started");
+            string started = lookup (v, "started", "");
             // we do not know what is the service state
             string started_text = _("???");
             if ("0" == started)
@@ -113,16 +113,19 @@ Select runlevels in which to run currently selected service.<ul>
                     // yes, service runs
                     started_text = _("Yes");
                 }
-            else if (nil != started)
+            else if ("" != started)
                 {
                     // no, service does not run
                     started_text = _("No");
                 }
             item = add (item, started_text);
-            list rl = lookup (v, "start", []);
+            list rl = [];
+            if (!isDisabled (v))
+                {
+                    rl = lookup (v, "start", []);
+                }
             foreach (`i, runlevels, ``{
                 item = add (item, (contains (rl, i)? i : " "));
-//                item = add (item, (contains (rl, i)? UI (`Glyph (`CheckMark)) : "   "));
             });
             if (first)
                 {
@@ -197,7 +200,7 @@ Select runlevels in which to run currently selected service.<ul>
                             {
                                 continue;
                             }
-                        setDefaultRunlevel (default_runlevel);
+                        saveDefaultRunlevel (default_runlevel);
                         UI (`MessagePopup (_("The new configuration \nwas stored successfully.")));
                     }
                 break;
@@ -231,45 +234,135 @@ Select runlevels in which to run currently selected service.<ul>
     }
 
     /**
-     * Is service disabled? Check "disabled" key which reflects whether service is disabled by some START_-like variable.
-     * Otherwise it checks if it is disabled by unchecking all checkboxes...
-     * @param service service to check
-     * @return boolean true if service is disabled
+     * Set service to its default state upon installation.
+     * @param service_name Name of service to process.
      */
-    global define isDisabled (map service) ``{
-        if (lookup (service, "disabled", false))
-            {
-                return true;
-            }
-        if (0 == size (lookup (service, "start", [])) && lookup (service, "start") != lookup (service, "defstart"))
-            {
-                return true;
-            }
-        return false;
+    global define setServiceToDefault (string service_name) ``{
+        map service = lookup (services, service_name);
+        services = add (services, service_name,
+                        union (service,
+                               $[
+                                   "start": lookup (service, "defstart", []),
+                                   "START": haskey (start_variables_disabled, service_name) ? false : true,
+                                   "dirty": true,
+                                   ]));
     }
 
+    /**
+     * Sets service to run in its default runlevels.
+     * @param service_name Name of service to process.
+     */
+    global define setServiceToEnabled (string service_name) ``{
+        map service = lookup (services, service_name);
+        services = add (services, service_name,
+                        union (service,
+                               $[
+                                   "start" :  lookup (service, "defstart"),
+                                   "START" : true,
+                                   "dirty" : true,
+                                   ]));
+    }
+
+    /**
+     * Prints list items into string, separates list items by commas
+     * and when line exceeds len characters, it does line break (\n).
+     * It adds 5 spaces before each line.
+     * Do not expect reasonable results if you set len < 0.
+     * @param l list of strings
+     * @param len minimal length of line
+     * @return string formated string
+     */
+    global define formatLine (list l, integer len) ``{
+        string s = "";
+        string line = "     ";
+        string add_sep = "";
+        string line_sep = "";
+        foreach (`i, l, ``{
+            if (size (line) > len)
+                {
+                    s = s + line_sep + line;
+                    line_sep = ",\n";
+                    line = "     ";
+                }
+            else
+                {
+                    line = line + add_sep;
+                }
+            line = line + i;
+            add_sep = ", ";
+        });
+        if (size (line) > 0)
+            {
+                s = s + line_sep + line;
+            }
+        return s;
+    }
+    
+    /**
+     * Checks what services should run in this runlevel and do not run
+     * or what services run but should not run.
+     */
+    global define overviewText () ``{
+        list should_not_run = [];
+        list should_run = [];
+        foreach (`k, `v, services, ``{
+            if (!isDisabled (v) && contains (lookup (v, "start", []), current_runlevel))
+                {   // it should run
+                    if ("0" != lookup (v, "started"))
+                        {
+                            should_run = add (should_run, k);
+                        }
+                }
+            else
+                {
+                    if ("0" == lookup (v, "started"))
+                        {
+                            should_not_run = add (should_not_run, k);
+                        }
+                }
+        });
+        string s = "";
+        if (size (should_run) + size (should_not_run) > 0)
+            {
+                // message label
+                s = s + "\n\n"/* + _("Overview") + "\n\n"*/;
+                if (size (should_not_run) > 0)
+                    {
+                        // list of services will follow
+                        s = s + _("Following services run in current\nrunlevel although they should not:");
+                        s = s + "\n" + formatLine (should_not_run, 35) + "\n\n";
+                    }
+                
+                if (size (should_run) > 0)
+                    {
+                        // list of services will follow
+                        s = s + _("Following services do not run in current\nrunlevel although they should:");
+                        s = s + "\n" + formatLine (should_run, 35) + "\n\n";
+                    }
+            }
+        return s;
+    }
+
+    /**
+     * Main dialog for changing services.
+     */
     global define allInOne () ``{
         // currently selected service we are working with
         map service = $[];
-        
+
+        /**
+         * Local function to allInOne. Changes values of checkboxes 0-S. Changes menubuttons.
+         */
         define changeService () ``{
-            string st = lookup (service, "started");
-            if (nil == st)
+            string st = lookup (service, "started", "");
+            if ("" == st)
                 {
                     st = serviceStatus (current_service);
                 }
-            list start = lookup (service, "start", []);
+            list start = isDisabled (service) ? [] : lookup (service, "start", []);
             foreach (`i, runlevels, ``{
-                UI (`ChangeWidget (`id (i), `Value, false));
+                UI (`ChangeWidget (`id (i), `Value, contains (start, i)));
             });
-            if (!isDisabled (service))
-                {
-                    foreach (`i, start, ``{
-                        UI (`ChangeWidget (`id (i), `Value, true));
-                    });
-                }
-            UI (`ChangeWidget (`id (`help), `Value, getHelpComplex ()));
-
             list menu_items = [
                 // menu item
                 `item (`id (`to_default), _("Reset to &default")),
@@ -284,6 +377,9 @@ Select runlevels in which to run currently selected service.<ul>
             // menu button label
             UI (`ReplaceWidget (`id (`menubutton), `MenuButton (_("Set/&Reset"), menu_items)));
         }
+        /**
+         * Reads data from checkboxes and updates service and services maps.
+         */
         define grabData () ``{
             list start_in = [];
             foreach (`i, runlevels, ``{
@@ -292,12 +388,43 @@ Select runlevels in which to run currently selected service.<ul>
                         start_in = add (start_in, i);
                     }
             });
-            if (lookup (service, "start") != start_in)
+            if (lookup (service, "start", []) != start_in)
                 {
                     service = add (add (service, "start", start_in), "dirty", true);
+                    service = add (service, "START", true);
                     services = add (services, current_service, service);
                 }
         }
+
+        /**
+         * Sets columns 0-S (runlevels) in table so they are synchronized with checkboxes.
+         */
+        define refreshTableLine () ``{
+            list start = (isDisabled (service) ? [] : lookup (service, "start", []));
+            foreach (`i, runlevels, ``{
+                UI (`ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, i)), contains (start, i) ? i : " "));
+            });
+        }
+        /**
+         * Sets current value to column running in table.
+         */
+        define refreshTableRunning () ``{
+            string started = lookup (service, "started", "");
+            // we do not know what is the service state
+            string started_text = _("???");
+            if ("0" == started)
+                {
+                    // yes, service runs
+                    started_text = _("Yes");
+                }
+            else if (nil != "")
+                {
+                    // no, service does not run
+                    started_text = _("No");
+                }
+            UI (`ChangeWidget (`id (`table), `Item (current_service, 1), started_text));
+        }
+
         // headers in table
         term header = `header (_("Service"), _("Running"));
         foreach (`i, runlevels, ``{
@@ -336,7 +463,7 @@ Select runlevels in which to run currently selected service.<ul>
                 `HStretch (),
                 `ReplacePoint (
                     `id (`menubutton),
-                // menubutton label
+                    // menubutton label
                     `MenuButton (_("Set/&Reset"), [
                         `item (`id (`to_default), _("Reset to &default")),
                         `item (`id (`to_enable), _("&Enable the service")),
@@ -349,6 +476,8 @@ Select runlevels in which to run currently selected service.<ul>
         UI (`SetWizardContents (_("Runlevel editor: details"), contents, getHelpComplex (), true, true));
         // this ChangeWidget causes next UserInput will return `table FIXME does not work in ncurses
         UI (`ChangeWidget (`id (`table), `CurrentItem, current_service));
+        service = lookup (services, current_service);
+        changeService ();
         any ret = nil;
         while (`next != ret && `back != ret && `abort != ret)
             {
@@ -366,7 +495,9 @@ Select runlevels in which to run currently selected service.<ul>
                         // save changes...
                         if (UI (`YesNoPopup (_("Now the changes to runlevels \nwill be saved."))))
                             {
-                                UI (`MessagePopup (_("The new configuration \nwas stored successfully.")));
+                                saveDefaultRunlevel (default_runlevel);
+                                saveServices ();
+                                UI (`MessagePopup (_("The new configuration \nwas stored successfully.") + overviewText ()));
                                 break;
                             }
                         ret = nil;
@@ -379,57 +510,83 @@ Select runlevels in which to run currently selected service.<ul>
                     }
                 if (`to_default == ret)
                     {
+                        current_service = UI (`QueryWidget (`id (`table), `CurrentItem));
+                        setServiceToDefault (current_service);
+                        service = lookup (services, current_service);
+                        changeService ();
+                        refreshTableLine ();
                     }
                 if (`to_enable == ret)
                     {
+                        current_service = UI (`QueryWidget (`id (`table), `CurrentItem));
+                        setServiceToEnabled (current_service);
+                        service = lookup (services, current_service);
+                        changeService ();
+                        refreshTableLine ();
                     }
                 if (`to_all_default == ret)
                     {
                         UI (`MessagePopup (_("Do you really want to restore all services to their\noriginal status upon initial installation?")));
+                        foreach (`k, `v, services, ``{
+                            setServiceToDefault (k);
+                        });
+                        UI (`ChangeWidget (`id (`table), `Items, servicesToTable ()));
                         UI (`MessagePopup (_("All services restored to their original\nstatus upon initial installation.")));
                     }
-                if (`start == ret || `stop == ret || `status == ret)
+                if (`start == ret || `stop == ret)
                     {
-                        string command = substring (sformat ("%1", ret), 1);
-                        map out = runInitScript (current_service, command);
-                        string message = "";
-                        if (0 == lookup (out, "exit"))
+                        boolean really = true;
+                        if (`stop == ret && "xdm" == current_service)
                             {
-                                // show an output
-                                message = sformat (_("Output from '/etc/init.d/%1 %2':\n\n"),
-                                                   current_service, command)
-                                    + lookup (out, "stdout");
+                                if (!UI (`YesNoPopup ( _("This may kill your X session.\n\nProceed?"))))
+                                    {
+                                        really = false;
+                                    }
                             }
-                        else
+                        really = false;
+                        if (really)
                             {
-                                // show an exit code
-                                message = sformat (_("'/etc/init.d/%1 %2' returned %3"),
-                                                   current_service,command,
-                                                   lookup (out, "exit")
-                                                   );
+                                string command = substring (sformat ("%1", ret), 1);
+                                map out = runInitScript (current_service, command);
+                                string message = "";
+                                if (0 == lookup (out, "exit"))
+                                    {
+                                        // show an output
+                                        message = sformat (_("Output from '/etc/init.d/%1 %2':\n\n"),
+                                                           current_service, command)
+                                            + lookup (out, "stdout");
+                                        //action was successfull
+                                        service = add (service, "started", `start == ret ? "0" : "3");
+                                    }
+                                else
+                                    {
+                                        // show an exit code
+                                        message = sformat (_("'/etc/init.d/%1 %2' returned %3"),
+                                                           current_service,command,
+                                                           lookup (out, "exit")
+                                            );
+                                        service = add (service, "started", "");
+                                    }
+                                refreshTableRunning ();
+                                UI (`MessagePopup (message));
                             }
-                        UI (`MessagePopup (message));
-                        // save ...
-                        // FIXME: get state of current service (rcservice status)
+                    }
+                if (`status == ret)
+                    {
+                        map out = runInitScript (current_service, "status");
+                        service = add (service, "started", sformat ("%1", lookup (out, "exit")));
+                        refreshTableRunning ();
+                        UI (`MessagePopup (sformat (_("Output from '/etc/init.d/%1 status':\n\n"), current_service) + lookup (out, "stdout")));
                     }
                 if (is (ret, string))
                     {
                         // checkbox pressed
                         // checked of unchecked?
-//                        string checked = ((UI (`QueryWidget (`id (ret), `Value))) ? UI (`Glyph (`CheckMark)) : "   ");
                         string checked = ((UI (`QueryWidget (`id (ret), `Value))) ? ret : " ");
                         grabData ();
                         UI (`ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret)), checked));
                     }
             }
-
-        // message label
-        string s0 =_("Overview");
-        // list of services will follow
-        string s1 = _("Following services run in current\nrunlevel although they should not:");
-        // list of services will follow
-        string s2 = _("Following services do not run in current\nrunlevel although they should:");
-
         return ret;      
     }
 }
