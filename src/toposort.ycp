@@ -28,7 +28,7 @@
      *   a superset of the nodes forming the cycle
      *   and "out" is a partial result
      */
-    global define list(string) TopologicalSort (map g) ``{
+    global define list(list) TopologicalSort (map g) ``{
 	list out = [];
 	map in_degree = mapmap (any vertex, list targets, g, ``([vertex, 0]));
 	foreach (any vertex, list targets, g, ``{
