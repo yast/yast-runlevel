@@ -7,6 +7,6 @@ SUBDIRS = autodocs
 docdir = @DOCDIR@
 htmldir = $(docdir)
 
-html_DATA = index.html start_variables.txt
+html_DATA = index.html runlevel.html
 
 EXTRA_DIST = $(html_DATA)

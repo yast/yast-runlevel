@@ -4,22 +4,22 @@
  * tests function dirtyServices
  */
 {
-    include "runlevel/services.ycp";
+    import "Runlevel";
     include "testsuite.ycp";
 
-    map services = $[
+    Runlevel::services = $[
         "a" : $[ ],
         "b" : $["start" : [ "1", ]],
         ];
-    DUMP (dirtyServices ());
-    services = $[
+    DUMP (Runlevel::isDirty ());
+    Runlevel::services = $[
         "a" : $["dirty" : true ],
         "b" : $["start" : [ "1", ]],
         ];
-    DUMP (dirtyServices ());
-    services = $[
+    DUMP (Runlevel::isDirty ());
+    Runlevel::services = $[
         "a" : $["dirty" : false ],
         "b" : $["start" : [ "1", ],"dirty" : true ],
         ];
-    DUMP (dirtyServices ());
+    DUMP (Runlevel::isDirty ());
 }

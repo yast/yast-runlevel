@@ -15,22 +15,13 @@
 {
     textdomain "runlevel";
 
-    include "ui/wizard_dialog.ycp";
-    include "wizard/sequencer.ycp";
+    import "Runlevel";
+    import "Progress";
+    import "Wizard";
 
-    // function for reading/manipulating services
-    include "runlevel/services.ycp";
+    include "wizard/sequencer.ycp";
     include "runlevel/ui.ycp";
 
-    map start_variables_disabled = $[];
-    map start_variables_all = $[];
-    include "runlevel/starts.ycp";
-
-    import "Progress";
-
-    //
-    // globals
-    //
 
     // you know what this means
     boolean do_abort_now = false;
@@ -42,76 +33,24 @@
     // when fetching_service_status becomes false, we stop fetching services
     boolean fetching_service_status = true;
 
-    // list of runlevels. e.g. [ "0", "1", "2", "S" ]
-    // taken from ls /etc/init.d/rc?.d
-    list runlevels = [];
+    string current_service = "";
 
     // index into table column for each runlevel
     map runlevel2tableindex = $[];
 
-    // default runlevel and original value (for dirtyness comparison)
-    string default_runlevel = "";
-    string default_runlevel_orig = "";
+    Wizard::CreateDialog ();
+    Wizard::DisableAbortButton ();
+    Wizard::RestoreHelp (getHelpProgress ());
 
-    // all services detected in /etc/init.d
-    // there is "service" : map
-    // map will be described later
-    /***
-	Main structure containing all settings in runlevel editor is map with following tuples:<br>
-	<pre>
-      "servicename" : $[
-	"defstart" : [ "2", "3", "5", ], // Default-Start comment
-	"defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
+    Progress::off ();
+    Runlevel::Read ();
+    Progress::on ();
 
-	"reqstart" : [ "$network", "portmap" ], // Required-Start comment
-	"reqstop"  : [ "$network", "portmap" ], // Required-Stop  comment
-
-	"description" : "text...",       // Description comment
-
-	"start" : [ "3", "5", ], // which runlevels service is really started/stopped in
-	"stop"  : [ "3", "5", ], // read from /etc/init.d/rc?.d/* links
-
-	"started" : "0", // return from rcservice status
-
-	"START" : true, // enabled(true)/disabled(false) by START_VARIABLE?
-
-	"dirty" : false, // was the entry changed?
-      ]
-      </pre>
-     */
-    map services = $[];
-    list service_list = [];
-
-    // services that have been chaged in this run
-    // are placed to this map to
-    map changed_services = $[];
-
-    // currently selected service
-    string current_service = "";
-
-    // current runlevel
-    string current_runlevel = "?";
-
-    UI (``{
-	CreateWizardDialog ();
-	DisableWizardAbortButton ();
+    integer id = 2;
+    foreach (`i, Runlevel::runlevels, ``{
+	runlevel2tableindex = add (runlevel2tableindex, i, id);
+	id = id + 1;
     });
-
-    Progress::Simple (_("Initializing runlevel editor. Please wait."), " ", 11, getHelpProgress ());
-
-    // read list of runlevels
-    readRunlevelList ();
-    Progress::Step (2);
-    // read current runlevel
-    readCurrentRunlevel ();
-    Progress::Step (4);
-    // read default runlevel
-    readDefaultRunlevel ();
-    Progress::Step (6);
-
-    // read scripts and find out when they are to run
-    getScripts ();
-    Progress::Step (10);
 
     //
     // maps for sequencer

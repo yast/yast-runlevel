@@ -7,21 +7,21 @@ clientsdir = $(YAST2DIR)/clients
 includedir = $(YAST2DIR)/include/runlevel
 menudir = $(YAST2DIR)/menuentries
 scrconfdir = $(YAST2DIR)/scrconf
+modulesdir = $(YAST2DIR)/modules
 
 agents_SCRIPTS = ag_initscripts
 
 scrconf_DATA = initscripts.scr
 
 clients_DATA =		\
-	runlevel.ycp	\
-	runlevel_adjust.ycp
+	runlevel.ycp
 
 include_DATA =		\
-	ui.ycp		\
-	services.ycp	\
-	starts.ycp
+	ui.ycp
+
+modules_DATA = Runlevel.ycp
 
 menu_DATA = menuentry_runlevel.ycp
 
-EXTRA_DIST = $(clients_DATA) $(include_DATA) $(menu_DATA) $(agents_SCRIPTS) $(scrconf_DATA)
+EXTRA_DIST = $(clients_DATA) $(include_DATA) $(menu_DATA) $(agents_SCRIPTS) $(scrconf_DATA) $(modules_DATA)
 

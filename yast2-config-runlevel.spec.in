@@ -47,7 +47,7 @@ make check
 @YAST2DIR@/servers_non_y2/ag_initscripts
 @YAST2DIR@/scrconf/initscripts.scr
 @YAST2DIR@/clients/runlevel.ycp
-@YAST2DIR@/clients/runlevel_adjust.ycp
 @YAST2DIR@/include/runlevel
+@YAST2DIR@/modules/Runlevel.ycp
 %dir @DOCDIR@
 @DOCDIR@/*

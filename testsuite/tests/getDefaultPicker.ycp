@@ -1,17 +1,18 @@
 // test for getDefaultPicker
 {
+    import "Runlevel";
     include "testsuite.ycp";
     include "runlevel/ui.ycp";
 
-    list runlevels = [ "S", "0", "1", "2", "3", "4", "5", "6", ];
-    string default_runlevel = "3";
+    Runlevel::runlevels = [ "S", "0", "1", "2", "3", "4", "5", "6", ];
+    Runlevel::default = "3";
     DUMP (getDefaultPicker ());
 
-    runlevels = [ "1", "2", "7", "8" ];
-    default_runlevel = "2";
+    Runlevel::runlevels = [ "1", "2", "7", "8" ];
+    Runlevel::default = "2";
     DUMP (getDefaultPicker ());
 
-    runlevels = [ "1", "2", "7", "8" ];
-    default_runlevel = "3";
+    Runlevel::runlevels = [ "1", "2", "7", "8" ];
+    Runlevel::default = "3";
     DUMP (getDefaultPicker ());
 }

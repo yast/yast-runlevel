@@ -4,9 +4,12 @@
  * tests function getScripts
  */
 {
-    include "runlevel/services.ycp";
+    import "Runlevel";
+    import "Progress";
     include "testsuite.ycp";
-    
+
+    Progress::off ();
+
     map READ = $[
         "init" : $[
             "scripts" : $[
@@ -30,17 +33,15 @@
                         "defstop" : [ "5", "6" ],
                         ],
                     ],
+		"runlevel_list" : [ "0", "1", "2", "3", "5", "6", "S", ],
+		"current_runlevel" : "5",
+		"default_runlevel" : "5",
                 ]
             ]
         ];
-    
 
-    map start_variables_all = $[];
-    map services = $[];
-    list service_list = [];
-
-    TEST (``(getScripts ()), [READ] , 0);
-    DUMP (services);
+    TEST (``(Runlevel::Read ()), [READ] , 0);
+    DUMP (Runlevel::services);
 
     READ = $[
         "init" : $[
@@ -65,12 +66,15 @@
                         "defstop" : [ "5", "6" ],
                         ],
                     ],
+		"runlevel_list" : [ "0", "1", "2", "3", "5", "6", "S", ],
+		"current_runlevel" : "5",
+		"default_runlevel" : "5",
                 ]
             ]
         ];
 
-    TEST (``(getScripts ()), [READ] , 0);
-    DUMP (services);
+    TEST (``(Runlevel::Read ()), [READ] , 0);
+    DUMP (Runlevel::services);
 
-    
+    Progress::on ();
 }

@@ -4,15 +4,15 @@
  * tests function saveServices
  */
 {
-    include "runlevel/services.ycp";
+    import "Runlevel";
+    import "Progress";
     include "testsuite.ycp";
 
-    map services = $[];
-    map start_variables_all = $[];
+    Progress::off ();
 
-    TEST (``(saveServices ()), [] , 0);
+    TEST (``(Runlevel::Write ()), [] , 0);
 
-    services = $[
+    Runlevel::services = $[
         "a" : $[
             "dirty" : false,
             "start" : ["1", "2", "3", ],
@@ -22,9 +22,9 @@
             "start" : ["1", "2", "3", ],
             ],
         ];
-    TEST (``(saveServices ()), [] , 0);
+    TEST (``(Runlevel::Write ()), [] , 0);
 
-    services = $[
+    Runlevel::services = $[
         "a" : $[
             "dirty" : true,
             "start" : ["1", "2", "3", ],
@@ -34,9 +34,9 @@
             "start" : ["1", "2", "3", ],
             ],
         ];
-    TEST (``(saveServices ()), [] , 0);
+    TEST (``(Runlevel::Write ()), [] , 0);
 
-    services = $[
+    Runlevel::services = $[
         "a" : $[
             "dirty" : true,
             "start" : ["1", "2", "3", ],
@@ -48,15 +48,11 @@
             "defstart" : ["1", "2", "S", "b" ],
             ],
         ];
-    TEST (``(saveServices ()), [] , 0);
+    TEST (``(Runlevel::Write ()), [] , 0);
 
-    start_variables_all = $[
-        "a" : "START_a",
-        "b" : "START_b",
-        ];
-    TEST (``(saveServices ()), [] , 0);
+    TEST (``(Runlevel::Write ()), [] , 0);
 
-    services = $[
+    Runlevel::services = $[
         "a" : $[
             "dirty" : true,
             "start" : [],
@@ -68,8 +64,6 @@
             "defstart" : ["1", "2", "S", ],
             ],
         ];
-    start_variables_all = $[
-        "a" : "START_a",
-        ];
-    TEST (``(saveServices ()), [] , 0);
+    TEST (``(Runlevel::Write ()), [] , 0);
+    Progress::on ();
 }

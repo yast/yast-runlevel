@@ -4,7 +4,7 @@
  * tests module adjust_runlevel
  */
 {
-    include "testsuite.ycp";
+/*    include "testsuite.ycp";
 
     map READ = $[];
     map WRITE = $[];
@@ -365,5 +365,5 @@
         ];
     // lpd script exist
     TEST (`runlevel_adjust ("lpd", "enable", "start"), [READ, WRITE, EXEC], false);
-    
+    */
 }

@@ -1,50 +1,42 @@
 // tests overviewText
 {
+    import "Runlevel";
     include "testsuite.ycp";
     include "runlevel/ui.ycp";
-    include "runlevel/services.ycp";
 
-    string current_runlevel = "3";
-    map services = $[
+    Runlevel::current = "3";
+    Runlevel::services = $[
 	"a" : $[
 	    "start" : ["0", "3"],
-	    "START" : true,
-	    "started" : "0",
+	    "started" : 0,
 	    ],
 	"b" : $[
 	    "start" : ["0", "4"],
-	    "START" : true,
-	    "started" : "0",
+	    "started" : 0,
 	    ],
 	"c" : $[
 	    "start" : ["0", "3"],
-	    "START" : false,
-	    "started" : "0",
+	    "started" : 0,
 	    ],
 	"d" : $[
 	    "start" : ["0", "4"],
-	    "START" : false,
-	    "started" : "0",
+	    "started" : 0,
 	    ],
 	"e" : $[
 	    "start" : ["0", "3"],
-	    "START" : true,
-	    "started" : "1",
+	    "started" : 1,
 	    ],
 	"f" : $[
 	    "start" : ["0", "4"],
-	    "START" : true,
-	    "started" : "1",
+	    "started" : 1,
 	    ],
 	"g" : $[
 	    "start" : ["0", "3"],
-	    "START" : false,
-	    "started" : "1",
+	    "started" : 1,
 	    ],
 	"h" : $[
 	    "start" : ["0", "4"],
-	    "START" : false,
-	    "started" : "2",
+	    "started" : 2,
 	    ],
 	];
     string s = overviewText ();
