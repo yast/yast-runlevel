@@ -3,7 +3,7 @@
  *   ui.ycp
  *
  * Module:
- *   Runlevel Editor
+ *   System Services (Runlevel) (formerly known as Runlevel Editor)
  *
  * Summary:
  *   Runlevel Editor user interface.
@@ -520,11 +520,11 @@
     define string getHelpProgress () ``{
 	return
 	    // help text
-	    _("<P><BIG><B>Runlevel editor initialization</B></BIG><BR>
+	    _("<P><BIG><B>System services (runlevel) initialization</B></BIG><BR>
 Please wait.</P>")
 	    +
 	    // warning
-	    _("<p><b>Note!</b> The runlevel editor is an expert tool. Please only change settings if
+	    _("<p><b>Note!</b> The System Services (runlevel editor) is an expert tool. Please only change settings if
  you know what you are doing; otherwise your system might not function properly afterwards.</p>")
 	    ;
     }
@@ -1107,7 +1107,7 @@ Select runlevels in which to run the currently selected service.<ul>
 		)
 	    );
 	// dialog caption.
-	Wizard::SetContents (_("Runlevel editor: details"), contents, getHelpComplex (), true, true);
+	Wizard::SetContents (_("System Services (Runlevel): Details"), contents, getHelpComplex (), true, true);
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = RunlevelEd::services[current_service]:$[];
@@ -1277,7 +1277,7 @@ both of them?")))
 	    _("<p>Here, specify which system services should be started.</p>")
 	    +
 	    // warning
-	    _("<p><b>Warning!</b> The runlevel editor is an expert tool. Only change settings if you know
+	    _("<p><b>Warning!</b> The system services (runlevel editor) is an expert tool. Only change settings if you know
  what you are doing, otherwise your system might not function properly afterwards.</p>")
 	    +
 	    // help text
@@ -1313,7 +1313,7 @@ and the service itself and disables their start at system boot time.</p>")
 		)
 	    );
 	// dialog caption.
-	Wizard::SetContentsButtons (_("Runlevel Editor: Services"), contents, help_text, Label::BackButton(), Label::FinishButton());
+	Wizard::SetContentsButtons (_("System Services (Runlevel): Services"), contents, help_text, Label::BackButton(), Label::FinishButton());
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = RunlevelEd::services[current_service]:$[];
@@ -1549,7 +1549,7 @@ name or the name specified is already in use."));
 		)
 	    );
 	// dialog caption.
-	Wizard::SetContentsButtons (_("Runlevel editor: details"), contents, getHelpAuto (), Label::BackButton(), Label::FinishButton());
+	Wizard::SetContentsButtons (_("System Services (Runlevel): Details"), contents, getHelpAuto (), Label::BackButton(), Label::FinishButton());
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = RunlevelEd::services[current_service]:$[];
