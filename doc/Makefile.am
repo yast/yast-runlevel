@@ -9,6 +9,6 @@ htmldir = $(docdir)
 screenshots = \
 	$(wildcard runlevel*.png)
 
-html_DATA = index.html $(screenshots)
+html_DATA = index.html
 
-EXTRA_DIST = $(html_DATA)
+EXTRA_DIST = $(html_DATA) $(screenshots)
