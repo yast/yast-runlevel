@@ -117,7 +117,8 @@ boolean Write () ``{
 <p>
 <h2>What should you know?</h2>
 It has sense to run some services only in case that some other service runs. 
-Now the only case known to me is <tt>nfsserver</tt> that needs <tt>portmap</tt>.
+Now the only case known to me is <tt>portmap</tt> that is needed by
+NFS, NIS and others.
 Runlevel UI cares about this case. But if you use functions like 
 <tt>ServiceAdjust</tt>, you must take care about these dependencies yourself.
 If you know about other dependencies, let me know, I will implement them in UI.
