@@ -98,12 +98,12 @@
      * @param service service map
      */
     define setDefault (string service_name, map service) ``{
-	if (!lookup (service, "START") && haskey (start_variables_all, service_name))
+	if (!lookup (service, "START", true) && haskey (start_variables_all, service_name))
 	    {
-		y2milestone ("%1 ===> Settings START_ variable %2 to yes", service_name, lookup (start_variables_all, service_name));
-		SCR::Write (add (.rc.system, lookup (start_variables_all, service_name)), "yes");
+		y2milestone ("%1 ===> Settings START_ variable %2 to yes", service_name, lookup (start_variables_all, service_name, ""));
+		SCR::Write (add (.rc.system, lookup (start_variables_all, service_name, "")), "yes");
 	    }
-	if (lookup (service, "start") == lookup (service, "defstart"))
+	if (lookup (service, "start", nil) == lookup (service, "defstart", nil))
 	    {   // already default
 		return ;
 	    }
@@ -125,7 +125,7 @@
      * @param service service map
      */
     define setDisabled (string service_name, map service) ``{
-	if (!lookup (service, "START"))
+	if (!lookup (service, "START", nil))
 	    {   // is already disabled
 		return ;
 	    }
@@ -144,7 +144,7 @@
 		    commandline = commandline + add_comma + i;
 		    add_comma = ",";
 		});
-		SCR::Write (add (.rc.system, lookup (start_variables_all, service_name)), "no");
+		SCR::Write (add (.rc.system, lookup (start_variables_all, service_name, "")), "no");
 	    }
 	else
 	    {
@@ -174,7 +174,7 @@
     // service is almost complete
     if (haskey (start_variables_all, service_name))
 	{
-	    string start_val = SCR::Read (add (.rc.system, lookup (start_variables_all, service_name)));
+	    string start_val = SCR::Read (add (.rc.system, lookup (start_variables_all, service_name, "")));
 	    change (service, "START", "yes" == start_val ? true : false);
 	}
     else

@@ -81,7 +81,7 @@
 	    map second_service = lookup (details, k, $[]);
 	    if (haskey (start_variables_all, k))
 		{
-		    string start_val = SCR::Read (add (.rc.system, lookup (start_variables_all, k)));
+		    string start_val = SCR::Read (add (.rc.system, lookup (start_variables_all, k, "")));
 		    v = add (v, "START", "yes" == start_val ? true : false);
 		}
 	    else
@@ -148,8 +148,8 @@
 		    SCR::Execute (.target.bash, commandline);
 		    if (haskey (start_variables_all, k))
 			{ // set its START variable
-			    SCR::Write (add (.rc.system, lookup (start_variables_all, k)), disabled ? "no" : "yes");
-			    y2milestone ("%1 ===> Settings START_ variable %2 to yes", k, lookup (start_variables_all, k));
+			    SCR::Write (add (.rc.system, lookup (start_variables_all, k, "")), disabled ? "no" : "yes");
+			    y2milestone ("%1 ===> Settings START_ variable %2 to yes", k, lookup (start_variables_all, k, ""));
 			}
 		}
 	});
@@ -166,7 +166,7 @@
 	    {
 		return true;
 	    }
-	if (0 == size (lookup (service, "start", [])) && lookup (service, "start") != lookup (service, "defstart"))
+	if (0 == size (lookup (service, "start", [])) && 0 != size (lookup (service, "defstart", [])))
 	    {
 		return true;
 	    }
