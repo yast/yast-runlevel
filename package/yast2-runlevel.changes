@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Sat Sep  7 12:00:22 EDT 2002 - nashif@suse.de
+
+- added 'service_status' to enable/disable a service with default 
+  runlevels
+
+-------------------------------------------------------------------
 Sun Aug 11 21:59:05 CEST 2002 - mvidner@suse.cz
 
 - Let the table keep the keyboard focus (#16116 workaround).
