@@ -42,7 +42,7 @@
     // and then update map services.
     integer fetching_service_index = 0;
     // when fetching_service_status becomes false, we stop fetching services
-    boolean fetching_service_status = false;
+    boolean fetching_service_status = true;
 
     // UI "slots"
     // update parts of the UI
@@ -289,13 +289,10 @@
 	{
 	    rls = prepend (rls, "");
 	}
-	else if (mode == `proposal)
-	{
-	    rls = ["3", "5"];
-	}
 
 	foreach (string i, rls, ``{
-	    if ("0" != i && "6" != i && "S" != i && "B" != i)
+	    // which ones to avoid: #36110
+	    if ("0" != i && "1" != i && "6" != i && "S" != i && "B" != i)
 	    {
 		items[size(items)] = `item (`id (i),
 					   RunlevelEd::getRunlevelDescr (i),
@@ -492,7 +489,7 @@
 
 	if (use_func)
 	{
-            updateStatusInTable(service_name, service, started);
+	    updateStatusInTable(service_name, service, started);
 	}
     }
 
