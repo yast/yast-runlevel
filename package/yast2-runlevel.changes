@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Oct 11 16:51:04 CEST 2004 - jsrain@suse.cz
+
+- adapted to new Arch:: interface
+
+-------------------------------------------------------------------
 Fri Sep  3 17:18:32 CEST 2004 - mvidner@suse.cz
 
 - Added GetModified, SetModified for autoyast (#43904).
