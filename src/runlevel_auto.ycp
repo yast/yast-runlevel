@@ -18,7 +18,7 @@
 {
     textdomain "runlevel";
 
-    import "Runlevel";
+    import "RunlevelEd";
     import "Progress";
     import "Wizard";
 
@@ -45,15 +45,15 @@
 
 
     // We take data from underlying system
-    // Runlevel::Read ();
+    // RunlevelEd::Read ();
 
-    Runlevel::Import (settings);
+    RunlevelEd::Import (settings);
     // and patch them with supplied map
     y2milestone("Imported: (%1)", settings);
 
 
     integer id = 2;
-    foreach (`i, Runlevel::runlevels, ``{
+    foreach (`i, RunlevelEd::runlevels, ``{
 	runlevel2tableindex = add (runlevel2tableindex, i, id);
 	id = id + 1;
     });
@@ -78,7 +78,7 @@
 	term contents =
 	    `VBox(
 		  `VSpacing(1),
-		  `RichText( `id(`summary), Runlevel::Summary()),
+		  `RichText( `id(`summary), RunlevelEd::Summary()),
 		  `VSpacing(0.5),
 		  `HBox(
 			`PushButton(`id(`configure), _("&Configure Runlevels")),
@@ -106,15 +106,15 @@
 	    UI::CloseDialog ();
 	    if (result == `next || result == `finish)
 	    {
-		settings = Runlevel::Export ();
+		settings = RunlevelEd::Export ();
 	    }
-	    Runlevel::Import(settings);
+	    RunlevelEd::Import(settings);
 	    set_contents();
 	}
 	else if ( ret == `reset)
 	{
 	    settings= $[];
-	    Runlevel::Import(settings);
+	    RunlevelEd::Import(settings);
 	    set_contents();
 	}
     } until (ret == `back || ret == `next || ret ==`key);

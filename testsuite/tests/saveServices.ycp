@@ -1,0 +1,99 @@
+/**
+ * YaST2 test case for runlevel editor
+ *
+ * tests function saveServices
+ */
+{
+    include "testsuite.ycp";
+    import "RunlevelEd";
+    import "Progress";
+
+    Progress::off ();
+
+    TEST (``(RunlevelEd::Write ()), [] , 0);
+
+    RunlevelEd::services = $[
+        "a" : $[
+            "dirty" : false,
+            "start" : ["1", "2", "3", ],
+            ],
+        "b" : $[
+            "dirty" : false,
+            "start" : ["1", "2", "3", ],
+            ],
+        ];
+    TEST (``(RunlevelEd::Write ()), [] , 0);
+
+    RunlevelEd::services = $[
+        "a" : $[
+            "dirty" : true,
+            "start" : ["1", "2", "3", ],
+            ],
+        "b" : $[
+            "dirty" : true,
+            "start" : ["1", "2", "3", ],
+            ],
+        ];
+    TEST (``(RunlevelEd::Write ()), [] , 0);
+
+    RunlevelEd::services = $[
+        "a" : $[
+            "dirty" : true,
+            "start" : ["1", "2", "3", ],
+            "defstart" : ["1", "2", "S", "B" ],
+            ],
+        "b" : $[
+            "dirty" : true,
+            "start" : ["1", "2", "3", ],
+            "defstart" : ["1", "2", "S", "b" ],
+            ],
+        ];
+    TEST (``(RunlevelEd::Write ()), [] , 0);
+
+    TEST (``(RunlevelEd::Write ()), [] , 0);
+
+    RunlevelEd::services = $[
+        "a" : $[
+            "dirty" : true,
+            "start" : [],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        "b" : $[
+            "dirty" : true,
+            "start" : [],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        ];
+    TEST (``(RunlevelEd::Write ()), [] , 0);
+
+    RunlevelEd::services = $[
+        "nfsserver" : $[
+            "dirty" : false,
+            "start" : ["1"],
+            "defstart" : ["1", "2", "S", ],
+	    "reqstart" : [ "portmap", ],
+            ],
+        "portmap" : $[
+            "dirty" : false,
+            "start" : [],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        ];
+    TEST (``(RunlevelEd::Write ()), [] , 0);
+
+    RunlevelEd::services = $[
+        "nfsserver" : $[
+            "dirty" : true,
+            "start" : ["1"],
+            "defstart" : ["1", "2", "S", ],
+	    "reqstart" : [ "portmap", ],
+            ],
+        "portmap" : $[
+            "dirty" : false,
+            "start" : [],
+            "defstart" : ["1", "2", "S", ],
+            ],
+        ];
+    TEST (``(RunlevelEd::Write ()), [] , 0);
+    Progress::on ();
+}
