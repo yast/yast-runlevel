@@ -76,6 +76,10 @@
     {
 	settings = Runlevel::Export ();
     }
+    else
+    {
+	settings = $[];
+    }
     UI::CloseDialog ();
     return settings;
 }
