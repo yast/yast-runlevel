@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Nov  2 11:03:45 CET 2004 - visnov@suse.cz
+
+- Adapted to new Mode:: and Linuxrc:: interface
+- 2.11.1 
+
+-------------------------------------------------------------------
 Mon Oct 11 16:51:04 CEST 2004 - jsrain@suse.cz
 
 - adapted to new Arch:: interface
