@@ -8,7 +8,7 @@ ETAGS_ARGS = $(TAGS_DEPENDENCIES)
 
 YCPCFLAGS = -I.
 
-myyncludedir = $(yncludedir)/runlevel
+myyncludedir = @yncludedir@/runlevel
 
 agent_SCRIPTS =
 
