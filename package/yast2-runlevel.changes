@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Mon Feb 17 16:19:02 CET 2003 - mvidner@suse.de
+
+- Fixed the success popup after enabling all services (#23663).
+- 2.7.2
+
+-------------------------------------------------------------------
+Wed Feb 12 10:46:19 CET 2003 - mvidner@suse.de
+
+- Changed _auto::Result to Export (nashif).
+- Reset variables correctly during Import.
+
+-------------------------------------------------------------------
 Mon Jan 20 10:37:02 CET 2003 - mvidner@suse.de
 
 - Using the new *_auto dispatcher (nashif).
