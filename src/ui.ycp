@@ -16,9 +16,6 @@
  * Runlevel editor user interface functions.
  */
 
-// FIXME: implement message box when user selected nfsserver but not
-// portmap
-
 {
     textdomain "runlevel";
 
@@ -122,21 +119,25 @@ checking or unchecking the <b>check boxes B-S</b> for the runlevel.</p>
 	    // help text
 	    _("<P><B>Set/Reset:</B>
 Select runlevels in which to run currently selected service.<ul>
-<li><B>Reset to default</B><BR>restores services to their original status (installation defaults).</li>
-<li><B>Reset all to default</B><BR>does the same, but for all services.</li>
-<li><B>Enable the service</B><BR>Reactivates deactivated services in the standard runlevels.</li>
+<li><p><b>Enable the service</b><br>Activates the service in the standard runlevels.</p></li>
+<li><p><b>Disable the service</b><br>Deactivates service.</p></li>
+<li><p><b>Enable all services</b><br>Activates all services in their standard runlevels.</p></li>
 </ul></p>")
 	    ;
     }
     /**
      * Help text for auto-complex-screen
-     * FIXME: better help
      * @return help text
      */
     global define string getHelpAuto () ``{
 	return
 	    // help text
-	    _("<p>Prepare data for autoinstallation.</p>");
+	    _("<p><b>Prepare data for autoinstallation.</b></p>")
+	    +
+	    _("<p>Change the services to requested state. Only services marked as changed will be really changed in target system.</p>")
+	    +
+	    _("<p>If you made a mistake and want to undo the change, press <b>Clear</b> or <b>Clear all</b></p>")
+	    ;
     }
 
     /**
@@ -314,6 +315,19 @@ Select runlevels in which to run currently selected service.<ul>
 	return items;
     }
 
+    /**
+     * Disable the service. Changes global services.
+     * @param service_name name of the service.
+     */
+    global define void setServiceDisable (string service_name) ``{
+	map service = lookup (Runlevel::services, service_name, $[]);
+	Runlevel::services = add (Runlevel::services, service_name,
+			union (service,
+			       $[
+				   "start": [],
+				   "dirty": true,
+				   ]));
+    }
     /**
      * Set service to its default state upon installation.
      * Changes global services.
@@ -526,10 +540,10 @@ Select runlevels in which to run currently selected service.<ul>
 		`ReplacePoint (
 		    `id (`menubutton),
 		    // menubutton label
-		    `MenuButton (_("Set/&Reset"), [	// FIXME:after 8.0 remove Enable! (and remove it from help text too)
-			`item (`id (`to_default), _("Reset to &default")),
+		    `MenuButton (_("Set/&Reset"), [
 			`item (`id (`to_enable), _("&Enable the service")),
-			`item (`id (`to_all_default), _("Reset &all services to default")),
+			`item (`id (`to_disable), _("&Disable the service")),
+			`item (`id (`to_all_enable), _("Enable &all services")),
 			])
 		    )
 		)
@@ -576,16 +590,25 @@ both of them?")))
 			ret = nil;
 			continue;
 		    }
-		    string nfs_adj = Runlevel::AdjustNfsserver ();
+		    string nfs_adj = Runlevel::CheckPortmap ();
 		    if (nil != nfs_adj)
 		    {
 			UI::ChangeWidget (`id (`table), `CurrentItem, "portmap");
 			current_service = "portmap";
 			service = lookup (Runlevel::services, "portmap", $[]);
-			refreshTableLine ();
-			UI::PollInput ();
-			UI::MessagePopup (sformat (_("Service portmap, required by
-%1, was enabled."), nfs_adj));
+			changeService ();
+			while (nil != UI::PollInput ()) {}
+			if (!UI::YesNoPopup (sformat (_("Service portmap, which is required by
+%1 is disabled. You should enable
+portmap if you want to run %1.
+
+Do you really want to leave portmap
+disabled?
+"), nfs_adj)))
+			{
+			    ret = nil;
+			    continue;
+			}
 		    }
 		    if (Runlevel::isDirty ())
 		    {
@@ -603,7 +626,15 @@ both of them?")))
 		    service = lookup (Runlevel::services, current_service, $[]);
 		    changeService ();
 		}
-		if (`to_default == ret || `to_enable == ret)
+		if (`to_disable == ret)
+		{
+		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
+		    setServiceDisable (current_service);
+		    service = lookup (Runlevel::services, current_service, $[]);
+		    changeService ();
+		    refreshTableLine ();
+		}
+		else if (`to_enable == ret)
 		{
 		    current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 		    setServiceToDefault (current_service);
@@ -611,14 +642,16 @@ both of them?")))
 		    changeService ();
 		    refreshTableLine ();
 		}
-		if (`to_all_default == ret)
+		else if (`to_all_enable == ret)
 		{
-		    UI::MessagePopup (_("Do you really want to restore all services to their\noriginal status upon initial installation?"));
-		    foreach (`k, `v, Runlevel::services, ``{
-			setServiceToDefault (k);
-		    });
-		    UI::ChangeWidget (`id (`table), `Items, servicesToTable ());
-		    UI::MessagePopup (_("All services restored to their original\nstatus upon initial installation."));
+		    if (UI::YesNoPopup (_("Do you really want to enable all services?")))
+		    {
+			foreach (`k, `v, Runlevel::services, ``{
+			    setServiceToDefault (k);
+			});
+			UI::ChangeWidget (`id (`table), `Items, servicesToTable ());
+			UI::MessagePopup (_("All services restored to their original\nstatus upon initial installation."));
+		    }
 		}
 		if (`start == ret || `stop == ret)
 		{
@@ -849,6 +882,7 @@ name or the name specified is already in use."));
 	service = lookup (Runlevel::services, current_service, $[]);
 	changeService ();
 	any ret = nil;
+	while (nil != UI::PollInput ()) {}
 	while (`next != ret && `back != ret && `abort != ret)
 	    {
 		ret = UI::UserInput ();
@@ -868,18 +902,28 @@ name or the name specified is already in use."));
 to run simultaneously. Do you really want to run
 both of them?")))
 		    {
+			ret = nil;
 			continue;
 		    }
-		    string nfs_adj = Runlevel::AdjustNfsserver ();
+		    string nfs_adj = Runlevel::CheckPortmap ();
 		    if (nil != nfs_adj)
 		    {
 			UI::ChangeWidget (`id (`table), `CurrentItem, "portmap");
 			current_service = "portmap";
 			service = lookup (Runlevel::services, "portmap", $[]);
-			refreshTableLine ();
+			changeService ();
 			while (nil != UI::PollInput ()) {}
-			UI::MessagePopup (sformat (_("Service portmap, required by
-%1, was enabled."), nfs_adj));
+			if (!UI::YesNoPopup (sformat (_("Service portmap, which is required by
+%1 is disabled. You should enable
+portmap if you want to run %1.
+
+Do you really want to leave portmap
+disabled?
+"), nfs_adj)))
+			{
+			    ret = nil;
+			    continue;
+			}
 		    }
 		    break;
 		}

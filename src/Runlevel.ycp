@@ -14,8 +14,6 @@
  * $Id$
  *
  * Function exported by runlevel editor to other modules.
- * FIXME: check the situation about boot.* init scripts and
- * runlevel binary
  */
 
 {
@@ -92,7 +90,6 @@
      *    no links, set default, otherwise do nothing, "default" -- set
      *    defaults.
      * @return success state
-     * FIXME: think about enabling portmapper
      */
     global define boolean ServiceAdjust (string name, string action) ``{
 	if (!SCR::Read (.init.scripts.exists, name))
@@ -271,10 +268,11 @@
     }
 
     /**
-     * If nfsserver runs, portmap has to run too.
+     * Check for portmap. Portmap should be started if inetd, nfs,
+     * nfsserver, nis, ... is started. This checks the dependency.
      * @return string name of the first enabled service that requires portmap
      */
-    global define string AdjustNfsserver () ``{
+    global define string CheckPortmap () ``{
 	if (!isDisabled (lookup (services, "portmap", $[])))  // if portmap is enabled, there is no problem
 	    return nil;
 	string req = nil;
@@ -287,19 +285,7 @@
 		    req = k;
 	    }
 	});
-	if (size (in) > 0)
-	{
-	    y2error ("Enabling portmap in %1", in);
-	    map service = lookup (services, "portmap", $[]);
-	    services = add (services, "portmap",
-		    union (service,
-			$[
-			"start": in,
-			"dirty": true,
-			]));
-	    return req;
-	}
-	return nil;
+	return size (in) > 0 ? req : nil;
     }
     /**
      * If inetd and xinetd are enabled together, show a warning.
@@ -320,8 +306,6 @@
 	if (default != default_orig)
 	    SCR::Write (.init.scripts.default_runlevel, default);
 	Progress::NextStep ();
-
-	AdjustNfsserver ();
 
 	foreach (`k, `v, services, ``{
 	    Progress::Title (sformat (_("Service %1"), k));
@@ -401,7 +385,6 @@
      * @return user settings
      */
     global define map Export () ``{
-	AdjustNfsserver ();
 	map svc = filter (`k, `v, services, ``{
 	    return lookup (v, "dirty", false);
 	});

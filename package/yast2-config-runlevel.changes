@@ -1,3 +1,10 @@
+- Now there are buttons for service enabling and disabling. Button
+  to reset to the state after installation was removed -- we have no
+  idea what the state after installation was.
+- Fixed double bullets in help text.
+- Portmap isn't forced to run. There is only question if user really
+  doesn't want to run it in case it is needed. (Bug #15260)
+
 -------------------------------------------------------------------
 Thu Mar 21 09:40:13 CET 2002 - pblahos@suse.cz
 
