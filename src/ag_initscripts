@@ -8,44 +8,57 @@
 # Summary:
 #  Agent for reading initscripts info.
 # Authors:
+#  Martin Vidner <mvidner@suse.cz>, 2002
 #  Petr Blahos <pblahos@suse.cz>, 2001
 #
 # $Id$
 #
 ################################################################
+# Runlevels are single character strings.
+# Except default_runlevel, all paths are read-only.
+# Assuming that the agent is mounted at .init.scripts:
+################################################################
 # .init.scripts.comments
-#    returns map of services, e.g.:
+#    returns a map of services, e.g.:
 #     $[
 #    "xdm" : $[
+#	   "provides" : [ "xdm", ],		# apache has apache, httpd
 #          "reqstart" : [ "$remote_fs", "$syslog", "ypbind", ],
 #          "reqstop" : [ ],
-#          "defstart" : [ 5, ],
+#	   "shouldstart" : [ ],
+#	   "shouldstop" : [ ],
+#          "defstart" : [ "5", ],
 #          "defstop" : [ ],
 #          "description": "X Display Manager",
 #     ],
-#     "xfs" : $[
-#          "reqstart" : [ "network", "route", "named", ],
-#          "reqstop" : [ ],
-#          "defstart" : [ 3, 5, ],
-#          "defstop" : [ ],
-#          "description": "X Font Server",
+#     "inetd" : $[
+#	   "provides" : [ "inetd",],
+#          "reqstart" : [ "$network", "$remote_fs", ],
+#          "reqstop" : [ "$network", ],
+#	   "shouldstart" : [ "portmap", "autofs", ],
+#	   "shouldstop" : [ "portmap", ],
+#          "defstart" : [ "3", "5", ],
+#          "defstop" : [ "0", "1", "2", "6", ],
+#          "description": "Start the inet daemon.",
 #     ],
 #     ]
 # .init.scripts.comment
 #   Read (.init.scripts.comment, "script")
 #   reads the same but for given script
+#
+# Not all of the fields are needed/used by the runlevel editor.
+# TODO: shortdescription
+# TODO: what if some fields are missing?
 ################################################################
 # .init.scripts.runlevels
-#   return maps of services and runlevels they run in, e.g.:
+#   return maps of services and runlevels they run in,
+#   according to the symlinks, e.g.:
 #     $[
 #     "xfs" : $[
 #           "start" : [ "3", "5", ]
 #           "stop"  : [ "1", "2", "6",  ]
 #     ]
 #     ]
-# where in key, first character is name of runlevel and second
-# is S for start and K for kill. In value there is a list of
-# services that are started/killed in given runlevel.
 # .init.scripts.runlevel
 #   Read (.init.scripts.runlevel, "script")
 #   reads the same but for given script
@@ -137,6 +150,35 @@ get_script_info () {
             printf "     \"reqstop\" : [ ";
             for (i = 3; i<= NF; i++) printf ("\"%s\", ", $i) ;
             print "],";
+        }
+    in_continue && in_comment && $2 == "X-SuSE-Should-Start:" {
+            in_continue = 0;
+            in_descr = 0;
+            printf "     \"shouldstart\" : [ ";
+            for (i = 3; i<= NF; i++) printf ("\"%s\", ", $i) ;
+            print "],";
+        }
+    in_continue && in_comment && $2 == "X-SuSE-Should-Stop:" {
+            in_continue = 0;
+            in_descr = 0;
+            printf "     \"shouldstop\" : [ ";
+            for (i = 3; i<= NF; i++) printf ("\"%s\", ", $i) ;
+            print "],";
+        }
+    in_continue && in_comment && $2 == "Provides:" {
+            in_continue = 0;
+            in_descr = 0;
+            printf "     \"provides\" : [ ";
+            for (i = 3; i<= NF; i++) printf ("\"%s\", ", $i) ;
+            print "],";
+        }
+    in_continue && in_comment && $2 == "Short-Description:" {
+            in_continue = 0;
+            in_descr = 0;
+	    shortdescription = $0;
+            gsub (/.*Short-Description:[ \t]*"/, "", shortdescription);
+            gsub (/"/, "\\\"", shortdescription);
+            print "     \"shortdescription\": \""shortdescription"\",";
         }
     in_continue && in_comment && $2 == "Description:" {
             in_continue = 0;
@@ -270,9 +312,9 @@ while true ; do
                 mv /etc/inittab.yast2.tmp /etc/inittab
                 chmod 0644 /etc/inittab
                 chown root:root /etc/inittab
-                echo "0"
+                echo "true"
             else
-                echo "-1"
+                echo "false"
             fi
             ;;
 
