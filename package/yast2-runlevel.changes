@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Sep  2 02:50:06 CEST 2003 - nashif@suse.de
+
+- Added function Packages
+- Turn progress bar off early enough
+- 2.8.7
+
+-------------------------------------------------------------------
 Thu Aug 14 16:33:43 CEST 2003 - jsuchome@suse.cz
 
 - removed "succes popup" (#28729)

@@ -99,12 +99,15 @@ else if (func == "Change") {
 else if (func == "Export") {
 	ret = RunlevelEd::Export();
 }
+else if (func == "Packages") {
+	ret = $[];
+}
 /* Write givven settings */
 else if (func == "Write") {
 	import "Progress";
+	Progress::off();
     RunlevelEd::Read ();
     RunlevelEd::Import (param);
-	Progress::off();
 	ret = RunlevelEd::Write();
 	Progress::on();
 }
