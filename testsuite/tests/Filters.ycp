@@ -1,0 +1,45 @@
+// tests for FilterEnableDisable{,Set} and related functions
+{
+    include "testsuite.ycp";
+    import "RunlevelEd";
+
+    RunlevelEd::services = $[
+	"normal" : $[
+	    "start" : [ "3", "5" ],
+	    "defstart" : [ "3", "5" ],
+	    ],
+	"inactive" : $[
+	    "start" : [],
+	    "defstart" : [ "3", "5" ],
+	    ],
+	"justboot" : $[
+	    "start" : [ "B" ],
+	    "defstart" : [ "B" ],
+	    ],
+	"inactiveboot" : $[
+	    "start" : [],
+	    "defstart" : [ "B" ],
+	    ],
+	];
+    list svcs = maplist (string name, any data, RunlevelEd::services, ``( name ));
+
+    DUMP ("enable");
+    DUMP (svcs);
+    TEST (``(RunlevelEd::FilterEnableDisable (svcs, "4", true)), [], nil);
+    TEST (``(RunlevelEd::FilterEnableDisable (svcs, "5", true)), [], nil);
+    TEST (``(RunlevelEd::FilterEnableDisableSet (svcs, ["4", "5"], true)), [], nil);
+
+    // it does not make sense to disable a boot service automatically.
+    // it would mean it requires a non-boot service, ie. broken service design
+    svcs = filter (string s, svcs, ``(
+		       RunlevelEd::services[s, "defstart"]:[] != [ "B" ]
+		       ));
+
+    DUMP ("disable");
+    DUMP (svcs);
+    TEST (``(RunlevelEd::FilterEnableDisable (svcs, "4", false)), [], nil);
+    TEST (``(RunlevelEd::FilterEnableDisable (svcs, "5", false)), [], nil);
+    // not implemented, will fail
+    TEST (``(RunlevelEd::FilterEnableDisableSet (svcs, ["4", "5"], false)), [], nil);
+    TEST (``(RunlevelEd::FilterEnableDisableSet (svcs, nil, false)), [], nil);
+}

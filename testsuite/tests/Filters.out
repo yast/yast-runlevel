@@ -1,0 +1,12 @@
+Dump	enable
+Dump	["inactive", "inactiveboot", "justboot", "normal"]
+Return	["inactive", "inactiveboot", "normal"]
+Return	["inactive", "inactiveboot"]
+Return	["inactive", "inactiveboot", "normal"]
+Dump	disable
+Dump	["inactive", "normal"]
+Return	[]
+Return	["normal"]
+Log	Disabling in a nontrivial set of runlevels (["4", "5"]) not implemented.
+Return	nil
+Return	["normal"]

@@ -39,8 +39,20 @@
 
 	"description" : "text...",       // Description comment
 
-	"start" : [ "3", "5", ], // which runlevels service is really started/stopped in
-	"stop"  : [ "3", "5", ], // read from /etc/init.d/rc?.d/* links
+	// which runlevels service is really started/stopped in
+	// read from /etc/init.d/{rc?,boot}.d/* links
+	//
+	// Note that the boot process (init.d/boot.d) is considered
+	// a "B" runlevel that is implicitly contained in the other runlevels.
+	// Using
+	//   list st = services ["boot.local", "start"]:[]
+	//   contains (st, "3") // DON'T
+	// results in false but that's probably not what you want.
+	// Use
+	//   StartContainsImplicitly (st, "3")
+	// which tests for "3" and "B".
+	"start" : [ "3", "5", ],
+	"stop"  : [ "3", "5", ],
 
 	"started" : 0, // return from rcservice status (integer)
 
@@ -250,6 +262,7 @@ Further dependency checking will be disabled."));
 	});
 	return result;
     }
+
     /**
      * Filter out already started/stopped services.
      * @param svcs	service list to be started/stopped
@@ -279,7 +292,7 @@ Further dependency checking will be disabled."));
 	    list start = services[service, "start"]:[];
 	    // keep it in the list if the wanted result
 	    // is different from the current state
-	    return enable != contains (start, rl);
+	    return enable != StartContainsImplicitly (start, rl);
 	});
     }
     /**
@@ -299,7 +312,7 @@ Further dependency checking will be disabled."));
 		list start = services[service, "start"]:[];
 		// keep it in the list
 		// if it should start in a bigger set than now
-		return !subset (rls, start);
+		return !ImplicitlySubset (rls, start);
 	    });
 	}
 	else
@@ -320,6 +333,29 @@ Further dependency checking will be disabled."));
 		});
 	    }
 	}
+    }
+
+    /**
+     * Is a service started in a runlevel, given the list of rulevels
+     * it is started in?
+     * This looks like a simple contains,
+     * but "B" implicitly expands to all runlevels.
+     * See also bug #17234.
+     * @param rls runlevels the service is started in
+     * @param rl  which runlevel is tested
+     * @return should it be running in rl?
+     */
+    global define boolean StartContainsImplicitly (list(string) rls,
+						   string rl) ``{
+	return contains (rls, "B") || contains (rls, rl);
+    }
+    /**
+     * Whether a set of runlevels is a subset of another set of runlevels.
+     * But expands "B" to the whole set
+     */
+    define boolean ImplicitlySubset (list(string) rls_a,
+					    list(string) rls_b) ``{
+	return contains (rls_b, "B") || subset (rls_a, rls_b);
     }
 
     /**
