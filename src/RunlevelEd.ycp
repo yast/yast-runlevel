@@ -166,7 +166,7 @@
 	Progress::NextStep ();
 	services = (map<string,map>) SCR::Read (.init.scripts.comments);
 	Progress::NextStep ();
-	services = mapmap (string k, map v, services, ``{
+	services = (map<string, map>) mapmap (string k, map v, services, ``{
 	    foreach (string f, v["provides"]:[], ``{
 		// identity implicit; only the first script provides a facility
 		if (f != k && !haskey (what_provides, f))
@@ -395,7 +395,7 @@ Further dependency checking will be disabled."));
      * original "start"/"stop" for them.
      */
     global define void ClearServices () ``{
-	services = mapmap (string k, map v, services, ``{
+	services = (map<string, map>)mapmap (string k, map v, services, ``{
 	    if (v["dirty"]:false)
 	    {
 		v["dirty"] = false;
@@ -460,7 +460,7 @@ Further dependency checking will be disabled."));
 	    SCR::Write (.init.scripts.default_runlevel, default);
 	Progress::NextStep ();
 
-	map<string,map> failed = filter (string k, map v, services, ``{
+	map<string,map> failed = (map<string, map>)filter (string k, map v, services, ``{
 	    boolean fail = false;
 	    if (v["dirty"]:false)
 	    {
@@ -517,7 +517,7 @@ Further dependency checking will be disabled."));
      *]</pre>
      */
     global define map Export () ``{
-	map<string,map> svc = filter (string k, map v, services, ``{
+	map<string,map> svc = (map<string, map>)filter (string k, map v, services, ``{
 	    return v["dirty"]:false;
 	});
 	list tmp_services = maplist(string service_name, map service_data, svc, ``{
@@ -563,7 +563,7 @@ Further dependency checking will be disabled."));
 
 	// and finaly process map being imported
 	list<map> new = s["services"]:[];
-	map<string,map> tmp_services = listmap(map service, new,  ``{
+	map<string,map> tmp_services = (map<string, map>)listmap(map service, new,  ``{
 	    string name = service["service_name"]:"";
 	    list stop = [];
 	    list start = [];
