@@ -4,7 +4,7 @@
 
 agentsdir = $(YAST2DIR)/servers_non_y2
 clientsdir = $(YAST2DIR)/clients
-includedir = $(YAST2DIR)/include/runlevel
+yncludedir = $(YAST2DIR)/include/runlevel
 menudir = $(YAST2DIR)/menuentries
 scrconfdir = $(YAST2DIR)/scrconf
 modulesdir = $(YAST2DIR)/modules
@@ -18,12 +18,12 @@ clients_DATA =		\
 	runlevel_auto.ycp \
 	runlevel_write.ycp
 
-include_DATA =		\
+ynclude_DATA =		\
 	ui.ycp
 
 modules_DATA = Runlevel.ycp
 
 menu_DATA = menuentry_runlevel.y2cc
 
-EXTRA_DIST = $(clients_DATA) $(include_DATA) $(menu_DATA) $(agents_SCRIPTS) $(scrconf_DATA) $(modules_DATA)
+EXTRA_DIST = $(clients_DATA) $(ynclude_DATA) $(menu_DATA) $(agents_SCRIPTS) $(scrconf_DATA) $(modules_DATA)
 

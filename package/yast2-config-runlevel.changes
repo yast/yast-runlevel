@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Apr 18 14:48:21 CEST 2002 - pblahos@suse.cz
+
+- Works with automake-1.6.1
+
+-------------------------------------------------------------------
 Tue Apr 16 09:50:07 CEST 2002 - pblahos@suse.cz
 
 - Fixed: insserv -r service must be called before 
