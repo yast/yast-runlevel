@@ -21,6 +21,7 @@
     module "RunlevelEd";
     textdomain "runlevel";
 
+    import "Runlevel";
     import "Progress";
     import "Summary";
     import "Report";
@@ -460,18 +461,7 @@ Further dependency checking will be disabled."));
 		{
 		    start = union (start, [ "B" ]);
 		}
-		string commandline = "";
-		if (size (start)>0)
-		{
-		    string rls = mergestring (start, ",");
-		    commandline = sformat ("/sbin/insserv -r %1; /sbin/insserv %1,start=%2", k, rls);
-		}
-		else
-		{
-		    commandline = sformat ("/sbin/insserv -r %1", k);
-		}
-		y2milestone ("%1 ===> Running %2", k, commandline);
-		SCR::Execute (.target.bash, commandline);
+		Runlevel::ServiceFinetune (k, start);
 	    }
 	    else
 		// progress item, %1 is a service (init script) name

@@ -10,7 +10,20 @@
 
     Progress::off ();
 
-    TEST (``(RunlevelEd::Write ()), [] , 0);
+    map READ = $[
+	"init": $[
+	    "scripts": $[
+		"exists": true,
+		],
+	    ],
+	];
+    map EXEC = $[
+	"target": $[
+	    "bash_output": $[ "exit": 0, "stdout": "", "stderr": "", ],
+	    ],
+	];
+
+    TEST (``(RunlevelEd::Write ()), [READ, $[], EXEC] , 0);
 
     RunlevelEd::services = $[
         "a" : $[
@@ -22,7 +35,7 @@
             "start" : ["1", "2", "3", ],
             ],
         ];
-    TEST (``(RunlevelEd::Write ()), [] , 0);
+    TEST (``(RunlevelEd::Write ()), [READ, $[], EXEC] , 0);
 
     RunlevelEd::services = $[
         "a" : $[
@@ -34,7 +47,7 @@
             "start" : ["1", "2", "3", ],
             ],
         ];
-    TEST (``(RunlevelEd::Write ()), [] , 0);
+    TEST (``(RunlevelEd::Write ()), [READ, $[], EXEC] , 0);
 
     RunlevelEd::services = $[
         "a" : $[
@@ -48,9 +61,9 @@
             "defstart" : ["1", "2", "S", "b" ],
             ],
         ];
-    TEST (``(RunlevelEd::Write ()), [] , 0);
+    TEST (``(RunlevelEd::Write ()), [READ, $[], EXEC] , 0);
 
-    TEST (``(RunlevelEd::Write ()), [] , 0);
+    TEST (``(RunlevelEd::Write ()), [READ, $[], EXEC] , 0);
 
     RunlevelEd::services = $[
         "a" : $[
@@ -64,7 +77,7 @@
             "defstart" : ["1", "2", "S", ],
             ],
         ];
-    TEST (``(RunlevelEd::Write ()), [] , 0);
+    TEST (``(RunlevelEd::Write ()), [READ, $[], EXEC] , 0);
 
     RunlevelEd::services = $[
         "nfsserver" : $[
@@ -79,7 +92,7 @@
             "defstart" : ["1", "2", "S", ],
             ],
         ];
-    TEST (``(RunlevelEd::Write ()), [] , 0);
+    TEST (``(RunlevelEd::Write ()), [READ, $[], EXEC] , 0);
 
     RunlevelEd::services = $[
         "nfsserver" : $[
@@ -94,6 +107,6 @@
             "defstart" : ["1", "2", "S", ],
             ],
         ];
-    TEST (``(RunlevelEd::Write ()), [] , 0);
+    TEST (``(RunlevelEd::Write ()), [READ, $[], EXEC] , 0);
     Progress::on ();
 }
