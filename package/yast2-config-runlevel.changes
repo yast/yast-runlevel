@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Nov  6 15:27:53 CET 2001 - pblahos@suse.cz
+
+- If service start/stop/status was unsuccessful (!=0), shows 
+  textual description of exit value.
+- If service start/stop was unsuccessful, it shows its state as
+  not running.
+
+-------------------------------------------------------------------
 Tue Oct 23 09:13:23 CEST 2001 - pblahos@suse.cz
 
 - Uses new module Progress.
