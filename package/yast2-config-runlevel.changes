@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Jan 24 11:18:21 CET 2002 - pblahos@suse.cz
+
+- Added runlevel B (which selection as a default runlevel is
+  forbiden by UI)
+- menuentry...y2cc goes into the package instead of menuentry....ycp
+
+-------------------------------------------------------------------
 Tue Dec 11 09:14:20 CET 2001 - pblahos@suse.cz
 
 - Added dialog for adding services in _auto mode.

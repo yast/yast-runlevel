@@ -14,6 +14,8 @@
  * $Id$
  *
  * Function exported by runlevel editor to other modules.
+ * FIXME: check the situation about boot.* init scripts and
+ * runlevel binary
  */
 
 {
