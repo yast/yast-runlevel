@@ -81,12 +81,15 @@
 		  `RichText( `id(`summary), RunlevelEd::Summary()),
 		  `VSpacing(0.5),
 		  `HBox(
+		      // button label
 			`PushButton(`id(`configure), _("&Configure Runlevels")),
 			`HStretch(),
+		      // button label
 			`PushButton(`id(`reset), _("&Reset Configuration"))
 			),
 		  `VSpacing(1)
 		  );
+	// dialog heading
 	Wizard::SetContents(_("Runlevel Configuration"),
 			    contents, "", true, true);
     }
