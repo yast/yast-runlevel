@@ -33,7 +33,7 @@
     global define boolean LongContinueCancelHeadlinePopup (string headline, term richtext, integer hdim, integer vdim);
     global define void setServiceToDefault (string service_name);
     global define map tomap_true (list l);
-    
+
     global string current_service = "";
 
 
