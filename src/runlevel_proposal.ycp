@@ -21,8 +21,8 @@ import "Progress";
 import "RunlevelEd";
 import "Summary";
 import "Arch";
-import "Mode";
 import "ProductFeatures";
+import "Linuxrc";
 
 include "runlevel/ui.ycp";
 
@@ -70,7 +70,9 @@ if(func == "MakeProposal") {
     boolean x11_selected = Pkg::IsSelected ("xorg-x11");	// variable
     // But if we install over VNC, we want RL 5 (and kdm) even though
     // there's no X.
-    boolean vnc = Mode::vnc;					// constant
+
+    boolean vnc = Linuxrc::vnc ();				// constant
+
     // we can be overriden
     string forced_runlevel = ProductFeatures::runlevel;		// constant
     y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3, forced: '%4'",
