@@ -513,6 +513,26 @@ Further dependency checking will be disabled."));
     }
 
     /**
+     * Returns true if the settings were modified
+     * @return settings were modified
+     */
+    global boolean GetModified () {
+	return isDirty ();
+    }
+
+    /**
+     * Function sets an internal variable indicating that any
+     * settings were modified to "true".
+     * Used for autoinst cloning.
+     */
+    global void SetModified () {
+	// Make sure GetModified will return true
+	default_orig = "---";
+	// maybe we should also touch dirty for all services,
+	// but that depends on what autoinst Clone really wants
+    }
+
+    /**
      * Export user settings.
      * @return user settings:<pre>$[
      *    "services": $[ map of dirty services ],
