@@ -41,7 +41,11 @@ make check
 %files
 %dir @YAST2DIR@/clients
 %dir @YAST2DIR@/menuentries
+%dir @YAST2DIR@/servers_non_y2
+%dir @YAST2DIR@/scrconf
 @YAST2DIR@/menuentries/menuentry_runlevel.ycp
+@YAST2DIR@/servers_non_y2/ag_initscripts
+@YAST2DIR@/scrconf/initscripts.scr
 @YAST2DIR@/clients/runlevel.ycp
 @YAST2DIR@/include/runlevel
 %dir @DOCDIR@

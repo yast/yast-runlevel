@@ -1,0 +1,198 @@
+#!/bin/bash
+
+#
+# File:
+#  ag_initscripts
+# Module:
+#  Runlevel editor.
+# Summary:
+#  Agent for reading initscripts info.
+# Authors:
+#  Petr Blahos <pblahos@suse.cz>, 2001
+#
+# $Id$
+#
+################################################################
+# .init.scripts.runlevels
+#    returns map of services, e.g.:
+#     $[
+#    "xdm" : $[
+#          "reqstart" : [ "$remote_fs", "$syslog", "ypbind", ],
+#          "reqstop" : [ ],
+#          "defstart" : [ 5, ],
+#          "defstop" : [ ],
+#          "description": "X Display Manager",
+#     ],
+#     "xfs" : $[
+#          "reqstart" : [ "network", "route", "named", ],
+#          "reqstop" : [ ],
+#          "defstart" : [ 3, 5, ],
+#          "defstop" : [ ],
+#          "description": "X Font Server",
+#     ],
+#     ]
+################################################################
+# .init.scripts.comments
+#   return maps of runlevels and services running in them, e.g.:
+#     $[
+#     "SS" : [ "kbd",  "single", ],
+#     "SK" : [ "single", ],
+#     "0S" : [ "halt", ],
+#     "0K" : [ ],
+#     "1S" : [ "fbset",  "kbd",  "single", ],
+#     "1K" : [ "fbset",  "single", ],
+#     ]
+# where in key, first character is name of runlevel and second
+# is S for start and K for kill. In value there is a list of
+# services that are started/killed in given runlevel.
+################################################################
+
+export LC_ALL=C
+exec 2>/dev/null
+
+
+get_script_info () {
+awk '
+    BEGIN {
+            in_comment = 0; in_descr = 0; skip_file = 0; first_time = 1;
+        }
+    first_time {
+            first_time = 0;
+            if (FILENAME ~ /\.local$/ || FILENAME ~ /\.rpm/ || FILENAME ~ /\.ba/ ||
+                FILENAME ~ /\.old$/ || FILENAME ~ /\.new$/ || FILENAME ~ /\.save$/ || 
+                FILENAME ~ /\.swp$/ || FILENAME ~ /\.core$/ || FILENAME ~ /~$/ ||
+                FILENAME ~ /\.[^0-9$.#_\-\\*]*[0-9$.#_\-\\*]/)
+                skipfile = 1;
+            else
+                printf "\"%s\" : $[\n", FILENAME ;
+        }
+    skipfile {
+            nextfile;
+        }
+    { in_continue = 1; }
+    /^### BEGIN INIT INFO/ {
+            in_continue = 0;
+            in_descr = 0;
+            description = "";
+            in_comment = 1;
+        }
+    in_continue && /^### END INIT INFO/ {
+            in_continue = 0;
+            in_descr = 0;
+            in_comment = 0;
+            gsub (/"/, "\\\"", description);
+            print "     \"description\": \""description"\",";
+            print "],"; 
+            nextfile;
+        }
+    in_continue && in_comment && $2 == "Default-Start:" {
+            in_continue = 0;
+            in_descr = 0;
+            printf "     \"defstart\" : [ ";
+            for (i = 3; i<= NF; i++) printf ("%s, ", $i) ;
+            print "],";
+        }
+    in_continue && in_comment && $2 == "Default-Stop:" {
+            in_continue = 0;
+            in_descr = 0;
+            printf "     \"defstop\" : [ ";
+            for (i = 3; i<= NF; i++) printf ("%s, ", $i) ;
+            print "],";
+        }
+    in_continue && in_comment && $2 == "Required-Start:" {
+            in_continue = 0;
+            in_descr = 0;
+            printf "     \"reqstart\" : [ ";
+            for (i = 3; i<= NF; i++) printf ("\"%s\", ", $i) ;
+            print "],";
+        }
+    in_continue && in_comment && $2 == "Required-Stop:" {
+            in_continue = 0;
+            in_descr = 0;
+            printf "     \"reqstop\" : [ ";
+            for (i = 3; i<= NF; i++) printf ("\"%s\", ", $i) ;
+            print "],";
+        }
+    in_continue && in_comment && $2 == "Description:" {
+            in_continue = 0;
+            in_descr = 1;
+            description = $3;
+            for (i = 4; i<= NF; i++) description = description " " $i;
+        }
+    in_continue && in_comment && in_descr && (/^#\ \ / || /^#\t/) {
+            in_continue = 0;
+            $1 = "";
+            description = description $0;
+        }
+    in_continue && in_comment { in_descr = 0; }
+
+'  $1
+}
+
+process_all_scripts () {
+    cd /etc/init.d
+    for i in * ; do
+        if [ -f $i ] ; then
+            case "$i" in
+                "reboot" | "halt" | "single" | "README" | "core" | "rc" | "rx" | "skeleton" | "powerfail" | "boot")
+                    ;;
+                *)
+                    get_script_info $i
+            esac
+        fi
+    done
+}
+# Read (.runlevels)
+read_runlevels () {
+    find /etc/init.d | awk -F / '
+    BEGIN { SUBSEP = ":"; }
+    $4 ~ /^rc.\.d$/ && $5 ~ /^[SK][0-9][0-9]/ {
+        runlevels [substr ($4, 3, 1)] = substr ($4, 3, 1);
+        services [substr ($4, 3, 1), substr ($5, 1, 1), substr ($5, 4)] = "1";
+    }
+    $4 ~ /^boot.d$/ && $5 ~ /^[SK][0-9][0-9]/ {
+        runlevels ["B"] = "B";
+        services ["B", substr ($5, 1, 1), substr ($5, 4)] = "1";
+    }
+    END {
+        print "$[";
+        for (i in runlevels) {
+            printf "\"%sS\" : [\n", i;
+            for (j in services) {
+                if (i == substr (j, 1, 1) && "S" == substr (j, 3, 1))
+                    printf " \"%s\", ", substr (j, 5);
+            }
+            printf "],\n";
+            printf "\"%sK\" : [\n", i;
+            for (j in services) {
+                if (i == substr (j, 1, 1) && "K" == substr (j, 3, 1))
+                    printf " \"%s\", ", substr (j, 5);
+            }
+            printf "],\n";
+        }
+        print "]";
+    }
+    '
+}
+
+while true ; do
+    IFS=
+    read COMMAND || exit
+    unset IFS
+    
+    case "$COMMAND" in
+	"result ("*)
+	    exit
+	    ;;
+	'Read (.comments)')
+            echo '$['
+            process_all_scripts 
+            echo ']'
+	    ;;
+	'Read (.runlevels)')
+            read_runlevels 
+	    ;;
+	*)
+	    echo nil
+    esac
+done

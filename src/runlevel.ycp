@@ -35,6 +35,13 @@
     // you know what this means
     boolean do_abort_now = false;
 
+    // We read service status when dialog with services is shown.
+    // We read status for services taken from list of services (service_list)
+    // and then update map services.
+    integer fetching_service_index = 0;
+    // when fetching_service_status becomes false, we stop fetching services
+    boolean fetching_service_status = true;
+
     // list of runlevels. e.g. [ "0", "1", "2", "S" ]
     // taken from ls /etc/init.d/rc?.d
     list runlevels = [];
@@ -42,12 +49,15 @@
     // index into table column for each runlevel
     map runlevel2tableindex = $[];
 
+    // default runlevel and original value (for dirtyness comparison)
     string default_runlevel = "";
+    string default_runlevel_orig = "";
     
     // all services detected in /etc/init.d
     // there is "service" : map
     // map will be described later
-    /*
+    /***
+        <tt>
       "servicename" : $[
         "defstart" : [ "2", "3", "5", ], // Default-Start comment
         "defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
@@ -66,8 +76,10 @@
 
         "dirty" : false, // was the entry changed?
       ]
+      </tt>
      */
     map services = $[];
+    list service_list = [];
 
     // services that have been chaged in this run
     // are placed to this map to 
@@ -84,40 +96,29 @@
         DisableWizardAbortButton ();
     });
 
+    ProgressSetup (_("Initializing runlevel editor. Please wait."),
+                   "",
+                   11,
+                   [],
+                   // help text
+                   getHelpProgress ());
+
     // read list of runlevels
     readRunlevelList ();
+    ProgressStep (2);
     // read current runlevel
     readCurrentRunlevel ();
+    ProgressStep (4);
     // read default runlevel
     readDefaultRunlevel ();
+    ProgressStep (6);
 
-    ProgressSetup (_("Initializing runlevel editor. Please wait."),
-                     "",
-                     size (runlevels) + 3,
-                     [],
-                     // help text
-                     getHelpProgress ());
-
-    integer current_step = 0;
-    readServiceList ();
-    current_step = current_step + 1;
-    ProgressStep (current_step);
-    getScriptsInfo ();
-    current_step = current_step + 1;
-    ProgressStep (current_step);
-    getStartedInfo ();
-    current_step = current_step + 1;
-    ProgressStep (current_step);
-
-    foreach (`i, runlevels, ``{
-        readServicesRL (i);
-        current_step = current_step + 1;
-        ProgressStep (current_step);
-    });
-
+    // read scripts and find out when they are to run
+    getScripts ();
+    ProgressStep (10);
 
     //
-    // define maps for sequencer
+    // maps for sequencer
     //
     map aliases = $[
         "start" :            ``(runMain ()),

@@ -20,6 +20,9 @@
     
     include "ui/common_popups.ycp";
 
+    /**
+     * help text for progress
+     */
     global define getHelpProgress () ``{
         return
             // help text
@@ -32,6 +35,9 @@ Please wait.</P>")
             ;
     }
 
+    /**
+     * help text for main dialog
+     */
     global define getHelpMain () ``{
         return
             // help text
@@ -51,6 +57,9 @@ Please wait.</P>")
             ;
     }
 
+    /**
+     * help text services dialog 
+     */
     global define getHelpComplex () ``{
         // help text
         return
@@ -76,6 +85,10 @@ Select runlevels in which to run currently selected service.<ul>
      * @return boolean true if user really wants to abort
      */
     global define reallyAbort ()``{
+        if (default_runlevel == default_runlevel_orig && !dirtyServices ())
+            {
+                do_abort_now = true;
+            }
         if (do_abort_now)
             {
                 return true;
@@ -107,23 +120,8 @@ Select runlevels in which to run currently selected service.<ul>
             // started?
             string started = lookup (v, "started", "");
             // we do not know what is the service state
-            string started_text = _("???");
-            if ("0" == started)
-                {
-                    // yes, service runs
-                    started_text = _("Yes");
-                }
-            else if ("" != started)
-                {
-                    // no, service does not run
-                    started_text = _("No");
-                }
-            item = add (item, started_text);
-            list rl = [];
-            if (!isDisabled (v))
-                {
-                    rl = lookup (v, "start", []);
-                }
+            item = add (item, ("0" == started ? _("Yes") : ("" != started ? _("No") : _("???"))));
+            list rl = isDisabled (v) ? [] : lookup (v, "start", []);
             foreach (`i, runlevels, ``{
                 item = add (item, (contains (rl, i)? i : " "));
             });
@@ -138,7 +136,30 @@ Select runlevels in which to run currently selected service.<ul>
         return items;
     }
 
+    /**
+     * Dialog that allows changing of default runlevel.
+     */
     global define runMain () ``{
+
+        /**
+         * Helper function for fetching service status in run-time.
+         */
+        define fetchNextServiceStatus () ``{
+            if (!fetching_service_status)
+                {
+                    return ;
+                }
+            if (fetching_service_index >= size (service_list))
+                {
+                    fetching_service_status = false;
+                    return ;
+                }
+            string service_name = select (service_list, fetching_service_index);
+            fetching_service_index = fetching_service_index + 1;
+            map service = lookup (services, service_name, $[]);
+            services = add (services, service_name, add (service, "started", serviceStatus (service_name)));
+        }
+
         list levels = [];
         foreach (`i, runlevels, ``{
             if ("6" != i && "0" != i && "S" != i)
@@ -146,6 +167,7 @@ Select runlevels in which to run currently selected service.<ul>
                     levels = add (levels, `item (`id (i), i, default_runlevel == i));
                 }
         });
+        
         term contents = `VBox (
             `VStretch (),
             // label in dialog
@@ -177,13 +199,23 @@ Select runlevels in which to run currently selected service.<ul>
         // window label
         UI (`SetWizardContents (_("Runlevel editor: default runlevel"), contents, getHelpMain (), true, true));
         UI (`ReplaceWizardNextButton (`PushButton (`id (`next), FinishButtonLabel())));
-
         
         any ret = nil;
-
         while (true)
             {
-                ret = UI (`UserInput ());
+                if (fetching_service_status)
+                    {
+                        ret = UI (`PollInput ());
+                        if (nil == ret)
+                            {
+                                fetchNextServiceStatus ();
+                                continue ;
+                            }
+                    }
+                else
+                    {
+                        ret = UI (`UserInput ());
+                    }
                 // we may read this anyway...
                 default_runlevel = UI (`QueryWidget (`id (`default), `Value));
                 if (`back == ret || `abort == ret)
@@ -208,6 +240,11 @@ Select runlevels in which to run currently selected service.<ul>
         return ret;
     }
 
+    /**
+     * Returns textual runlevel description. Descriptions are hard-coded in ycp script.
+     * @param rl Runlevel to check.
+     * @return string Description.
+     */
     global define getRunlevelDescr (string rl) ``{
         return lookup ($[
             // descriptions of runlevels. there must be number: description
@@ -222,6 +259,10 @@ Select runlevels in which to run currently selected service.<ul>
             ], rl, rl);
     }
 
+    /**
+     * Returns items for default runlevel combo box.
+     * @return list List of items. Default is selected.
+     */
     global define getDefaultPicker () ``{
         list items = [];
         foreach (`i, runlevels, ``{
@@ -235,6 +276,7 @@ Select runlevels in which to run currently selected service.<ul>
 
     /**
      * Set service to its default state upon installation.
+     * Changes global services.
      * @param service_name Name of service to process.
      */
     global define setServiceToDefault (string service_name) ``{
@@ -250,6 +292,7 @@ Select runlevels in which to run currently selected service.<ul>
 
     /**
      * Sets service to run in its default runlevels.
+     * Changes global services.
      * @param service_name Name of service to process.
      */
     global define setServiceToEnabled (string service_name) ``{
@@ -301,6 +344,7 @@ Select runlevels in which to run currently selected service.<ul>
     /**
      * Checks what services should run in this runlevel and do not run
      * or what services run but should not run.
+     * @return string overview text
      */
     global define overviewText () ``{
         list should_not_run = [];
@@ -354,10 +398,11 @@ Select runlevels in which to run currently selected service.<ul>
          * Local function to allInOne. Changes values of checkboxes 0-S. Changes menubuttons.
          */
         define changeService () ``{
-            string st = lookup (service, "started", "");
-            if ("" == st)
+            if ("" == lookup (service, "started", ""))
                 {
-                    st = serviceStatus (current_service);
+                    service = add (service, "started", serviceStatus (current_service));
+                    services = add (services, current_service, service);
+                    refreshTableRunning ();
                 }
             list start = isDisabled (service) ? [] : lookup (service, "start", []);
             foreach (`i, runlevels, ``{
@@ -410,19 +455,30 @@ Select runlevels in which to run currently selected service.<ul>
          */
         define refreshTableRunning () ``{
             string started = lookup (service, "started", "");
-            // we do not know what is the service state
-            string started_text = _("???");
-            if ("0" == started)
+            // ???: we do not know what is the service state
+            UI (`ChangeWidget (`id (`table), `Item (current_service, 1), ("0" == started ? _("Yes") : ("" != started ? _("No") : _("???")))));
+        }
+
+        /**
+         * Helper function for fetching service status in run-time.
+         */
+        define fetchNextServiceStatus () ``{
+            if (!fetching_service_status)
                 {
-                    // yes, service runs
-                    started_text = _("Yes");
+                    return ;
                 }
-            else if (nil != "")
+            if (fetching_service_index >= size (service_list))
                 {
-                    // no, service does not run
-                    started_text = _("No");
+                    fetching_service_status = false;
+                    return ;
                 }
-            UI (`ChangeWidget (`id (`table), `Item (current_service, 1), started_text));
+            string service_name = select (service_list, fetching_service_index);
+            fetching_service_index = fetching_service_index + 1;
+            map service = lookup (services, service_name, $[]);
+            string started = serviceStatus (service_name);
+            services = add (services, service_name, add (service, "started", started));
+            string started_text = ("0" == started ? _("Yes") : ("" != started ? _("No") : _("???")));
+            UI (`ChangeWidget (`id (`table), `Item (service_name, 1), started_text));
         }
 
         // headers in table
@@ -481,7 +537,15 @@ Select runlevels in which to run currently selected service.<ul>
         any ret = nil;
         while (`next != ret && `back != ret && `abort != ret)
             {
-                ret = UI (`UserInput ());
+                if (fetching_service_status)
+                    {
+                        ret = UI (`PollInput ());
+                        fetchNextServiceStatus ();
+                    }
+                else
+                    {
+                        ret = UI (`UserInput ());
+                    }
                 if (`abort == ret)
                     {
                         if (!reallyAbort ())
@@ -578,7 +642,7 @@ Select runlevels in which to run currently selected service.<ul>
                         refreshTableRunning ();
                         UI (`MessagePopup (sformat (_("Output from '/etc/init.d/%1 status':\n\n"), current_service) + lookup (out, "stdout")));
                     }
-                if (is (ret, string))
+                if (nil != ret && is (ret, string))
                     {
                         // checkbox pressed
                         // checked of unchecked?

@@ -16,6 +16,7 @@
  * This include file contains functions for reading runlevels, services,
  * starting/stopping services ...
  */
+
 {
     /**
      * Get current runlevel into global current_runlevel.
@@ -34,6 +35,7 @@
             .target.bash_output,
             "/bin/cat /etc/inittab | /bin/grep 'id:.:initdefault:' | /bin/sed -e s/id://g -e s/:initdefault://g"));
         default_runlevel = sformat ("%1", tointeger (lookup (out, "stdout", "5")));
+        default_runlevel_orig = default_runlevel;
     }
 
     /**
@@ -75,205 +77,19 @@
     }
 
     /**
-     * Uses scripts from map services. Calls service status
-     * for each service. Updates map services.
-     * We create script that test all init scripts at once. We could
-     * also call each script status separately from ycp but SCR bash call
-     * has too big overhead and it is too slow.
+     * Get scripts info via agent. <br>
+     * .init.scripts.runlevels returns map in format we need:
+     *   $[ "servicename" : $[ ...], ...]. <br>
+     * .init.scripts.comments returns map:
+     * $[ "xS" : [ list of services ], "xK" : [ list of services ] ],
+     * where x is runlevel name and S means start, K means kill.
+     * So each tuple means that in runlevel x there is list of services
+     * that are Started/Killed. This must be patched in services map<br>
+     * Also START_ variables presence is patched into services. 
      */
-    global define getStartedInfo () ``{
-        string temp_out = SCR (`Read (.target.tmpdir));
-        string temp_script = temp_out + "/servstatus";
-        temp_out = temp_out + "/servstatus.out";
-        string script = "#!/bin/bash\nexport TERM=raw\n";
-        foreach (`k, `v, services, ``{
-            script = script + sformat ("/etc/init.d/%1 status\necho $? %1 >> %2\n", k, temp_out);
-        });
-        SCR (`Write (.target.string, temp_script, script));
-        SCR (`Execute (.target.bash, "source " + temp_script));
-        script = SCR (`Read (.target.string, temp_out));
-        foreach (`i, splitstring (script, "\n"), ``{
-            list pair = splitstring (i, " ");
-            if (2 != size (pair))
-                {
-                    return 0;
-                }
-            map m = lookup (services, select (pair, 1), nil);
-            if (nil == m)
-                {
-                    return 0;
-                }
-            m = add (m, "started", select (pair, 0));
-            services = add (services, select (pair, 1), m);
-        });
-    }
-
-    /**
-     * Get script information and adds it into map info. Reads script comments and remembers:
-     * Description, Default-Start, Default-Stop, Required-Start, Required-Stop.
-     * @param lines Comments from scripts
-     */
-    global define getScriptInfo (list lines) ``{
-        // read file to string...
-        map info = $[];
-        boolean description_continues = false;
-        string description = "";
-        string current = "";
-        foreach (`i, lines, ``{
-            if (size (i) < 0)
-                {
-                    return 0;
-                }
-            if ("#" != substring (i, 0, 1))
-                {
-                    if (current != "")
-                        { // save processed service
-                            info = add (info, "description", description);
-                            services = add (services, current, info);
-                        }
-                    current = i;
-                    info = lookup (services, current);
-                    description = "";
-                    description_continues = false;
-                    return nil;
-                }
-            if (size (i)<1 || "#" != substring (i, 0, 1))
-                {
-                    return nil;
-                }
-            if (description_continues && ("#\t" == substring (i, 0, 2) || "#  " == substring (i, 0, 3)))
-                {
-                    string s = substring (i, 1);
-                    while (" " == substring (s, 0, 1) || "\t" == substring (s, 0, 1))
-                        {
-                            s = substring (s, 1);
-                        }
-                    description = description + " " + s;
-                }
-            else
-                {
-                    description_continues = false;
-                }
-            if ("# Description:" == substring (i, 0, 14))
-                {
-                    description_continues = true;
-                    description = substring (i, 15);
-                    while (" " == substring (description, 0, 1) || "\t" == substring (description, 0, 1))
-                        {
-                            description = substring (description, 1);
-                        }
-                }
-            if ("# Default-Start:" == substring (i, 0, 16))
-                {
-                    list num = filter (`j, splitstring (substring (i, 16), " \t"), ``{
-                        return "" != j;
-                    });
-                    info = add (info, "defstart", num);
-                }
-            if ("# Default-Stop:" == substring (i, 0, 15))
-                {
-                    list num = filter (`j, splitstring (substring (i, 15), " \t"), ``{
-                        return "" != j;
-                    });
-                    info = add (info, "defstop", num);
-                }
-            if ("# Required-Start:" == substring (i, 0, 17))
-                {
-                    list req = filter (`j, splitstring (substring (i, 17), " \t"), ``{
-                        return "" != j;
-                    });
-                    info = add (info, "reqstart", req);
-                }
-            if ("# Required-Stop:" == substring (i, 0, 16))
-                {
-                    list req = filter (`j, splitstring (substring (i, 16), " \t"), ``{
-                        return "" != j;
-                    });
-                    info = add (info, "reqstop", req);
-                }
-            // fixme maybe I will read provides as well
-        });
-        if (current != "")
-            { // save processed service
-                info = add (info, "description", description);
-                services = add (services, current, info);
-            }
-    }
-
-    /**
-     * read service names from /etc/init.d/. For each service adds tuple "servicename" : $[] to global services.
-     */
-    global define readServiceList () ``{
-        map out = SCR (`Execute (.target.bash_output, "cd /etc/init.d; for i in * ; do if test -f $i; then echo $i ; fi  ; done;"));
-        // fixme check exit 
-        list serv = splitstring (lookup (out, "stdout", ""), "\n");
-        serv = filter (`i, serv, ``{
-            if ("" == i || nil == i)
-            {
-                return false;
-            }
-            if ("reboot" == i ||
-                "halt" == i ||
-                "single" == i)
-            {
-                return false;
-            }
-            if ("README" == i ||
-                "core" == i ||
-                "rc" == i ||
-                "rx" == i ||
-                "skeleton" == i ||
-                "powerfail" == i ||
-                "boot" == i)
-            {
-                return false;
-            }
-            string end = i;
-            while (size (end) > 0)
-            {
-                if ("." == substring (end, 0, 1))
-                {
-                    end = substring (end, 1);
-                    break;
-                }
-                end = substring (end, 1);
-            }
-            if (
-                "local" == end ||
-                "rpm" == substring (end, 0, 3) ||
-                "ba" == substring (end, 0, 2) ||
-                "old" == end ||
-                "new" == end ||
-                "save" == end ||
-                "swp" == end ||
-                "core" == end)
-            {
-                return false;
-            }
-            if ("~" == substring (i, size (i) - 1))
-            {
-                return false;
-            }
-            end = substring (i, 0, 1);
-            if (0 != size (filterchars (end, "0123456789$.#_-\\*")))
-            {
-                return false;
-            }
-            
-            services = add (services, i, $[]);
-            return true;
-        });
-    }
-
-    /**
-     * Run getScriptInfo for each script taken from map.
-     * Modifies global services.
-     */
-    global define getScriptsInfo () ``{
-        string temp_out = SCR (`Read (.target.tmpdir));
-        string temp_script = temp_out + "/servinfo";
-        temp_out = temp_out + "/servinfo.out";
-        string script = sformat ("#!/bin/bash\n/bin/rm %1\n", temp_out);
+    global define getScripts () ``{
+        map details = SCR (`Read (.init.scripts.runlevels));
+        services = SCR (`Read (.init.scripts.comments));
         services = mapmap (`k, `v, services, ``{
             if (haskey (start_variables_all, k))
                 {
@@ -284,67 +100,23 @@
                 {
                     v = add (v, "START", true);
                 }
-            script = script + sformat ("/bin/echo %1 >> %2\n", k, temp_out);
-            script =
-                script + sformat
-                ("/bin/awk 'BEGIN {wr=0} /### BEGIN INIT INFO/ {wr=1;} /### END INIT INFO/ {wr=0;} { if(wr) print $0; } ' /etc/init.d/%1 >> %2\n",
-                 k, temp_out);
-            return [ k, v ];
+            service_list = add (service_list, k);
+            list start = [];
+            list stop = [];
+            foreach (`i, runlevels, ``{
+                if (contains (lookup (details, i + "S", []), k))
+                    {
+                        start = add (start, i);
+                    }
+                /* we do not use this info !!!
+                if (contains (lookup (details, i + "K", []), k))
+                    {
+                        stop = add (stop, i);
+                    }
+                */
+            });
+            return [ k, add (add (v, "start", start), "stop", stop) ];
         });
-        SCR (`Write (.target.string, temp_script, script));
-        SCR (`Execute (.target.bash, "source " + temp_script));
-        script = SCR (`Read (.target.string, temp_out));
-        getScriptInfo (splitstring (script, "\n"));
-    }
-    
-    /**
-     * Get list of services that are run in given runlevel.
-     * Modifies global services.
-     * @param runlevel runlevel to get list of services from
-     */
-    global define readServicesRL (string runlevel) ``{
-        map out = SCR (`Execute (
-            .target.bash_output,
-            sformat ("cd /etc/init.d/rc%1.d; for i in * ; do if test -f $i; then echo $i ; fi  ; done;", runlevel)));
-        // fixme check exit 
-        list serv = splitstring (lookup (out, "stdout", ""), "\n");
-        list start = [];
-        list kill = [];
-        foreach (`i, serv, ``{
-            if (size (i) < 4)
-                {
-                    return ;
-                }
-            if ("S" == substring (i, 0, 1))
-                {
-                    start = add (start, substring (i,3));
-                }
-            else if ("K" == substring (i, 0, 1))
-                {
-                    kill = add (kill, substring (i,3));
-                }
-        });
-        // we have start and kill arrays and we may add them to main map
-        services = mapmap (`k, `v, services, ``{
-            if (contains (start, k))
-            {
-                v = add (v, "start", add (lookup (v, "start", []), runlevel));
-            }
-            if (contains (kill, k))
-            {
-                v = add (v, "stop", add (lookup (v, "stop", []), runlevel));
-            }
-            return [ k, v ];
-        });
-    }
-
-    /**
-     * Run service status and return exit status.
-     * @param servicename Name of service to query.
-     * @param integer Exit status.
-     */
-    global define doesServiceRun (string servicename) ``{
-        return SCR (`Execute (.target.bash, sformat ("/etc/init.d/%1 status", servicename)));
     }
 
     /**
@@ -352,9 +124,11 @@
      * Changes global runlevels.
      */
     global define readRunlevelList () ``{
-//        map out = SCR (`Execute (.target.bash_output,"ls /etc/init.d/ | grep 'rc.\.d' | cut -c 3"));
         map out = SCR (`Execute (.target.bash_output,"/usr/bin/awk '/^[^#]..*\\/etc\\/init\\.d\\/rc / { print $2 }' /etc/inittab"));
-        // fixme check exit 
+        if (0 != lookup (out, "exit"))
+            {
+                out = add (out, "stdout", "S\n0\n1\n2\n3\n4\n5\n6\n");
+            }
         runlevels = filter (`j, splitstring (lookup (out, "stdout", ""), "\n"), ``{
             return j != "";
         });
@@ -412,5 +186,24 @@
                 return true;
             }
         return false;
+    }
+
+    /**
+     * Are services dirty (changed)?
+     * @return boolean true if services are dirty.
+     */
+    global define dirtyServices () ``{
+        boolean dirty = false;
+        foreach (`k, `v, services, ``{
+            if (dirty)
+                {
+                    return ;
+                }
+            if (lookup (v, "dirty", false))
+                {
+                    dirty = true;
+                }
+        });
+        return dirty;
     }
 }
