@@ -513,12 +513,12 @@
     define string getHelpProgress () ``{
 	return
 	    // help text
-	    _("<P><BIG><B>System Service (runlevel) Initialization</B></BIG><BR>
+	    _("<P><BIG><B>System Service (Runlevel) Initialization</B></BIG><BR>
 Please wait...</P>
 ")
 	    +
 	    // warning
-	    _("<p><b>Note:</b> The System Services (runlevel editor) is an expert tool. Only change settings if
+	    _("<p><b>Note:</b> The system services (runlevel editor) is an expert tool. Only change settings if
  you know what you are doing.  Otherwise your system might not function properly afterwards.</p>
 ")
 	    ;
