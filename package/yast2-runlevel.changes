@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Nov  3 15:11:43 CET 2004 - mvidner@suse.cz
+
+- Fixed a type error.
+- Replaced lookups by []:
+- 2.11.2
+
+-------------------------------------------------------------------
 Tue Nov  2 11:03:45 CET 2004 - visnov@suse.cz
 
 - Adapted to new Mode:: and Linuxrc:: interface

@@ -418,7 +418,7 @@ Further dependency checking will be disabled."));
      * @return boolean true if service is disabled
      */
     global define boolean isDisabled (map service) ``{
-	return 0 == size (lookup (service, "start", []));
+	return 0 == size (service["start"]:[]);
     }
 
     /**
@@ -446,7 +446,7 @@ Further dependency checking will be disabled."));
      * @return are both of them enabled?
      */
     global define boolean CheckXInetd () ``{
-	return !isDisabled (lookup (services, "inetd", $[])) && !isDisabled (lookup (services, "xinetd", $[]));
+	return !isDisabled (services["inetd"]:$[]) && !isDisabled (services["xinetd"]:$[]);
     }
 
     /**
@@ -470,7 +470,7 @@ Further dependency checking will be disabled."));
 		// progress item, %1 is a service (init script) name
 		Progress::Title (sformat (_("Service %1"), k));
 		// save!
-		list start = lookup (v, "start", []);
+		list start = v["start"]:[];
 		y2milestone ("Setting %1: %2", k, start);
 		fail = ! Service::Finetune (k, start);
 	    }
@@ -627,7 +627,7 @@ Further dependency checking will be disabled."));
 	if (size (tmp_services) > 0)
 	{
 	    foreach (string k, map v, tmp_services, ``{
-		if (nil == lookup (services, k, nil))
+		if (nil == services[k]:nil)
 		{
 		    y2milestone ("Service %1 is not installed on target system, adding it by hand.", k);
 		}
@@ -640,7 +640,7 @@ Further dependency checking will be disabled."));
 	// default
 	if (haskey (s, "default"))
 	{
-	    default = lookup (s, "default", nil);
+	    default = s["default"]:"";
 	    default_orig = "---";
 	}
 	return true;
@@ -653,7 +653,7 @@ Further dependency checking will be disabled."));
      * @return string Description.
      */
     global define string getRunlevelDescr (string rl) ``{
-	return lookup ($[
+	map<string, string> descr = $[
 	    // descriptions of runlevels. there must be number: description
 	    // number is runlevel name
 	    // runlevel description
@@ -673,7 +673,8 @@ Further dependency checking will be disabled."));
 	    // runlevel description
 	    // internal one: without a number
 	    "" : _("Unchanged"),
-	    ], rl, rl);
+	    ];
+	return descr[rl]:rl;
     }
 
     /**

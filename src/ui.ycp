@@ -228,7 +228,7 @@
      * @return string help text
      */
     define string getActionReturnHelp (integer exit) ``{
-	return lookup (
+	map <integer, string> descr =
 	    $[
 		// Init script non-status-command return codes
 		// http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
@@ -248,8 +248,9 @@
 		6: _("program is not configured"),
 		// status code.
 		7: _("program is not running"),
-		// status code.
-		], exit, _("unspecified error"));
+		];
+	// status code.
+	return descr[exit]:_("unspecified error");
     }
     /**
      * Get help text for rcscript status return value
@@ -258,7 +259,7 @@
      * @return string help text
      */
     define string getStatusReturnHelp (integer exit) ``{
-	return lookup (
+	map <integer, string> descr =
 	    $[
 		// Init script "status" command return codes
 		// http://www.linuxbase.org/spec/gLSB/gLSB/iniscrptact.html
@@ -273,8 +274,9 @@
 		3: _("program is stopped"),
 		// status code.
 		4: _("program or service status is unknown"),
-		// status code.
-		], exit, _("unspecified error"));
+		];
+	// status code.
+	return descr[exit]:_("unspecified error");
     }
 
     /**
@@ -436,7 +438,7 @@
 	    if (m_rstatus)
 	    {
 		// runtime status
-		integer started = lookup (v, "started", -1);
+		integer started = v["started"]:-1;
 		c_rstatus = col;
 		item = add (item, StartedText (started));
 		col = col + 1;
@@ -444,7 +446,7 @@
 	    if (m_runlevels)
 	    {
 		// runlevels
-		list rl = lookup (v, "start", []);
+		list rl = v["start"]:[];
 		c_runlevels = col;
 		foreach (string i, RunlevelEd::runlevels, ``{
 		    runlevel2tableindex[i] = col;
@@ -847,7 +849,7 @@ and enabled, because it depends on them:
 	map out = Service::RunInitScriptOutput (service_name, command);
 	UI::CloseDialog ();
 
-	integer exit = lookup (out, "exit", -1);
+	integer exit = out["exit"]:-1;
 	string rich_message = sformat (
 	    // %1 service, %2 command,
 	    // %3 exit status, %4 status description, %5 stdout
@@ -1108,7 +1110,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	Wizard::SetContents (_("Runlevel editor: details"), contents, getHelpComplex (), true, true);
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
-	service = lookup (RunlevelEd::services, current_service, $[]);
+	service = RunlevelEd::services[current_service]:$[];
 	changeService1 (service);
 
 	any ret = nil;
@@ -1314,7 +1316,7 @@ and the service itself and disables their start at system boot time.</p>")
 	Wizard::SetContentsButtons (_("Runlevel Editor: Services"), contents, help_text, Label::BackButton(), Label::FinishButton());
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
-	service = lookup (RunlevelEd::services, current_service, $[]);
+	service = RunlevelEd::services[current_service]:$[];
 	updateDescription (service);
 
 	any ret = nil;
@@ -1550,7 +1552,7 @@ name or the name specified is already in use."));
 	Wizard::SetContentsButtons (_("Runlevel editor: details"), contents, getHelpAuto (), Label::BackButton(), Label::FinishButton());
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
-	service = lookup (RunlevelEd::services, current_service, $[]);
+	service = RunlevelEd::services[current_service]:$[];
 	updateRlCheckBoxes (service);
 	any ret = nil;
 	while (nil != UI::PollInput ()) {sleep(50);}
@@ -1594,7 +1596,7 @@ both of them?")))
 		    {
 			UI::ChangeWidget (`id (`table), `CurrentItem, "portmap");
 			current_service = "portmap";
-			service = lookup (RunlevelEd::services, "portmap", $[]);
+			service = RunlevelEd::services["portmap"]:$[];
 			updateRlCheckBoxes (service);
 			while (nil != UI::PollInput ()) {sleep(50);}
 			// yes-no popup
@@ -1654,7 +1656,7 @@ disabled?\n"), nfs_adj)))
 		    // checked or unchecked?
 		    string checked = (((boolean) UI::QueryWidget (`id (ret), `Value)) ? (string) ret : " ");
 		    service = queryRlCheckBoxes (current_service, service);
-		    UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret, -1)), checked);
+		    UI::ChangeWidget (`id (`table), `Item (current_service, runlevel2tableindex[ret]:-1), checked);
 		    UI::ChangeWidget (`id (`table), `Item (current_service, c_dirty), CheckMark);
 		}
 
@@ -1662,7 +1664,7 @@ disabled?\n"), nfs_adj)))
 		if (`table == ret)
 		{
 		    current_service = (string) UI::QueryWidget (`id (`table), `CurrentItem);
-		    service = lookup (RunlevelEd::services, current_service, $[]);
+		    service = RunlevelEd::services[current_service]:$[];
 		    updateRlCheckBoxes (service);
 		    while (nil != UI::PollInput ()) {sleep(50);}
 		}
@@ -1720,7 +1722,7 @@ disabled?\n"), nfs_adj)))
      * @param service_name name of the service.
      */
     define void setServiceDisable (string service_name) ``{
-	map service = lookup (RunlevelEd::services, service_name, $[]);
+	map service = RunlevelEd::services[service_name]:$[];
 	RunlevelEd::services[service_name] = union (service,
 			       $[
 				   "start": [],
@@ -1736,10 +1738,10 @@ disabled?\n"), nfs_adj)))
      * @param service_name Name of service to process.
      */
     define void setServiceToDefault (string service_name) ``{
-	map service = lookup (RunlevelEd::services, service_name, $[]);
+	map service = RunlevelEd::services[service_name]:$[];
 	RunlevelEd::services[service_name] = union (service,
 			       $[
-				   "start": lookup (service, "defstart", []),
+				   "start": service["defstart"]:[],
 				   "dirty": true,
 				   ]);
     }
