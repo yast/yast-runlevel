@@ -161,6 +161,15 @@
 	return SCR::Execute (.target.bash, sformat ("/etc/init.d/%1 %2", name, param), $[ "TERM" : "raw"]);
     }
 
+    /**
+     * Run init script and return also its output.
+     * @param name init service name
+     * @param param init script argument
+     * @return map of $[ "stdout" : "...", "stderr" : "...", "exit" : int,]
+     */
+    global define map RunInitScriptOutput (string name, string param) ``{
+	return SCR::Execute (.target.bash_output, sformat ("/etc/init.d/%1 %2", name, param), $[ "TERM" : "raw"]);
+    }
 
     /*
      * The above interface was very public. Now there is interface for
@@ -252,7 +261,6 @@
     }
 
     /**
-     * FIXME: is it used somewhere? update comment.
      * Is service disabled? Check "disabled" key which reflects whether service is disabled by some START_-like variable.
      * Otherwise it checks if it is disabled by unchecking all checkboxes...
      * @param service service to check
@@ -269,22 +277,34 @@
 
     /**
      * If nfsserver runs, portmap has to run too.
-     * @return true if something was changed.
+     * @return string name of the first enabled service that requires portmap
      */
-    global define boolean AdjustNfsserver () ``{
-	if (!isDisabled (lookup (services, "nfsserver", $[])) && isDisabled (lookup (services, "portmap", $[])))
+    global define string AdjustNfsserver () ``{
+	if (!isDisabled (lookup (services, "portmap", $[])))  // if portmap is enabled, there is no problem
+	    return nil;
+	string req = nil;
+	list in = [];
+	foreach (`k, `v, services, ``{
+	    if (contains (lookup (v, "reqstart", []), "portmap") && size (lookup (v, "start", [])) > 0)
+	    {
+		in = union (in, toset (lookup (v, "start", [])));
+		if (nil == req)
+		    req = k;
+	    }
+	});
+	if (size (in) > 0)
 	{
-	    y2error ("nfsserver is enabled, but portmap is not. Enabling portmap.");
+	    y2error ("Enabling portmap in %1", in);
 	    map service = lookup (services, "portmap", $[]);
 	    services = add (services, "portmap",
 		    union (service,
 			$[
-			"start": lookup (service, "defstart", []),
+			"start": in,
 			"dirty": true,
 			]));
-	    return true;
+	    return req;
 	}
-	return false;
+	return nil;
     }
 
     /**
