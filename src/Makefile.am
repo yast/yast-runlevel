@@ -13,7 +13,8 @@ agents_SCRIPTS = ag_initscripts
 scrconf_DATA = initscripts.scr
 
 clients_DATA =		\
-	runlevel.ycp
+	runlevel.ycp	\
+	runlevel_adjust.ycp
 
 include_DATA =		\
 	ui.ycp		\

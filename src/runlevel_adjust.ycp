@@ -1,0 +1,182 @@
+/**
+ * File:
+ *   runlevel_adjust.ycp
+ *
+ * Module:
+ *   Runlevel Editor
+ *
+ * Summary:
+ *   Exported functionality
+ *
+ * Authors:
+ *   Petr Blahos <pblahos@suse.cz>
+ *
+ * $Id$
+ *
+ * <h3>Allows foreign modules to start/stop service or enable/disable it.</h3>
+ * <pre>
+ * CallModule ("runlevel_adjust", [ "script_name", "action" [, "action" ...] ]);
+ *
+ * Because service starting will not be driven by START_ variables soon and
+ * because runlevel editor will be responsible for it, we have to use runlevel
+ * editor to edit service startup. Now settig START_???=yes via rc.config agent
+ * may have none effect because runlevel editor disables services by removing
+ * links from /etc/init.d/rc?.d/. So if module wants to enable service, it must
+ * call CallModule ("runlevel_adjust", [ "service", "enable" ]);
+ * For disabling service call:
+ *      CallModule ("runlevel_adjust", [ "service", "disable" ]);
+ * If module may start and enable or stop and disable as well (of course it may
+ * stop and enable but I do not see much use of it).
+ *      CallModule ("runlevel_adjust", [ "service", "start", "enable" ]);
+ *      CallModule ("runlevel_adjust", [ "service", "stop", "disable" ]);
+ *
+ * script_name is name of the init script.
+ *
+ * action is one of:
+ * "start" :    Starts service.
+ * "stop"  :    Stops service.
+ * "restart" :  Restarts service.
+ *
+ * "disable" :  If service is not disabled, it disables it by calling
+ *              insserv service,start=
+ *              If service is disabled (START_*!=yes or there are no links),
+ *              nothing happens.
+ * "enable" :   Enables service. If service is disabled, it does the same as
+ *              "default". Otherwise it does nothing. We suppose that if there is
+ *              at least one link in /etc/init.d/rc?.d/, system administrator made
+ *              such setting intentionaly and service is enabled.
+ * "default" :  Enables service and calls
+ *              insserv -d service
+ *              which creates default links under /etc/init.d/rc?.d for service.
+ *
+ * You should not combine "start", "stop", "restart".
+ * You should not combine "enable", "disable", "default".
+ * </pre>
+ */
+
+{
+    integer len = size (Args ());
+
+    if (len < 2)
+        {
+            // bad usage
+            y2error ("Usage: CallModule (\"runlevel_adjust\", [ \"servicename\", \"action\"[, \"action\", ...] ])");
+            return -1;
+        }
+
+    /**
+     * Is service disabled?
+     * Function local to runlevel_adjust.ycp
+     * @param service service map
+     * @return boolean true if disabled
+     */
+    define isDisabled (map service) ``{
+        if (!lookup (service, "START", true))
+            {
+                return true;
+            }
+        return 0 == size (lookup (service, "start", []));
+    }
+
+    /**
+     * Sets service to run if its default runlevels.
+     * Function local to runlevel_adjust.ycp
+     * @param service_name name of service
+     * @param service service map
+     */
+    define setDefault (string service_name, map service) ``{
+        if (haskey (start_variables_all, service_name))
+            {
+                y2milestone ("%1 ===> Settings START_ variable %2 to yes", service_name, lookup (start_variables_all, service_name));
+                SCR (`Write (add (.rc.system, lookup (start_variables_all, service_name)), "yes"));                
+            }
+        string commandline = sformat ("/sbin/insserv %1,start=", service_name);
+        string add_comma = "";
+        list start = lookup (v, "defstart", []);
+        foreach (`i, start, ``{
+            commandline = commandline + add_comma + i;
+            add_comma = ",";
+        });
+        y2milestone ("%1 ===> Running %2", service_name, commandline);
+        SCR (`Execute (.target.bash, commandline));
+    }
+
+    /**
+     * Disable service.
+     * Function local to runlevel_adjust.ycp
+     * @param service_name name of service
+     * @param service service map
+     */
+    define setDisabled (string service_name, map service) ``{
+        if (!lookup (service, "START"))
+            {   // is already disabled
+                return ;
+            }
+        string commandline = sformat ("/sbin/insserv %1,start=", service_name);
+        y2milestone ("%1 ===> Running %2", service_name, commandline);
+        SCR (`Execute (.target.bash, commandline));
+    }
+    /* end of defines */
+
+    map start_variables_disabled = $[];
+    map start_variables_all = $[];
+    include "runlevel/starts.ycp";
+
+    string service_name = Args (0);
+    if (!SCR (`Read (.init.scripts.exists, service_name)))
+        {
+            y2milestone ("Service %1 does not exit. Giving up.", service_name);
+            return -1;
+        }
+    y2milestone ("Working with service %1", service_name);
+
+    map detail =  lookup (SCR (`Read (.init.scripts.runlevels)), service_name, $[]);
+    map service = lookup (SCR (`Read (.init.scripts.comments)), service_name, $[]);
+    change (service, "start", lookup (detail, "start", []));
+    change (service, "stop", lookup (detail, "stop", []));
+    // service is almost complete
+    if (haskey (start_variables_all, service_name))
+        {
+            string start_val = SCR (`Read (add (.rc.system, lookup (start_variables_all, service_name))));
+            change (service, "START", "yes" == start_val ? true : false);
+        }
+    else
+        {
+            change (service, "START", true);
+        }
+    y2milestone ("Service %1 current state: %2", service_name, service);
+
+    integer i = 1;
+    while (i < len)
+        {
+            y2milestone ("%1 %2", service_name, Args (i));
+
+            if ("enable" == Args (i))
+                {
+                    if (isDisabled (service))
+                        {
+                            setDefault (service_name, service);
+                        }
+                    // else it is already enabled
+                }
+            else if ("disable" == Args (i))
+                {
+                    setDisabled (service_name, service);
+                }
+            else if ("default" == Args (i))
+                {
+                    setDefault (service_name, service);
+                }
+
+            else if ("start" == Args (i) || "stop" == Args (i) || "restart" == Args (i))
+                {
+                    SCR (`Execute (.target.bash, sformat ("TERM=raw /etc/init.d/%1 %2", service_name, Args (i))));
+                }
+            else
+                {
+                    y2error ("Unknown action to runlevel_adjust (%1)", Args (i));
+                }
+            i = i + 1;
+        }
+    return 0;
+}

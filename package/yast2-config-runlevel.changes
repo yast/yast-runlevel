@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Aug  8 08:12:21 CEST 2001 - pblahos@suse.cz
+
+- runlevel_adjust: new module for adjusting service startup.
+
+-------------------------------------------------------------------
 Tue Aug  7 12:34:55 CEST 2001 - pblahos@suse.cz
 
 - First test cases.
