@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 12 16:32:42 CET 2003 - mvidner@suse.de
+
+- Do not export empty values to autoyast (#25191).
+- 2.7.3
+
+-------------------------------------------------------------------
 Mon Feb 17 16:19:02 CET 2003 - mvidner@suse.de
 
 - Fixed the success popup after enabling all services (#23663).
