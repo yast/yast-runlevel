@@ -23,7 +23,7 @@ Summary:	Configuration of runlevel
 %dir @YAST2DIR@/menuentries
 %dir @YAST2DIR@/servers_non_y2
 %dir @YAST2DIR@/scrconf
-@YAST2DIR@/menuentries/menuentry_runlevel.ycp
+@YAST2DIR@/menuentries/menuentry_runlevel.y2cc
 @YAST2DIR@/servers_non_y2/ag_initscripts
 @YAST2DIR@/scrconf/initscripts.scr
 @YAST2DIR@/clients/runlevel.ycp
