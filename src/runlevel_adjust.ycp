@@ -85,10 +85,14 @@
      * @param service service map
      */
     define setDefault (string service_name, map service) ``{
-        if (haskey (start_variables_all, service_name))
+        if (!lookup (service, "START") && haskey (start_variables_all, service_name))
             {
                 y2milestone ("%1 ===> Settings START_ variable %2 to yes", service_name, lookup (start_variables_all, service_name));
                 SCR (`Write (add (.rc.system, lookup (start_variables_all, service_name)), "yes"));                
+            }
+        if (lookup (service, "start") == lookup (service, "defstart"))
+            {   // already default
+                return ;
             }
         string commandline = sformat ("/sbin/insserv %1,start=", service_name);
         string add_comma = "";
@@ -112,6 +116,10 @@
             {   // is already disabled
                 return ;
             }
+        if (0 == size (lookup (service, "start", [])))
+            {   // is already disabled
+                return ;
+            }
         string commandline = sformat ("/sbin/insserv %1,start=", service_name);
         y2milestone ("%1 ===> Running %2", service_name, commandline);
         SCR (`Execute (.target.bash, commandline));
@@ -130,8 +138,8 @@
         }
     y2milestone ("Working with service %1", service_name);
 
-    map detail =  lookup (SCR (`Read (.init.scripts.runlevels)), service_name, $[]);
-    map service = lookup (SCR (`Read (.init.scripts.comments)), service_name, $[]);
+    map detail =  lookup (SCR (`Read (.init.scripts.runlevel, service_name)), service_name, $[]);
+    map service = lookup (SCR (`Read (.init.scripts.comment, service_name)), service_name, $[]);
     change (service, "start", lookup (detail, "start", []));
     change (service, "stop", lookup (detail, "stop", []));
     // service is almost complete

@@ -1,0 +1,88 @@
+Log	Usage: CallModule ("runlevel_adjust", [ "servicename", "action"[, "action", ...] ])
+Return	-1
+Read	.init.scripts.exists "lpd" false
+Return	-1
+Dump	--- Test enable 1 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":["4", "5"], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "no"
+Write	.rc.system."START_LPD" "yes" true
+Execute	.target.bash "/sbin/insserv lpd,start=1,2" 0
+Return	0
+Dump	--- Test enable 2 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":[], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "yes"
+Execute	.target.bash "/sbin/insserv lpd,start=1,2" 0
+Return	0
+Dump	--- Test enable 3 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":["3", "4"], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "yes"
+Return	0
+Dump	--- Test disable 1 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":["4", "5"], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "no"
+Return	0
+Dump	--- Test disable 2 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":[], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "yes"
+Return	0
+Dump	--- Test disable 3 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":["3", "4"], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "yes"
+Execute	.target.bash "/sbin/insserv lpd,start=" 0
+Return	0
+Dump	--- Test set default 1 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":["4", "5"], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "no"
+Write	.rc.system."START_LPD" "yes" true
+Execute	.target.bash "/sbin/insserv lpd,start=1,2" 0
+Return	0
+Dump	--- Test set default 2 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":[], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "yes"
+Execute	.target.bash "/sbin/insserv lpd,start=1,2" 0
+Return	0
+Dump	--- Test set default 3 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":["3", "4"], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "yes"
+Execute	.target.bash "/sbin/insserv lpd,start=1,2" 0
+Return	0
+Dump	--- Test set default 4 ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":["1", "2"], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "yes"
+Return	0
+Dump	--- Test set start ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":["1", "2"], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "yes"
+Execute	.target.bash "TERM=raw /etc/init.d/lpd start" 0
+Return	0
+Dump	--- Test set enable and start ---
+Read	.init.scripts.exists "lpd" true
+Read	.init.scripts.runlevel "lpd" $["lpd":$["start":["4", "5"], "stop":[]]]
+Read	.init.scripts.comment "lpd" $["lpd":$["defstart":["1", "2"], "defstop":["3", "4"], "description":"some description"]]
+Read	.rc.system."START_LPD" "no"
+Write	.rc.system."START_LPD" "yes" true
+Execute	.target.bash "/sbin/insserv lpd,start=1,2" 0
+Execute	.target.bash "TERM=raw /etc/init.d/lpd start" 0
+Return	0

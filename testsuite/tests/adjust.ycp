@@ -1,0 +1,341 @@
+/**
+ * YaST2 test case for runlevel editor
+ *
+ * tests module adjust_runlevel
+ */
+{
+    include "testsuite.ycp";
+
+    map READ = $[];
+    map WRITE = $[];
+    map EXEC = $[];
+
+    // wrong arguments
+    TEST (`runlevel_adjust ("lpd"), [READ, WRITE, EXEC], false);
+    // lpd script does not exist
+    TEST (`runlevel_adjust ("lpd", "enable"), [READ, WRITE, EXEC], false);
+
+    //
+    // TEST ENABLE
+    //
+    DUMP ("--- Test enable 1 ---");
+    
+    // Disabled by START_ variable
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : ["4", "5", ],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ]
+            ],
+        "rc" : $[
+            "system" : "no",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "enable"), [READ, WRITE, EXEC], false);
+
+    DUMP ("--- Test enable 2 ---");
+    // Disabled by links
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : [],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ],
+            ],
+        "rc" : $[
+            "system" : "yes",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "enable"), [READ, WRITE, EXEC], false);
+
+    DUMP ("--- Test enable 3 ---");
+    // already enabled
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : [ "3", "4", ],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ],
+            ],
+        "rc" : $[
+            "system" : "yes",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "enable"), [READ, WRITE, EXEC], false);
+    
+    //
+    // TEST DISABLE
+    //
+    DUMP ("--- Test disable 1 ---");
+    
+    // Disabled by START_ variable
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : ["4", "5", ],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ]
+            ],
+        "rc" : $[
+            "system" : "no",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "disable"), [READ, WRITE, EXEC], false);
+
+    DUMP ("--- Test disable 2 ---");
+    // Disabled by links
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : [],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ],
+            ],
+        "rc" : $[
+            "system" : "yes",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "disable"), [READ, WRITE, EXEC], false);
+
+    DUMP ("--- Test disable 3 ---");
+    // already enabled
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : [ "3", "4", ],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ],
+            ],
+        "rc" : $[
+            "system" : "yes",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "disable"), [READ, WRITE, EXEC], false);
+    
+    //
+    // TEST SET DEFAULT
+    //
+    DUMP ("--- Test set default 1 ---");
+    // Disabled by START_ variable
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : ["4", "5", ],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ]
+            ],
+        "rc" : $[
+            "system" : "no",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "default"), [READ, WRITE, EXEC], false);
+
+    DUMP ("--- Test set default 2 ---");
+    // Disabled by links
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : [],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ],
+            ],
+        "rc" : $[
+            "system" : "yes",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "default"), [READ, WRITE, EXEC], false);
+
+    DUMP ("--- Test set default 3 ---");
+    // already enabled
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : [ "3", "4", ],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ],
+            ],
+        "rc" : $[
+            "system" : "yes",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "default"), [READ, WRITE, EXEC], false);
+    
+    DUMP ("--- Test set default 4 ---");
+    // already enabled and already default
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : [ "1", "2", ],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ],
+            ],
+        "rc" : $[
+            "system" : "yes",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "default"), [READ, WRITE, EXEC], false);
+
+    DUMP ("--- Test set start ---");
+    // start/stop/restart is always the same
+    TEST (`runlevel_adjust ("lpd", "start"), [READ, WRITE, EXEC], false);
+
+    DUMP ("--- Test set enable and start ---");
+    // Disabled by START_ variable
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "exists" : true,
+                "runlevel" : $[
+                    "lpd" : $[
+                        "start" : ["4", "5", ],
+                        "stop" : [],
+                        ],
+                    ],
+                "comment" : $[
+                    "lpd" : $[
+                        "defstart" : [ "1", "2",],
+                        "defstop" : ["3", "4", ],
+                        "description" : "some description",
+                        ],
+                    ],
+                ]
+            ],
+        "rc" : $[
+            "system" : "no",
+            ],
+        ];
+    // lpd script exist
+    TEST (`runlevel_adjust ("lpd", "enable", "start"), [READ, WRITE, EXEC], false);
+    
+}
