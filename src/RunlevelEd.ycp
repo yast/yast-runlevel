@@ -87,7 +87,7 @@
      * List of all services. Each item is a map described above.
      * @ref service
      */
-    global map services = $[];
+    global map<string,map> services = $[];
 
     /**
      * List of all service names.
@@ -164,7 +164,7 @@
 
 	map details = (map) SCR::Read (.init.scripts.runlevels);
 	Progress::NextStep ();
-	services = (map) SCR::Read (.init.scripts.comments);
+	services = (map<string,map>) SCR::Read (.init.scripts.comments);
 	Progress::NextStep ();
 	services = mapmap (string k, map v, services, ``{
 	    foreach (string f, v["provides"]:[], ``{
@@ -460,7 +460,7 @@ Further dependency checking will be disabled."));
 	    SCR::Write (.init.scripts.default_runlevel, default);
 	Progress::NextStep ();
 
-	map failed = filter (string k, map v, services, ``{
+	map<string,map> failed = filter (string k, map v, services, ``{
 	    boolean fail = false;
 	    if (v["dirty"]:false)
 	    {
@@ -517,7 +517,7 @@ Further dependency checking will be disabled."));
      *]</pre>
      */
     global define map Export () ``{
-	map svc = filter (string k, map v, services, ``{
+	map<string,map> svc = filter (string k, map v, services, ``{
 	    return v["dirty"]:false;
 	});
 	list tmp_services = maplist(string service_name, map service_data, svc, ``{
@@ -562,8 +562,8 @@ Further dependency checking will be disabled."));
 	default_orig = default;
 
 	// and finaly process map being imported
-	list new = s["services"]:[];
-	map tmp_services = listmap(map service, new,  ``{
+	list<map> new = s["services"]:[];
+	map<string,map> tmp_services = listmap(map service, new,  ``{
 	    string name = service["service_name"]:"";
 	    list stop = [];
 	    list start = [];
@@ -727,7 +727,7 @@ Further dependency checking will be disabled."));
 	sprint ("\t\"!missing\"[rank=max];\n");
 	sprint ("\t\"$syslog\" -> \"$network\" [style=invis, minlen=10];\n");
 	sprint ("\t\"$remote_fs\" -> \"$syslog\" [style=invis, minlen=5];\n");
-	foreach (string n, list e, requires, ``{
+	foreach (string n, list<string> e, requires, ``{
 	    foreach (string target, e, ``{
 		string attr = in_attr[target]:"";
 		sprint (sformat ("\t\"%1\" -> \"%2\"%3;\n", n, target, attr));

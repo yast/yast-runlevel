@@ -1,7 +1,7 @@
 // test for Read and related functions
 {
     // these are read before testsuite.ycp installs dummy SCR handlers
-    map comments = (map) SCR::Read (.target.ycp, "tests/scripts.ycp.out");
+    map<string,map> comments = (map<string,map>) SCR::Read (.target.ycp, "tests/scripts.ycp.out");
     map insserv_conf = (map) SCR::Read (.target.ycp, "tests/insserv_conf.ycp.out");
 
     include "testsuite.ycp";
