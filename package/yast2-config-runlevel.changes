@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Oct 23 09:13:23 CEST 2001 - pblahos@suse.cz
+
+- Uses new module Progress.
+
+-------------------------------------------------------------------
 Tue Oct 16 10:47:51 CEST 2001 - pblahos@suse.cz
 
 - Migrated to y2devtools
