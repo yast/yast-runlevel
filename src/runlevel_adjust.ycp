@@ -92,7 +92,7 @@
             }
         string commandline = sformat ("/sbin/insserv %1,start=", service_name);
         string add_comma = "";
-        list start = lookup (v, "defstart", []);
+        list start = lookup (service, "defstart", []);
         foreach (`i, start, ``{
             commandline = commandline + add_comma + i;
             add_comma = ",";
