@@ -22,12 +22,13 @@
     // function for reading/manipulating services
     include "runlevel/services.ycp";
     include "runlevel/ui.ycp";
-    
-    include "browser.ycp";
 
     //
     // globals
     //
+
+    // you know what this means
+    boolean do_abort_now = false;
 
     // list of runlevels. e.g. [ "0", "1", "2", "S" ]
     // taken from ls /etc/init.d/rc?.d
@@ -106,7 +107,7 @@
     });
 
     readDefaultRunlevel ();
-    
+
     //
     // define maps for sequencer
     //

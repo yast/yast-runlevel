@@ -37,10 +37,21 @@
     }
 
     /**
-     * Writes default runlevel into /etc/inittab
-     * FIXME:...
+     * Writes default runlevel into /etc/inittab.
+     * @param new_default New default runlevel.
+     * @return integer 0 on success, -1 otherwise.
      */
-    global define setDefaultRunlevel () ``{
+    global define setDefaultRunlevel (string new_default) ``{
+        string tmp = SCR (`Read (.target.tmpdir)) + "/inittab";
+        if (0 == SCR (`Execute (
+            .target.bash,
+            sformat ("/usr/bin/sed s/^id:.:initdefault:/id:%1:initdefault:/g /etc/inittab > %2", new_default, tmp)
+            )))
+            {
+                SCR (`Execute (.target.bash, sformat ("cp %1 /etc/inittab; chmod 0644 %1; chown root:root %1", tmp)));
+                return 0;
+            }
+        return -1;
     }
 
     /**
@@ -112,17 +123,32 @@
     /**
      * Get script information and adds it into map info. Reads script comments and remembers:
      * Description, Default-Start, Default-Stop, Required-Start, Required-Stop.
-     * @param script script name to read info about
-     * @param info map info is added to
-     * @return map updated info
+     * @param lines Comments from scripts
      */
-    global define getScriptInfo (string script, map info) ``{
+    global define getScriptInfo (list lines) ``{
         // read file to string...
+        map info = $[];
         boolean description_continues = false;
-        string file = SCR (`Read (.target.string, "/etc/init.d/" + script));
-        list lines = splitstring (file, "\n");
         string description = "";
+        string current = "";
         foreach (`i, lines, ``{
+            if (size (i) < 0)
+                {
+                    return 0;
+                }
+            if ("#" != substring (i, 0, 1))
+                {
+                    if (current != "")
+                        { // save processed service
+                            info = add (info, "description", description);
+                            services = add (services, current, info);
+                        }
+                    current = i;
+                    info = lookup (services, current);
+                    description = "";
+                    description_continues = false;
+                    return nil;
+                }
             if (size (i)<1 || "#" != substring (i, 0, 1))
                 {
                     return nil;
@@ -179,8 +205,11 @@
                 }
             // fixme maybe I will read provides as well
         });
-        info = add (info, "description", description);
-        return info;
+        if (current != "")
+            { // save processed service
+                info = add (info, "description", description);
+                services = add (services, current, info);
+            }
     }
 
     /**
@@ -253,11 +282,23 @@
      * Modifies global services.
      */
     global define getScriptsInfo () ``{
-        services = mapmap (`k, `v, services, ``{
-            return [ k, getScriptInfo (k, v)];
+        string temp_out = SCR (`Read (.target.tmpdir));
+        string temp_script = temp_out + "/servinfo";
+        temp_out = temp_out + "/servinfo.out";
+        string script = sformat ("#!/bin/bash\n/bin/rm %1\n", temp_out);
+        foreach (`k, `v, services, ``{
+            script = script + sformat ("/bin/echo %1 >> %2\n", k, temp_out);
+            script =
+                script + sformat
+                ("/bin/awk 'BEGIN {wr=0} /### BEGIN INIT INFO/ {wr=1;} /### END INIT INFO/ {wr=0;} { if(wr) print $0; } ' /etc/init.d/%1 >> %2\n",
+                 k, temp_out);
         });
+        SCR (`Write (.target.string, temp_script, script));
+        SCR (`Execute (.target.bash, "source " + temp_script));
+        script = SCR (`Read (.target.string, temp_out));
+        getScriptInfo2 (splitstring (script, "\n"));
     }
-
+    
     /**
      * Get list of services that are run in given runlevel.
      * Modifies global services.

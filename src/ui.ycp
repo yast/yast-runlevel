@@ -72,6 +72,30 @@ Select runlevels in which to run currently selected service.<ul>
     }
 
     /**
+     * Ask if really abort. Uses boolean changed_settings. Sets boolean do_abort_now.
+     * @return boolean true if user really wants to abort
+     */
+    global define reallyAbort ()``{
+        if (do_abort_now)
+            {
+                return true;
+            }
+        do_abort_now = UI (`AnyQuestionPopup (
+            // message box label
+            _("Exit without saving"),
+            // message box text
+            _("All your changes in the setup procedure\nwill be lost if you continue."),
+            // push button 
+            _("&Exit without saving"),
+            // push button 
+            _("&Cancel abort"),
+            `focus_yes
+            ));
+        return do_abort_now;
+    }
+
+
+    /**
      * Create table items from services.
      * @return list List of items for table.
      */
@@ -150,21 +174,37 @@ Select runlevels in which to run currently selected service.<ul>
         // window label
         UI (`SetWizardContents (_("Runlevel editor: default runlevel"), contents, getHelpMain (), true, true));
         UI (`ReplaceWizardNextButton (`PushButton (`id (`next), FinishButtonLabel())));
-        return UI (``{
-            return UserInput ();
-        });
-        do_abort_now = UI (`AnyQuestionPopup (
-            // abort question: label
-            _("Exit without saving"),
-            // abort question: text
-            _("All your changes in the setup procedure\nwill be lost if you continue."),
-            // abort question: exit button
-            _("&Exit without saving"),
-            // abort question: go back button
-            _("&Cancel abort"),
-            `focus_yes
-            ));
+
+        
+        any ret = nil;
+
+        while (true)
+            {
+                ret = UI (`UserInput ());
+                // we may read this anyway...
+                default_runlevel = UI (`QueryWidget (`id (`default), `Value));
+                if (`back == ret || `abort == ret)
+                    {
+                        if (!reallyAbort ())
+                            {
+                                continue;
+                            }
+                    }
+                else if (`next == ret)
+                    {
+                        // ask and save...?
+                        if (! UI (`YesNoPopup (_("Now the changes to runlevels \nwill be saved."))))
+                            {
+                                continue;
+                            }
+                        setDefaultRunlevel (default_runlevel);
+                        UI (`MessagePopup (_("The new configuration \nwas stored successfully.")));
+                    }
+                break;
+            }
+        return ret;
     }
+
     global define getRunlevelDescr (string rl) ``{
         return lookup ($[
             // descriptions of runlevels. there must be number: description
@@ -173,6 +213,7 @@ Select runlevels in which to run currently selected service.<ul>
             "1" : _("1: Single user mode"),
             "2" : _("2: Local multiuser without remote network"),
             "3" : _("3: Full multiuser with network"),
+            "4" : _("4: User defined"),
             "5" : _("5: Full multiuser with network and xdm"),
             "6" : _("6: System reboot"),
             ], rl, rl);
@@ -312,6 +353,14 @@ Select runlevels in which to run currently selected service.<ul>
         while (`next != ret && `back != ret && `abort != ret)
             {
                 ret = UI (`UserInput ());
+                if (`abort == ret)
+                    {
+                        if (!reallyAbort ())
+                            {
+                                ret = nil;
+                                continue;
+                            }
+                    }
                 if (`next == ret)
                     {
                         // save changes...
