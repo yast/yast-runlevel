@@ -233,12 +233,13 @@ checking or unchecking the <b>check boxes B-S</b> for the runlevel.</p>
 	    _("<p><b>Start/Stop/Refresh:</b> Use this to start or stop services individually.</p>")
 	    +
 	    // help text
-	    _("<P><B>Set/Reset:</B>
-Select runlevels in which to run currently selected service.<ul>
+	    _("<P><B>Set and Reset:</B>
+Select runlevels in which to run the currently selected service.<ul>
 <li><b>Enable the service:</b> Activates the service in the standard runlevels.</li>
 <li><b>Disable the service:</b> Deactivates service.</li>
 <li><b>Enable all services:</b> Activates all services in their standard runlevels.</li>
-</ul></p>")
+</ul></p>
+")
 	    ;
     }
     /**
@@ -250,9 +251,9 @@ Select runlevels in which to run currently selected service.<ul>
 	    // help text
 	    _("<p><b>Prepare data for autoinstallation.</b></p>")
 	    +
-	    _("<p>Change the services to requested state. Only services marked as changed will be really changed in target system.</p>")
+	    _("<p>Change the services to requested state. Only services marked as changed will really be changed in the target system.</p>")
 	    +
-	    _("<p>If you made a mistake and want to undo the change, press <b>Clear</b> or <b>Clear all</b></p>")
+	    _("<p>If you made a mistake and want to undo the change, press <b>Clear</b> or <b>Clear all</b>.</p>")
 	    ;
     }
 
@@ -711,7 +712,7 @@ because they depend on it:
 		if (exit != 0)
 		{
 		    doit = LongContinueCancelHeadlinePopup (
-			_("An error has occurred"), `RichText (rich_message),
+			_("An error has occurred."), `RichText (rich_message),
 			70, 10);
 		    // don't show what we've already seen
 		    rich_message = "";
@@ -1069,7 +1070,7 @@ both of them?")))
 		}
 		else if (`to_all_enable == ret)
 		{
-		    if (UI::YesNoPopup (_("Do you really want to enable all services?")))
+		    if (UI::YesNoPopup (_("Really enable all services?")))
 		    {
 			foreach (`k, `v, Runlevel::services, ``{
 			    setServiceToDefault (k);
@@ -1273,12 +1274,11 @@ both of them?")))
 			updateRlCheckBoxes (service);
 			while (nil != UI::PollInput ()) {}
 			if (!UI::YesNoPopup (sformat (_("Service portmap, which is required by
-%1 is disabled. You should enable
+%1, is disabled. Enable
 portmap if you want to run %1.
 
-Do you really want to leave portmap
-disabled?
-"), nfs_adj)))
+Leave portmap
+disabled?\n"), nfs_adj)))
 			{
 			    ret = nil;
 			    continue;
