@@ -25,8 +25,8 @@
     include "wizard/sequencer.ycp";
     include "runlevel/ui.ycp";
 
-    list args = Args ();
-    map settings = select (Args (), 0, $[]);
+    list args = WFM::Args ();
+    map settings = select (WFM::Args (), 0, $[]);
 
     // you know what this means
     boolean do_abort_now = false;
