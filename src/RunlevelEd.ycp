@@ -34,6 +34,7 @@
 	"defstart" : [ "2", "3", "5", ], // Default-Start comment
 	"defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
 
+	// "should" dependencies (+) are filtered by addRequires
 	"reqstart" : [ "$network", "portmap" ], // Required-Start comment
 	"reqstop"  : [ "$network", "portmap" ], // Required-Stop  comment
 
@@ -108,8 +109,9 @@
 
     /**
      * System facility definitions
+     * "should" dependencies (+) are filtered by addRequires
      * /etc/insserv.conf:
-     *   system_requires["$remote_fs"] == ["$local_fs", "nfs"];
+     *   system_requires["$network"] == ["network", "+pcmcia", "+hotplug"];
      */
     map system_requires = $[];
 
@@ -193,14 +195,16 @@
 	});
     }
     /**
-     * Resolve provides and add the requirements to "requires".
+     * Resolve provides, filter out "should" dependencies (+)
+     * and add the requirements to "requires".
      * Missing services are not detected.
      * @param service a service
      * @param req_facilities its required facilities
      */
     define void addRequires (string service, list(string) req_facilities) ``{
-	list req_s = maplist (string f, req_facilities,
-			      ``( what_provides[f]:f ));
+	list req_s = filter (string f, req_facilities,
+			     ``( substring (f, 0, 1) != "+"));
+	req_s = maplist (string f, req_s, ``( what_provides[f]:f ));
 	requires = add (requires, service, req_s);
     }
 
