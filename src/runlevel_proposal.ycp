@@ -1,0 +1,117 @@
+/**
+ * File:	clients/runlevel_proposal.ycp
+ * Package:	Runlevel editor
+ * Summary:	Default runlevel proposal
+ * Authors:	Michal Svec <msvec@suse.cz>
+ *
+ * $Id$
+ */
+
+{
+
+textdomain "runlevel";
+
+/* The main () */
+y2milestone("----------------------------------------");
+y2milestone("Runlevel proposal started");
+y2milestone("Arguments: %1", WFM::Args());
+
+import "Label";
+import "Progress";
+import "RunlevelEd";
+import "Summary";
+
+include "runlevel/ui.ycp";
+
+string func = (string) WFM::Args(0);
+map param = (map) WFM::Args(1);
+map ret = $[];
+
+define symbol RL() {
+
+    UI::OpenDialog(`VBox(
+	/* Heading label */
+	`Heading( _("Set Default Runlevel") ),
+	`VSpacing( 0.7 ),
+	    /* ComboBox label */
+	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Default Runlevel:"), getDefaultPicker (`complex)),
+	`VSpacing( 0.5 ),
+	`HBox(
+	    `HStretch(),
+	    `HWeight(1, `PushButton(`id(`ok), `opt(`default, `key_F10),
+	    Label::OKButton() )),
+	    `HStretch(),
+	    `HWeight(1, `PushButton(`id(`cancel), `opt (`key_F9),
+	    Label::CancelButton())),
+	    `HStretch()
+	)
+    ));
+
+    any ret = UI::UserInput();
+    if(ret == `ok) {
+	RunlevelEd::default = (string) UI::QueryWidget(`id(`default_rl), `Value);
+	UI::CloseDialog();
+	return `next;
+    }
+    UI::CloseDialog();
+    return `back;
+}
+
+/* create a textual proposal */
+if(func == "MakeProposal") {
+    string proposal = "";
+    string warning = nil;
+    symbol warning_level = nil;
+    boolean force_reset = param["force_reset"]:false;
+
+    if(force_reset || !RunlevelEd::proposal_valid) {
+	RunlevelEd::proposal_valid = true;
+	Progress::off();
+	RunlevelEd::Read();
+    }
+    // FIXME: proposal = RunlevelEd::Summary();
+    proposal = Summary::DevicesList([Summary::Device(RunlevelEd::getRunlevelDescr (RunlevelEd::default), "")]);
+    Progress::on();
+
+    ret = $[
+	"preformatted_proposal" : proposal,
+	"warning_level" : warning_level,
+	"warning" : warning,
+    ];
+}
+/* run the module */
+else if(func == "AskUser") {
+    map stored = RunlevelEd::Export();
+    symbol result = RL(); //(symbol) WFM::CallFunction("runlevel", [.propose]);
+    if(result != `next) RunlevelEd::Import(stored);
+    y2debug("stored=%1", stored);
+    y2debug("result=%1", result);
+    ret = $[ "workflow_sequence" : result ];
+}
+/* create titles */
+else if(func == "Description") {
+    ret = $[
+	/* Rich text title */
+	"rich_text_title" : _("Default Runlevel"),
+	/* MenuButton title */
+	"menu_title" : _("Default &Runlevel"),
+	"id" : "runlevel",
+    ];
+}
+/* write the proposal */
+else if(func == "Write") {
+    RunlevelEd::Write();
+}
+/* unknown function */
+else {
+    y2error("unknown function: %1", func);
+}
+
+/* Finish */
+y2debug("ret=%1",ret);
+y2milestone("Runlevel proposal finished");
+y2milestone("----------------------------------------");
+return ret;
+
+/* EOF */
+}
