@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Nov 16 08:31:09 CET 2001 - pblahos@suse.cz
+
+- Uses three parameters for lookups.
+
+-------------------------------------------------------------------
 Wed Nov  7 10:06:40 CET 2001 - pblahos@suse.cz
 
 - Fixed duplicate keyboard shortcut: &Start/Stop/Refresh, 

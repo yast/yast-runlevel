@@ -314,7 +314,7 @@ Select runlevels in which to run currently selected service.<ul>
      * @param service_name Name of service to process.
      */
     global define setServiceToDefault (string service_name) ``{
-	map service = lookup (services, service_name);
+	map service = lookup (services, service_name, $[]);
 	services = add (services, service_name,
 			union (service,
 			       $[
@@ -330,11 +330,11 @@ Select runlevels in which to run currently selected service.<ul>
      * @param service_name Name of service to process.
      */
     global define setServiceToEnabled (string service_name) ``{
-	map service = lookup (services, service_name);
+	map service = lookup (services, service_name, $[]);
 	services = add (services, service_name,
 			union (service,
 			       $[
-				   "start" :  lookup (service, "defstart"),
+				   "start" :  lookup (service, "defstart", []),
 				   "START" : true,
 				   "dirty" : true,
 				   ]));
@@ -386,14 +386,14 @@ Select runlevels in which to run currently selected service.<ul>
 	foreach (`k, `v, services, ``{
 	    if (!isDisabled (v) && contains (lookup (v, "start", []), current_runlevel))
 		{   // it should run
-		    if ("0" != lookup (v, "started"))
+		    if ("0" != lookup (v, "started", ""))
 			{
 			    should_run = add (should_run, k);
 			}
 		}
 	    else
 		{
-		    if ("0" == lookup (v, "started"))
+		    if ("0" == lookup (v, "started", ""))
 			{
 			    should_not_run = add (should_not_run, k);
 			}
@@ -481,7 +481,7 @@ Select runlevels in which to run currently selected service.<ul>
 	define refreshTableLine () ``{
 	    list start = (isDisabled (service) ? [] : lookup (service, "start", []));
 	    foreach (`i, runlevels, ``{
-		UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, i)), contains (start, i) ? i : " ");
+		UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, i, 0)), contains (start, i) ? i : " ");
 	    });
 	}
 	/**
@@ -565,7 +565,7 @@ Select runlevels in which to run currently selected service.<ul>
 	// dialog caption.
 	UI::SetWizardContents (_("Runlevel editor: details"), contents, getHelpComplex (), true, true);
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
-	service = lookup (services, current_service);
+	service = lookup (services, current_service, $[]);
 	changeService ();
 	any ret = nil;
 	while (`next != ret && `back != ret && `abort != ret)
@@ -612,14 +612,14 @@ Select runlevels in which to run currently selected service.<ul>
 		if (`table == ret)
 		    {
 			current_service = UI::QueryWidget (`id (`table), `CurrentItem);
-			service = lookup (services, current_service);
+			service = lookup (services, current_service, $[]);
 			changeService ();
 		    }
 		if (`to_default == ret)
 		    {
 			current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 			setServiceToDefault (current_service);
-			service = lookup (services, current_service);
+			service = lookup (services, current_service, $[]);
 			changeService ();
 			refreshTableLine ();
 		    }
@@ -627,7 +627,7 @@ Select runlevels in which to run currently selected service.<ul>
 		    {
 			current_service = UI::QueryWidget (`id (`table), `CurrentItem);
 			setServiceToEnabled (current_service);
-			service = lookup (services, current_service);
+			service = lookup (services, current_service, $[]);
 			changeService ();
 			refreshTableLine ();
 		    }
@@ -655,13 +655,13 @@ Select runlevels in which to run currently selected service.<ul>
 				string command = substring (sformat ("%1", ret), 1);
 				map out = runInitScript (current_service, command);
 				string message = "";
-				integer exit = lookup (out, "exit");
+				integer exit = lookup (out, "exit", 0);
 				if (0 == exit)
 				    {
 					// show an output
 					message = sformat (_("Output from '/etc/init.d/%1 %2':\n\n"),
 							   current_service, command)
-					    + lookup (out, "stdout");
+					    + lookup (out, "stdout", "");
 					//action was successfull
 					service = add (service, "started", `start == ret ? "0" : "3");
 				    }
@@ -682,12 +682,12 @@ Select runlevels in which to run currently selected service.<ul>
 		if (`status == ret)
 		    {
 			map out = runInitScript (current_service, "status");
-			service = add (service, "started", sformat ("%1", lookup (out, "exit")));
-			refreshTableRunning ();
 			integer exit = lookup (out, "exit", 0);
+			service = add (service, "started", sformat ("%1", exit));
+			refreshTableRunning ();
 			if (0 == exit)
 			{
-			    UI::MessagePopup (sformat (_("Output from '/etc/init.d/%1 status':\n\n"), current_service) + lookup (out, "stdout"));
+			    UI::MessagePopup (sformat (_("Output from '/etc/init.d/%1 status':\n\n"), current_service) + lookup (out, "stdout", ""));
 			}
 			else
 			{
@@ -704,7 +704,7 @@ Select runlevels in which to run currently selected service.<ul>
 			// checked of unchecked?
 			string checked = ((UI::QueryWidget (`id (ret), `Value)) ? ret : " ");
 			grabData ();
-			UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret)), checked);
+			UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret, 0)), checked);
 		    }
 	    }
 	return ret;
