@@ -1009,6 +1009,10 @@ because they depend on it:
 	any ret = nil;
 	while (`next != ret && `back != ret && `abort != ret)
 	    {
+		// Kludge, because a `Table still does not have a shortcut.
+		// #16116
+		UI::SetFocus (`id (`table));
+
 		if (fetching_service_status)
 		{
 		    ret = UI::PollInput ();
@@ -1292,6 +1296,10 @@ name or the name specified is already in use."));
 	while (nil != UI::PollInput ()) {}
 	while (`next != ret && `back != ret && `abort != ret)
 	    {
+		// Kludge, because a `Table still does not have a shortcut.
+		// #16116
+		UI::SetFocus (`id (`table));
+
 		ret = UI::UserInput ();
 		if (ret == `cancel)
 		{
