@@ -530,7 +530,6 @@ Select runlevels in which to run currently selected service.<ul>
 	    );
 	// dialog caption. 
 	UI::SetWizardContents (_("Runlevel editor: details"), contents, getHelpComplex (), true, true);
-	// this ChangeWidget causes next UserInput will return `table FIXME does not work in ncurses
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = lookup (services, current_service);
 	changeService ();
