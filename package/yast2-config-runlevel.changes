@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Nov 27 10:37:08 CET 2001 - pblahos@suse.cz
+
+- Removed START_ variables.
+- Migrated to module.
+
+-------------------------------------------------------------------
 Fri Nov 16 08:31:09 CET 2001 - pblahos@suse.cz
 
 - Uses three parameters for lookups.

@@ -1,14 +1,14 @@
 // test for servicesToTable
 {
+    import "Runlevel";
     include "testsuite.ycp";
     include "runlevel/ui.ycp";
-    include "runlevel/services.ycp";
 
     string current_service = "a";
-    list runlevels = [ "S", "0", "1", "2", "3", "5", "6" ];
-    map services = $[];
+    Runlevel::runlevels = [ "S", "0", "1", "2", "3", "5", "6" ];
+    Runlevel::services = $[];
 
-    services = $[
+    Runlevel::services = $[
         "a" : $[
             "dirty" : false,
             "start" : ["1", "2", "3", "4" ],
@@ -20,7 +20,7 @@
         ];
     DUMP (servicesToTable ());
 
-    services = $[
+    Runlevel::services = $[
         "a" : $[
             "dirty" : true,
             "start" : ["1", "2", "3", ],
@@ -32,7 +32,7 @@
         ];
     DUMP (servicesToTable ());
 
-    services = $[
+    Runlevel::services = $[
         "a" : $[
             "dirty" : true,
             "start" : ["S", "0", "1", ],

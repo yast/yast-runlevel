@@ -4,35 +4,23 @@
  * tests function isDisabled
  */
 {
-    include "runlevel/services.ycp";
+    import "Runlevel";
     include "testsuite.ycp";
 
-    DUMP (isDisabled (
-        $[
-            "START" : true,
-        ]
-        ));
-    DUMP (isDisabled (
-        $[
-            "START" : false,
-        ]
-        ));
-    DUMP (isDisabled (
-        $[
-        ]
-        ));
-    DUMP (isDisabled (
+    DUMP (Runlevel::isDisabled ($[]));
+    DUMP (Runlevel::isDisabled (
         $[
             "start" : [],
+	    "defstart" : ["1",],
         ]
         ));
-    DUMP (isDisabled (
+    DUMP (Runlevel::isDisabled (
         $[
             "start" : [],
             "defstart" : [],
         ]
         ));
-    DUMP (isDisabled (
+    DUMP (Runlevel::isDisabled (
         $[
             "start" : [ "1", ],
         ]
