@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Aug 12 15:40:45 CEST 2003 - lslezak@suse.de
+
+- Finish button
+- Enable/Disable buttons (consistent with table header)
+  instead of Activate/Deactivate
+- version 2.8.5
+
+-------------------------------------------------------------------
 Mon Aug 11 09:59:29 CEST 2003 - lslezak@suse.de
 
 - merged proofread texts

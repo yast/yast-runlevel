@@ -1267,12 +1267,14 @@ and the service itself and disables their start at system boot time.</p>")
 		    )
 		),
 	    `HBox (
-		`PushButton (`id (`enable), `opt (`key_F3),  _("&Activate")),
-		`PushButton (`id (`disable), `opt (`key_F5), _("&Deactivate"))
+		// Button label
+		`PushButton (`id (`enable), `opt (`key_F3),  _("Ena&ble")),
+		// Button label
+		`PushButton (`id (`disable), `opt (`key_F5), _("&Disable"))
 		)
 	    );
 	// dialog caption.
-	Wizard::SetContents (_("Runlevel Editor: Services"), contents, help_text, true, true);
+	Wizard::SetContentsButtons (_("Runlevel Editor: Services"), contents, help_text, Label::BackButton(), Label::FinishButton());
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = lookup (RunlevelEd::services, current_service, $[]);
@@ -1508,7 +1510,8 @@ name or the name specified is already in use."));
 		)
 	    );
 	// dialog caption.
-	Wizard::SetContents (_("Runlevel editor: details"), contents, getHelpAuto (), true, true);
+	Wizard::SetContentsButtons (_("Runlevel editor: details"), contents, getHelpAuto (), Label::BackButton(), Label::FinishButton());
+
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = lookup (RunlevelEd::services, current_service, $[]);
 	updateRlCheckBoxes (service);
