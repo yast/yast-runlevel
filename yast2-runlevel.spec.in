@@ -35,6 +35,4 @@ Summary:	Configuration of runlevel
 %dir @yncludedir@/runlevel
 @yncludedir@/runlevel/*.ycp
 @moduledir@/RunlevelEd.ycp
-%docdir @docdir@
-%doc @docdir@/index.html
-%doc @docdir@/autodocs
+%doc @docdir@
