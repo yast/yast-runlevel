@@ -1,0 +1,36 @@
+/**
+ * YaST2 test case for runlevel editor
+ *
+ * tests function readRunlevelList
+ */
+{
+    include "runlevel/services.ycp";
+    include "testsuite.ycp";
+
+    map READ = $[
+        "init" : $[
+            "scripts" : $[
+                "runlevel_list" : ["1", "2", "3"],
+                ]
+            ]
+        ];
+
+    list runlevels = [];
+    map runlevel2tableindex = $[];
+
+    TEST (``(readRunlevelList ()), [READ] , 0);
+    DUMP (runlevels);
+    DUMP (runlevel2tableindex);    
+
+    READ = $[
+        "init" : $[
+            "scripts" : $[
+                "runlevel_list" : [],
+                ]
+            ]
+        ];
+
+    TEST (``(readRunlevelList ()), [READ] , 0);
+    DUMP (runlevels);
+    DUMP (runlevel2tableindex);    
+}

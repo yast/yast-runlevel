@@ -1,0 +1,40 @@
+/**
+ * YaST2 test case for runlevel editor
+ *
+ * tests function isDisabled
+ */
+{
+    include "runlevel/services.ycp";
+    include "testsuite.ycp";
+
+    DUMP (isDisabled (
+        $[
+            "START" : true,
+        ]
+        ));
+    DUMP (isDisabled (
+        $[
+            "START" : false,
+        ]
+        ));
+    DUMP (isDisabled (
+        $[
+        ]
+        ));
+    DUMP (isDisabled (
+        $[
+            "start" : [],
+        ]
+        ));
+    DUMP (isDisabled (
+        $[
+            "start" : [],
+            "defstart" : [],
+        ]
+        ));
+    DUMP (isDisabled (
+        $[
+            "start" : [ "1", ],
+        ]
+        ));
+}
