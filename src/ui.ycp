@@ -9,6 +9,7 @@
  *   Runlevel Editor user interface.
  *
  * Authors:
+ *   Martin Vidner <mvidner@suse.cz>
  *   Petr Blahos <pblahos@suse.cz>
  *
  * $Id$
@@ -24,6 +25,10 @@
     import "Wizard";
     import "Label";
     import "Popup";
+
+
+    // UI "slots"
+    // update parts of the UI
 
     /**
      * Create term of checkboxes for runlevel selection.
@@ -129,7 +134,8 @@
 	}
 	return service;
     }
-
+
+    // mapping numbers to descriptions
     /**
      * Get help text for rcscript start|stop command exit value.
      * @param exit exit value
@@ -184,100 +190,63 @@
 		// status code.
 		], exit, _("Unspecified error."));
     }
+
     /**
-     * help text for progress
-     * @return help text
+     * Returns textual runlevel description. Descriptions are hard-coded in ycp script.
+     * @param rl Runlevel to check.
+     * @return string Description.
      */
-    global define string getHelpProgress () ``{
-	return
-	    // help text
-	    _("<P><BIG><B>Runlevel editor initialization</B></BIG><BR>
-Please wait.</P>")
-	    +
-	    // warning
-	    _("<p><b>Note!</b> The runlevel editor is an expert tool. Please only change settings if
- you know what you are doing; otherwise your system might not function properly afterwards.</p>")
-	    ;
+    global define string getRunlevelDescr (string rl) ``{
+	return lookup ($[
+	    // descriptions of runlevels. there must be number: description
+	    // number is runlevel name
+	    "0" : _("0: System halt"),
+	    "1" : _("1: Single user mode"),
+	    "2" : _("2: Local multiuser without remote network"),
+	    "3" : _("3: Full multiuser with network"),
+	    "4" : _("4: User defined"),
+	    "5" : _("5: Full multiuser with network and xdm"),
+	    "6" : _("6: System reboot"),
+	    ], rl, rl);
     }
 
     /**
-     * help text for main dialog
-     * @return help text
+     * Returns items for default runlevel combo box.
+     * (Excludes 0, 6, S and B)
+     * @return list List of items. Default is selected.
      */
-    global define string getHelpMain () ``{
-	return
-	    // help text
-	    _("<p><b>With the runlevel editor you can set the default runlevel and specify in detail
- which system services you want to be started in which runlevel.</b></p>")
-	    +
-	    // warning
-	    _("<p><b>Warning!</b> The runlevel editor is an expert tool. Only change settings if you know
- what you are doing, otherwise your system might not function properly afterwards.</p>")
-	    +
-	    // The change does not occur immediately. After a reboot the system boots into the specified runlevel.
-	    _("<p>Changes to the <b>default runlevel</b> will take effect next time you boot your computer.</p>")
-	    +
-	    // help text
-	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Runlevel properties</b>.
- You will also be able to start and stop services directly.</p>
-")
-	    ;
-    }
-
-    /**
-     * help text services dialog
-     * @return help text
-     */
-    global define string getHelpComplex () ``{
-	// help text
-	return
-	    // help text
-	    _("<p>Assign system services to runlevels by selecting the list entry of the respective service then
-checking or unchecking the <b>check boxes B-S</b> for the runlevel.</p>
-")
-	    +
-	    // help text
-	    _("<p><b>Start/Stop/Refresh:</b> Use this to start or stop services individually.</p>")
-	    +
-	    // help text
-	    _("<P><B>Set and Reset:</B>
-Select runlevels in which to run the currently selected service.<ul>
-<li><b>Enable the service:</b> Activates the service in the standard runlevels.</li>
-<li><b>Disable the service:</b> Deactivates service.</li>
-<li><b>Enable all services:</b> Activates all services in their standard runlevels.</li>
-</ul></p>
-")
-	    ;
-    }
-    /**
-     * Help text for auto-complex-screen
-     * @return help text
-     */
-    global define string getHelpAuto () ``{
-	return
-	    // help text
-	    _("<p><b>Prepare data for autoinstallation.</b></p>")
-	    +
-	    // help text
-	    _("<p>Change the services to requested state. Only services marked as changed will really be changed in the target system.</p>")
-	    +
-	    // help text
-	    _("<p>If you made a mistake and want to undo the change, press <b>Clear</b> or <b>Clear all</b>.</p>")
-	    ;
-    }
-
-    /**
-     * Ask if really abort. Uses boolean changed_settings. Sets boolean do_abort_now.
-     * @return boolean true if user really wants to abort
-     */
-    global define boolean reallyAbort ()``{
-	if (do_abort_now || !RunlevelEd::isDirty ())
+    global define list getDefaultPicker () ``{
+	list items = [];
+	foreach (`i, RunlevelEd::runlevels, ``{
+	    if ("0" != i && "6" != i && "S" != i && "B" != i)
 	    {
-		do_abort_now = true;
-		return true;
+		items = add (items, `item (`id (i), getRunlevelDescr (i), i == RunlevelEd::default));
 	    }
-	do_abort_now = Popup::ReallyAbort (true);
-	return do_abort_now;
+	});
+	return items;
+    }
+
+    /**
+     * @param	rll	a list of runlevels or nil, meaning "all"
+     * @return		"in [these] runlevels" (translated)
+     */
+    global define string getInRunlevels (list(string) rll) ``{
+	if (rll == nil)
+	{
+	    // translators: substituted into a message like
+	    // "To enable/disable foo IN ALL RUNLEVELS, this must be done..."
+	    // (do not include the trailing comma here)
+	    return _("in all runlevels");
+	}
+	else
+	{
+	    string s = mergestring (rll, ", ");
+	    // translators: substituted into a message like
+	    // "To enable/disable foo IN RUNLEVELS 3, 5, this must be done..."
+	    // (do not include the trailing comma here)
+	    return sformat (_("in runlevel %1", "in runlevels %1",
+			      size (rll)), s);
+	}
     }
 
     /**
@@ -295,8 +264,26 @@ Select runlevels in which to run the currently selected service.<ul>
 		 // ???: we do not know yet what is the service state
 		 _("???")));
     }
+
+    //start unsorted
+    /**
+     * Ask if really abort. Uses boolean changed_settings. Sets boolean do_abort_now.
+     * @return boolean true if user really wants to abort
+     */
+    global define boolean reallyAbort ()``{
+	if (do_abort_now || !RunlevelEd::isDirty ())
+	    {
+		do_abort_now = true;
+		return true;
+	    }
+	do_abort_now = Popup::ReallyAbort (true);
+	return do_abort_now;
+    }
+
     /**
      * Create table items from services.
+     * For Expert mode.
+     * Mixin: started, start, (short)description.
      * @return list List of items for table.
      */
     global define list servicesToTable () ``{
@@ -357,6 +344,46 @@ Select runlevels in which to run the currently selected service.<ul>
 	    func = add (func, started);
 	    eval (func);
 	}
+    }
+
+    /**
+     * help text for progress
+     * @return help text
+     */
+    global define string getHelpProgress () ``{
+	return
+	    // help text
+	    _("<P><BIG><B>Runlevel editor initialization</B></BIG><BR>
+Please wait.</P>")
+	    +
+	    // warning
+	    _("<p><b>Note!</b> The runlevel editor is an expert tool. Please only change settings if
+ you know what you are doing; otherwise your system might not function properly afterwards.</p>")
+	    ;
+    }
+
+    /**
+     * help text for main dialog
+     * @return help text
+     */
+    global define string getHelpMain () ``{
+	return
+	    // help text
+	    _("<p><b>With the runlevel editor you can set the default runlevel and specify in detail
+ which system services you want to be started in which runlevel.</b></p>")
+	    +
+	    // warning
+	    _("<p><b>Warning!</b> The runlevel editor is an expert tool. Only change settings if you know
+ what you are doing, otherwise your system might not function properly afterwards.</p>")
+	    +
+	    // The change does not occur immediately. After a reboot the system boots into the specified runlevel.
+	    _("<p>Changes to the <b>default runlevel</b> will take effect next time you boot your computer.</p>")
+	    +
+	    // help text
+	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Runlevel properties</b>.
+ You will also be able to start and stop services directly.</p>
+")
+	    ;
     }
 
     /**
@@ -448,108 +475,6 @@ Select runlevels in which to run the currently selected service.<ul>
 
 	Wizard::RestoreScreenShotName ();
 	return ret;
-    }
-
-    /**
-     * Returns textual runlevel description. Descriptions are hard-coded in ycp script.
-     * @param rl Runlevel to check.
-     * @return string Description.
-     */
-    global define string getRunlevelDescr (string rl) ``{
-	return lookup ($[
-	    // descriptions of runlevels. there must be number: description
-	    // number is runlevel name
-	    "0" : _("0: System halt"),
-	    "1" : _("1: Single user mode"),
-	    "2" : _("2: Local multiuser without remote network"),
-	    "3" : _("3: Full multiuser with network"),
-	    "4" : _("4: User defined"),
-	    "5" : _("5: Full multiuser with network and xdm"),
-	    "6" : _("6: System reboot"),
-	    ], rl, rl);
-    }
-
-    /**
-     * Returns items for default runlevel combo box.
-     * (Excludes 0, 6, S and B)
-     * @return list List of items. Default is selected.
-     */
-    global define list getDefaultPicker () ``{
-	list items = [];
-	foreach (`i, RunlevelEd::runlevels, ``{
-	    if ("0" != i && "6" != i && "S" != i && "B" != i)
-	    {
-		items = add (items, `item (`id (i), getRunlevelDescr (i), i == RunlevelEd::default));
-	    }
-	});
-	return items;
-    }
-
-    /**
-     * @param	rll	a list of runlevels or nil, meaning "all"
-     * @return		"in [these] runlevels" (translated)
-     */
-    global define string getInRunlevels (list(string) rll) ``{
-	if (rll == nil)
-	{
-	    // translators: substituted into a message like
-	    // "To enable/disable foo IN ALL RUNLEVELS, this must be done..."
-	    // (do not include the trailing comma here)
-	    return _("in all runlevels");
-	}
-	else
-	{
-	    string s = mergestring (rll, ", ");
-	    // translators: substituted into a message like
-	    // "To enable/disable foo IN RUNLEVELS 3, 5, this must be done..."
-	    // (do not include the trailing comma here)
-	    return sformat (_("in runlevel %1", "in runlevels %1",
-			      size (rll)), s);
-	}
-    }
-    /**
-     * Disable the service. Changes global services.
-     * @param service_name name of the service.
-     */
-    global define void setServiceDisable (string service_name) ``{
-	map service = lookup (RunlevelEd::services, service_name, $[]);
-	RunlevelEd::services = add (RunlevelEd::services, service_name,
-			union (service,
-			       $[
-				   "start": [],
-				   "dirty": true,
-				   ]));
-    }
-    /**
-     * Set service to its default state upon installation.
-     * Changes global services.
-     * @param service_name Name of service to process.
-     */
-    global define void setServiceToDefault (string service_name) ``{
-	map service = lookup (RunlevelEd::services, service_name, $[]);
-	RunlevelEd::services = add (RunlevelEd::services, service_name,
-			union (service,
-			       $[
-				   "start": lookup (service, "defstart", []),
-				   "dirty": true,
-				   ]));
-    }
-
-    /**
-     * Converts a list to a map with values of true
-     * @param l a list
-     * @return a map
-     */
-    global define map tomap (list l) ``{
-	return listmap (any i, l, ``( [i, true] ));
-    }
-
-    /**
-     * @param m a map
-     * @return keys of the map
-     */
-    global define list mapkeys (map m) ``{
-	return maplist (any k, any v, m, ``( k ));
     }
 
     /**
@@ -770,46 +695,6 @@ because they depend on it:
 	return doit;
     }
 
-    /**
-     * Like Popup::LongText
-     * @param headline	a headline
-     * @param richtext	`RichText(_("&lt;p>foo...&lt;/p>"))
-     * @param hdim	popup width
-     * @param vdim	popup height
-     * @return continue?
-     */
-    global define boolean LongContinueCancelHeadlinePopup (
-	string headline, term richtext, integer hdim, integer vdim) ``{
-
-	UI::OpenDialog (
-	    `opt (`decorated),
-	    `HBox (
-		`VSpacing (vdim),
-		`VBox (
-		    `HSpacing (hdim),
-		    `Left (`Heading (headline)),
-		    `VSpacing (0.2),
-		    richtext,	// scrolled text
-		    `HBox (
-			`PushButton (
-			    `id (`continue),
-			    `opt (`default, `key_F10),
-			    Label::ContinueButton ()),
-			`PushButton (
-			    `id (`cancel),
-			    `opt (`key_F9),
-			    Label::CancelButton ())
-			)
-		    )
-		)
-	    );
-
-	UI::SetFocus (`id (`continue));
-
-	boolean ret = UI::UserInput() == `continue;
-	UI::CloseDialog();
-	return ret;
-    }
 
     /**
      * Starts/stops/checks status of a service
@@ -927,6 +812,32 @@ because they depend on it:
 		    }
 	    }
 	return s;
+    }
+
+    /**
+     * help text services dialog
+     * @return help text
+     */
+    global define string getHelpComplex () ``{
+	// help text
+	return
+	    // help text
+	    _("<p>Assign system services to runlevels by selecting the list entry of the respective service then
+checking or unchecking the <b>check boxes B-S</b> for the runlevel.</p>
+")
+	    +
+	    // help text
+	    _("<p><b>Start/Stop/Refresh:</b> Use this to start or stop services individually.</p>")
+	    +
+	    // help text
+	    _("<P><B>Set and Reset:</B>
+Select runlevels in which to run the currently selected service.<ul>
+<li><b>Enable the service:</b> Activates the service in the standard runlevels.</li>
+<li><b>Disable the service:</b> Deactivates service.</li>
+<li><b>Enable all services:</b> Activates all services in their standard runlevels.</li>
+</ul></p>
+")
+	    ;
     }
 
     /**
@@ -1176,6 +1087,24 @@ both of them?")))
 
 	Wizard::RestoreScreenShotName ();
 	return ret;
+    }
+
+    // Autoyast UI
+    /**
+     * Help text for auto-complex-screen
+     * @return help text
+     */
+    global define string getHelpAuto () ``{
+	return
+	    // help text
+	    _("<p><b>Prepare data for autoinstallation.</b></p>")
+	    +
+	    // help text
+	    _("<p>Change the services to requested state. Only services marked as changed will really be changed in the target system.</p>")
+	    +
+	    // help text
+	    _("<p>If you made a mistake and want to undo the change, press <b>Clear</b> or <b>Clear all</b>.</p>")
+	    ;
     }
     /**
      * Add service by hand.
@@ -1440,4 +1369,99 @@ disabled?\n"), nfs_adj)))
 	    }
 	return ret;
     }
+
+    // generic ui helpers
+    /**
+     * Like Popup::LongText
+     * @param headline	a headline
+     * @param richtext	`RichText(_("&lt;p>foo...&lt;/p>"))
+     * @param hdim	popup width
+     * @param vdim	popup height
+     * @return continue?
+     */
+    global define boolean LongContinueCancelHeadlinePopup (
+	string headline, term richtext, integer hdim, integer vdim) ``{
+
+	UI::OpenDialog (
+	    `opt (`decorated),
+	    `HBox (
+		`VSpacing (vdim),
+		`VBox (
+		    `HSpacing (hdim),
+		    `Left (`Heading (headline)),
+		    `VSpacing (0.2),
+		    richtext,	// scrolled text
+		    `HBox (
+			`PushButton (
+			    `id (`continue),
+			    `opt (`default, `key_F10),
+			    Label::ContinueButton ()),
+			`PushButton (
+			    `id (`cancel),
+			    `opt (`key_F9),
+			    Label::CancelButton ())
+			)
+		    )
+		)
+	    );
+
+	UI::SetFocus (`id (`continue));
+
+	boolean ret = UI::UserInput() == `continue;
+	UI::CloseDialog();
+	return ret;
+    }
+
+    // move them to the module
+    // (no ui interaction)
+    /**
+     * Disable the service. Changes global services.
+     * @param service_name name of the service.
+     */
+    global define void setServiceDisable (string service_name) ``{
+	map service = lookup (RunlevelEd::services, service_name, $[]);
+	RunlevelEd::services = add (RunlevelEd::services, service_name,
+			union (service,
+			       $[
+				   "start": [],
+				   "dirty": true,
+				   ]));
+    }
+    /**
+     * DUH, in fact ENABLES  the service.
+     * but the described function will be there sometime
+     *
+     * Set service to its default state upon installation.
+     * Changes global services.
+     * @param service_name Name of service to process.
+     */
+    global define void setServiceToDefault (string service_name) ``{
+	map service = lookup (RunlevelEd::services, service_name, $[]);
+	RunlevelEd::services = add (RunlevelEd::services, service_name,
+			union (service,
+			       $[
+				   "start": lookup (service, "defstart", []),
+				   "dirty": true,
+				   ]));
+    }
+
+    // favorite missing builtins
+    /**
+     * Converts a list to a map with values of true
+     * @param l a list
+     * @return a map
+     */
+    global define map tomap (list l) ``{
+	return listmap (any i, l, ``( [i, true] ));
+    }
+
+    /**
+     * @param m a map
+     * @return keys of the map
+     */
+    global define list mapkeys (map m) ``{
+	return maplist (any k, any v, m, ``( k ));
+    }
+
+
 }
