@@ -11,6 +11,7 @@
 
     Progress::off ();
 
+    // outdated, does not matter
     map insserv_conf = $[
 	"$local_fs":["boot"],
 	"$named":["named"],
