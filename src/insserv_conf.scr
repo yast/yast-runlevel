@@ -23,7 +23,7 @@
 .init.insserv_conf
 
 `ag_anyagent (
-    SCR::AnyAgent (
+    Description (
 	`File ("/etc/insserv.conf"),
 	"#\n",
 	true,
