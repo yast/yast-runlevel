@@ -29,6 +29,7 @@ import "RunlevelEd";
 import "Progress";
 import "Wizard";
 import "Sequencer";
+import "Progress";
 
 include "runlevel/ui.ycp";
 
@@ -86,6 +87,12 @@ else if (func == "Change") {
 	UI::CloseDialog ();
 
 }
+/* Read Configuration  */
+else if (func == "Read") {
+    Progress::off();
+    ret = RunlevelEd::Read();
+    Progress::on();
+}
 /* Return actual state */
 else if (func == "Export") {
 	ret = RunlevelEd::Export();
@@ -95,12 +102,11 @@ else if (func == "Packages") {
 }
 /* Write givven settings */
 else if (func == "Write") {
-	import "Progress";
-	Progress::off();
+    Progress::off();
     RunlevelEd::Read ();
     RunlevelEd::Import (param);
-	ret = RunlevelEd::Write();
-	Progress::on();
+    ret = RunlevelEd::Write();
+    Progress::on();
 }
 /* Unknown function */
 else {

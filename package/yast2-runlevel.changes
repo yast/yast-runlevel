@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Sat May 22 17:21:08 CEST 2004 - nashif@suse.de
+
+- Always export runlevel for autoyast (#41340)
+- Make runlevel clonable for use with autoyast (#41340)
+
+-------------------------------------------------------------------
 Fri Apr  2 15:21:33 CEST 2004 - mvidner@suse.cz
 
 - changed license to GPL
