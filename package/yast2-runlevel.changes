@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Aug  4 17:41:46 CEST 2003 - mvidner@suse.de
+
+- Added desktop file (supersedes y2cc file).
+- 2.8.3
+
+-------------------------------------------------------------------
 Thu Jul 24 10:28:39 CEST 2003 - mvidner@suse.cz
 
 - Added help for the main dialog.
