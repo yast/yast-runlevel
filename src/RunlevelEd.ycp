@@ -1,20 +1,16 @@
 /**
  * File:
  *   RunlevelEd.ycp
- *
  * Package:
  *   Runlevel Editor
- *
  * Summary:
- *   Exported functionality
+ *   Data for configuration of services, input and output functions.
  *
  * Authors:
  *   Martin Vidner <mvidner@suse.cz>
  *   Petr Blahos <pblahos@suse.cz>
  *
  * $Id$
- *
- * Function exported by runlevel editor to other modules.
  */
 
 {
