@@ -1,5 +1,5 @@
 #
-# Makefile.am for y2c_runlevel/src
+# Makefile.am for runlevel/src
 #
 
 #crude:
@@ -10,21 +10,19 @@ YCPCFLAGS = -I.
 
 myyncludedir = $(yncludedir)/runlevel
 
-agent_SCRIPTS = 
+agent_SCRIPTS =
 
 scrconf_DATA = insserv_conf.scr
 
 client_DATA =		\
 	runlevel.ycp	\
-	runlevel_auto.ycp 
+	runlevel_auto.ycp
 
 myynclude_DATA =		\
 	toposort.ycp \
-	ui.ycp 
+	ui.ycp
 
 module_DATA = RunlevelEd.ycp
-
-config_DATA = runlevel.y2cc
 
 desktop_DATA = runlevel.desktop
 
@@ -33,6 +31,6 @@ runlevel:
 
 ycpchook = runlevel
 
-EXTRA_DIST = $(client_DATA) $(myynclude_DATA) $(config_DATA) $(agent_SCRIPTS) $(scrconf_DATA) $(module_DATA) $(desktop_DATA)
+EXTRA_DIST = $(client_DATA) $(myynclude_DATA) $(agent_SCRIPTS) $(scrconf_DATA) $(module_DATA) $(desktop_DATA)
 
 include $(top_srcdir)/Makefile.am.common

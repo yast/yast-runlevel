@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Sat Feb 07 23:27:44 CET 2004 - arvin@suse.de
+
+- removed config files (*.y2cc)
+
+-------------------------------------------------------------------
 Thu Feb  5 16:54:19 CET 2004 - lslezak@suse.cz
 
 - NI fixes
@@ -109,7 +114,7 @@ Thu Sep 26 21:56:53 EDT 2002 - nashif@suse.de
 -------------------------------------------------------------------
 Sat Sep  7 12:00:22 EDT 2002 - nashif@suse.de
 
-- added 'service_status' to enable/disable a service with default 
+- added 'service_status' to enable/disable a service with default
   runlevels
 
 -------------------------------------------------------------------
