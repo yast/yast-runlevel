@@ -1,6 +1,6 @@
 {
-    import "Runlevel";
     include "testsuite.ycp";
+    import "Runlevel";
 
     map READ = $[];
     map EXEC = $[];

@@ -1,7 +1,7 @@
 // test for servicesToTable
 {
-    import "Runlevel";
     include "testsuite.ycp";
+    import "Runlevel";
     include "runlevel/ui.ycp";
 
     string current_service = "a";

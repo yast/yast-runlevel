@@ -1,7 +1,7 @@
 // test for getDefaultPicker
 {
-    import "Runlevel";
     include "testsuite.ycp";
+    import "Runlevel";
     include "runlevel/ui.ycp";
 
     Runlevel::runlevels = [ "S", "0", "1", "2", "3", "4", "5", "6", ];
