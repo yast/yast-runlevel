@@ -1,8 +1,8 @@
 // test for Read and related functions
 {
     // these are read before testsuite.ycp installs dummy SCR handlers
-    map comments = SCR::Read (.target.ycp, "tests/scripts.ycp.out");
-    map insserv_conf = SCR::Read (.target.ycp, "tests/insserv_conf.ycp.out");
+    map comments = (map) SCR::Read (.target.ycp, "tests/scripts.ycp.out");
+    map insserv_conf = (map) SCR::Read (.target.ycp, "tests/insserv_conf.ycp.out");
 
     include "testsuite.ycp";
     import "Progress";
@@ -17,14 +17,14 @@
 
     // assume all the services are enabled
     map all_enabled = mapmap (string service, map descr, comments, ``(
-				  [service, $[
+				  $[service : $[
 				      "start": descr["defstart"]:[],
 				      // unused
 				      "stop": descr["defstop"]:[],
 				      ]]
 				  ));
     map all_disabled = mapmap (string service, map descr, comments, ``(
-				  [service, $[
+				  $[service : $[
 				      "start": [],
 				      // unused
 				      "stop": [],
