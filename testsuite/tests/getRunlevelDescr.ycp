@@ -1,0 +1,14 @@
+// test for getRunlevelDescr
+{
+    include "testsuite.ycp";
+    include "runlevel/ui.ycp";
+
+    DUMP (getRunlevelDescr ("0"));
+    DUMP (getRunlevelDescr ("1"));
+    DUMP (getRunlevelDescr ("2"));
+    DUMP (getRunlevelDescr ("3"));
+    DUMP (getRunlevelDescr ("4"));
+    DUMP (getRunlevelDescr ("5"));
+    DUMP (getRunlevelDescr ("6"));
+    DUMP (getRunlevelDescr ("7"));    
+}

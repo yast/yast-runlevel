@@ -1,0 +1,48 @@
+// test for servicesToTable
+{
+    include "testsuite.ycp";
+    include "runlevel/ui.ycp";
+    include "runlevel/services.ycp";
+
+    string current_service = "a";
+    list runlevels = [ "S", "0", "1", "2", "3", "5", "6" ];
+    map services = $[];
+
+    services = $[
+        "a" : $[
+            "dirty" : false,
+            "start" : ["1", "2", "3", "4" ],
+            ],
+        "b" : $[
+            "dirty" : false,
+            "start" : ["1", "2", ],
+            ],
+        ];
+    DUMP (servicesToTable ());
+
+    services = $[
+        "a" : $[
+            "dirty" : true,
+            "start" : ["1", "2", "3", ],
+            ],
+        "b" : $[
+            "dirty" : true,
+            "start" : ["1", "2", "3", ],
+            ],
+        ];
+    DUMP (servicesToTable ());
+
+    services = $[
+        "a" : $[
+            "dirty" : true,
+            "start" : ["S", "0", "1", ],
+            "defstart" : ["1", "2", "S", "B" ],
+            ],
+        "b" : $[
+            "dirty" : true,
+            "start" : ["2", "3", "4", "6", "b" ],
+            "defstart" : ["1", "2", "S", "b" ],
+            ],
+	];
+    DUMP (servicesToTable ());
+}

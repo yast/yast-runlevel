@@ -1,0 +1,31 @@
+
+/**
+ * tests for small functions that just call SCR::Read...
+
+ serviceStatus
+ runInitScript
+ saveDefaultRunlevel
+ readDefaultRunlevel
+ readCurrentRunlevel
+
+ */
+{
+    include "runlevel/services.ycp";
+    include "testsuite.ycp";
+    
+    any default_runlevel = nil;
+    any default_runlevel_orig = nil;
+    any current_runlevel = nil;
+    
+    TEST (``(readCurrentRunlevel ()), [], 1);
+    DUMP (current_runlevel);
+    
+    TEST (``(readDefaultRunlevel ()), [], 2);
+    DUMP (default_runlevel);
+    DUMP (default_runlevel_orig);
+
+    TEST (``(saveDefaultRunlevel ("new_default")), [], 0);
+
+    TEST (``(runInitScript ("script", "start")), [], 0);
+    TEST (``(serviceStatus ("script")), [], 0);
+}
