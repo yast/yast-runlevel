@@ -1,11 +1,9 @@
 @HEADER-COMMENT@
 
-# neededforbuild yast2-devtools autoconf automake yast2-testsuite dejagnu expect tcl yast2-core yast2-core-devel
+# neededforbuild yast2-devel-packages
 
 @HEADER@
 Requires:       yast2
-Requires:       yast2-lib-wizard
-Requires:       yast2-lib-sequencer
 Provides:	yast2-config-runlevel
 Obsoletes:	yast2-config-runlevel
 BuildArchitectures:     noarch
