@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Apr  2 15:21:33 CEST 2004 - mvidner@suse.cz
+
+- changed license to GPL
+- 2.9.13
+
+-------------------------------------------------------------------
 Fri Mar 26 14:51:03 CET 2004 - mvidner@suse.cz
 
 - really offer runlevels 2, 3, 5 during installation (#37071)
