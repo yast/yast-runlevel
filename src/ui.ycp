@@ -934,7 +934,7 @@ and enabled, because it depends on them:
 				  // radio button label
 				  _("&Simple mode"), mode == `simple),
 		    `HSpacing (3),
-		    `RadioButton (`id (`complex), `opt (`notify),
+		    `RadioButton (`id (`complex), `opt (`notify, `key_F7),
 				  // radio button label
 				  _("&Expert mode"), mode == `complex)
 		    )
@@ -993,6 +993,13 @@ Select runlevels in which to run the currently selected service.<ul>
 	});
 	// headers in table
 	header = add (header, _("Description"));
+
+	list args = WFM::Args ();
+	// should we show debugging buttons?
+	boolean show_debug = args[0]:"" == "debug";
+	// should we show the Restore to default button?
+	boolean show_restore = true;
+
 	term contents = `VBox (
 	    `VSpacing (0.4),
 	    ModeTabs (`complex),
@@ -1041,11 +1048,22 @@ Select runlevels in which to run the currently selected service.<ul>
 			`item (`id (`to_enable), /*`opt (`key_F3),*/ _("&Enable the service")),
 				 // menu item
 			`item (`id (`to_disable), /*`opt (`key_F5),*/ _("&Disable the service")),
+			]
+			+ (!show_restore ? [] :
+			[
+			    //TODO
+			])
+			+
+			[
 				 // menu item
 			`item (`id (`to_all_enable), _("Enable &all services")),
+			]
+			+ (!show_debug ? [] :
+			[
 				// menu item
 			`item (`id (`depviz), _("Save dependency &graph")),
 			])
+			)
 		    )
 		)
 	    );
@@ -1215,13 +1233,20 @@ both of them?")))
 	map service = $[];
 
 	string help_text =
+	    // Simple mode dialog
 	    // help text
-	    _("<p><b>With the runlevel editor you can set the default runlevel and specify in detail
- which system services you want to be started in which runlevel.</b></p>")
+	    _("<p>Here you can specify which system services should be started.</p>")
 	    +
 	    // warning
 	    _("<p><b>Warning!</b> The runlevel editor is an expert tool. Only change settings if you know
  what you are doing, otherwise your system might not function properly afterwards.</p>")
+	    +
+	    // help text
+	    // Activate is a button
+	    _("<p><b>Activate</b> starts the selected service and services
+that it depends on and enables them to start at system boot time.
+Likewise, <b>Deactivate</b> stops services that depend on a given service
+and the service itself and disables their start at system boot time.</p>")
 	    +
 	    // help text
 	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Expert mode</b>.</p>
@@ -1243,12 +1268,12 @@ both of them?")))
 		    )
 		),
 	    `HBox (
-		`PushButton (`id (`enable),  _("&Activate")),
-		`PushButton (`id (`disable), _("&Deactivate"))
+		`PushButton (`id (`enable), `opt (`key_F3),  _("&Activate")),
+		`PushButton (`id (`disable), `opt (`key_F5), _("&Deactivate"))
 		)
 	    );
 	// dialog caption.
-	Wizard::SetContents (_("Runlevel editor: services"), contents, _("<p>TODO</p>"), true, true);
+	Wizard::SetContents (_("Runlevel editor: services"), contents, help_text, true, true);
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = lookup (RunlevelEd::services, current_service, $[]);
