@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Sep  7 11:41:01 CEST 2001 - pblahos@suse.cz
+
+- Use insserv -r service to remove service from all runlevels.
+- Sets proper START_ variable to "no" when disabling service.
+  (Bug 10209)
+
+-------------------------------------------------------------------
 Thu Sep  6 10:37:44 CEST 2001 - pblahos@suse.cz
 
 - runlevel_adjust implements function `ask, that says whether

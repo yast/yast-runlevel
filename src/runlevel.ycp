@@ -98,7 +98,7 @@
     });
 
     ProgressSetup (_("Initializing runlevel editor. Please wait."),
-		   "",
+		   " ",
 		   11,
 		   [],
 		   // help text

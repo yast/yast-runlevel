@@ -11,3 +11,7 @@ Write	.rc.system."START_a" "yes" true
 Execute	.target.bash "/sbin/insserv b,start=1,2,3" 0
 Write	.rc.system."START_b" "yes" true
 Return	nil
+Execute	.target.bash "/sbin/insserv a,start=1,2,S" 0
+Write	.rc.system."START_a" "no" true
+Execute	.target.bash "/sbin/insserv -r b" 0
+Return	nil
