@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Aug  7 12:34:55 CEST 2001 - pblahos@suse.cz
+
+- First test cases.
+- Fixed: ag_initscripts agent did not work if there were
+  mis-formated init scripts.
+
+-------------------------------------------------------------------
 Mon Aug  6 10:42:23 CEST 2001 - pblahos@suse.cz
 
 - Add documentation to package.
