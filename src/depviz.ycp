@@ -4,104 +4,49 @@
  * $Id$
  */
 {
-    define mapkeys (map m) ``{
-	return maplist (`k, `v, m, ``(k));
-    }
-
-    /** yast2 foo.ycp | cat > result.txt */
-    define Print (string s) ``{
-	SCR::Write (.target.string, "/dev/stdout", s);
-    }
-
-    define print_graph(map g) ``{
-	Print ("digraph g {\n");
-	Print ("\trankdir=LR;\n");
-	Print ("\t\"!missing\"[rank=max];\n");
-	foreach (string n, list e, g, ``{
-	    foreach (string target, e, ``{
-		Print (sformat ("\t\"%1\" -> \"%2\";\n", n, target));
-	    });
-	});
-	Print ("}\n");
-    }
-
-    /* Dependency solving: */
     /**
-     * ONLY ONE SCRIPT provides a facility in this model.
-     * In SuSE packages, the only exception are sendmail and postfix
-     * both providing sendmail but they cannot be installed together
-     * anyway.
-     * atd has Provides: at, so
-     *   what_provides["at"] == "atd";
-     * Identity is not represented explicitly: ypbind has Provides: ypbind, but
-     *   haskey (what_provides, "ypbind") == false;
+     * Coerce the dummy agent to return v when asked for p.
+     * No temporary files needed ;-)
      */
-    map what_provides = $[];
+    define SCRTorture (path p, any v) ``{
+	SCR::RegisterAgent(
+	    p, `ag_dummy (
+		``{
+		    global define term MakeDataMap (any V) ``{
+			y2debug ("MDM");
+			term DM = ``(DataMap ());
+			// root path: use the default value
+			DM = add (DM, $[]);
+			DM = add (DM, V);
+			return DM;
+		    }
+		}
+		)
+	    );
 
-    /**
-     * System facility definitions
-     * /etc/insserv.conf:
-     *   system_requires["$remote_fs"] == ["$local_fs", "nfs"];
-     */
-    map system_requires = SCR::Read (.init.insserv_conf);
+	term Armor = ``(MakeDataMap ());
+	Armor = add (Armor, v);
 
-    map services = SCR::Read (.mv.init.scripts.comments);
-    y2debug ("Services: %1", mapkeys (services));
-
-    foreach (string k, map v, services, ``{
-	foreach (string f, v["provides"]:[], ``{
-	    // identity implicit; only the first script provides a facility
-	    if (f != k && !haskey (what_provides, f))
-	    {
-		what_provides = add (what_provides, f, k);
-	    }
-	});
-    });
-
-    map g = $[];
-    map missing_nodes = $[];
-
-    define add_nodes (string service, list req_facilities) ``{
-		if (service == "boot.localfs")
-	y2internal ("Processing %1: %2", service, req_facilities);
-	y2debug ("Processing %1: %2", service, req_facilities);
-	list req = [];
-	foreach (string f, req_facilities, ``{
-	    string provider = what_provides[f]:"";
-	    if (provider != "")
-	    {
-		req = add (req, provider);
-	    }
-	    else if (haskey (services, f) || haskey (system_requires, f))
-	    {
-		// f is a script
-		req = add (req, f);
-	    }
-	    else if (substring (f, 0, 1) != "$")
-	    {
-		req = add (req, f);
-		if (service == "boot.localfs")
-		y2internal ("Missing: %1 %2 %3", f, haskey (services, f), services);
-		missing_nodes = add (missing_nodes, f, true);
-	    }
-	});
-	g = add (g, service, req);
+	SCR::RegisterAgent(p, `ag_dummy (Armor));
     }
 
-    foreach (string svc, map comments, services, ``{
-	add_nodes (svc, comments["reqstart"]:[]);
-    });
-    foreach (string s, list v, system_requires, ``{
-	add_nodes (s, v);
-    });
-    y2debug ("%1", g);
+/*
+    // testing miniature
+    map services = $[
+	"a": $[
+	    "reqstart": ["b", "c"],
+	    ],
+	];
+*/
 
-    foreach (string s, any v, missing_nodes, ``{
-	list t = g[s]:[];
-	t = add (t, "!missing");
-	g = add (g, s, t);
-    });
+    map services = SCR::Read (.target.ycp, "scripts2.ycp.out");
+    SCRTorture (.init.scripts.comments, services);
 
-    y2debug ("%1", g);
-    print_graph (g);
+    import "RunlevelEd";
+    import "Progress";
+    Progress::off ();
+    RunlevelEd::Read ();
+    string dot_graph = RunlevelEd::DotRequires ();
+    SCR::Write (.target.string, "/dev/stdout", dot_graph);
+
 }
