@@ -1,4 +1,4 @@
-## configure.in.in for XXpkgXX
+## YCP module configure.in.in
 
 ## Initialize
 @YAST2-INIT-COMMON@
@@ -10,4 +10,3 @@
 
 ## and generate the output...
 @YAST2-OUTPUT@
-
