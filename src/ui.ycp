@@ -371,12 +371,12 @@ Select runlevels in which to run the currently selected service.<ul>
 		),
 	    `VStretch (),
 	    // pushbutton
-	    `PushButton (`id (`edit), _("Runlevel &properties...")),
+	    `PushButton (`id (`edit), `opt (`key_F2), _("Runlevel &properties...")),
 	    `VStretch ()
 	    );
 	// window label
 	Wizard::SetContents (_("Runlevel editor: default runlevel"), contents, getHelpMain (), true, true);
-	Wizard::ReplaceNextButton (`PushButton (`id (`next), FinishButtonLabel()));
+	Wizard::ReplaceNextButton (`PushButton (`id (`next), `opt (`key_F10), FinishButtonLabel()));
 
 	any ret = nil;
 	while (true)
@@ -771,10 +771,11 @@ because they depend on it:
 		    `HBox (
 			`PushButton (
 			    `id (`continue),
-			    `opt (`default),
+			    `opt (`default, `key_F10),
 			    ContinueButtonLabel ()),
 			`PushButton (
 			    `id (`cancel),
+			    `opt (`key_F9),
 			    CancelButtonLabel ())
 			)
 		    )
@@ -992,9 +993,9 @@ because they depend on it:
 		    // menubutton label
 		    `MenuButton (_("Set/&Reset"), [
 				 // menu item
-			`item (`id (`to_enable), _("&Enable the service")),
+		        `item (`id (`to_enable), /*`opt (`key_F3),*/ _("&Enable the service")),
 				 // menu item
-			`item (`id (`to_disable), _("&Disable the service")),
+			`item (`id (`to_disable), /*`opt (`key_F5),*/ _("&Disable the service")),
 				 // menu item
 			`item (`id (`to_all_enable), _("Enable &all services")),
 			])
@@ -1165,7 +1166,10 @@ both of them?")))
 		    // text entry
 		    `TextEntry (`id (`des), _("&Description (optional)"), ""),
 		    `VSpacing (1),
-		    `HBox (`PushButton (`id (`ok), UI::OKButtonLabel ()), `PushButton (`id (`cancel), UI::CancelButtonLabel ()))
+		    `HBox (`PushButton (`id (`ok), `opt (`default, `key_F10),
+					UI::OKButtonLabel ()),
+			   `PushButton (`id (`cancel), `opt (`key_F9),
+					UI::CancelButtonLabel ()))
 		    ));
 	symbol ret = nil; // TODO any (symbol|string)
 	string name = "";
@@ -1277,7 +1281,7 @@ name or the name specified is already in use."));
 		),
 	    `HBox (
 		// button label
-		`PushButton (`id (`add), _("A&dd")),
+		`PushButton (`id (`add), `opt (`key_F3), _("A&dd")),
 		`HStretch (),
 		// button label
 		`PushButton (`id (`clear), _("&Clear")),
