@@ -100,7 +100,7 @@ Please wait.</P>")
 	return
 	    // help text
 	    _("<p>You can assign system services to runlevels by selecting the list entry of the resp. service and
- then ticking or unticking the <b>checkboxes 0 - S</b> for the runlevel.</p>")
+ then ticking or unticking the <b>checkboxes B - S</b> for the runlevel.</p>")
 	    +
 	    _("<p><b>Start/Stop/Refresh:</b> Use this to start or stop services individually.</p>")
 	    +
