@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Sep 17 08:34:47 CEST 2001 - pblahos@suse.cz
+
+- When there are no changes, pressing Finish, causes exit without
+  word. (Bug 10677)
+
+-------------------------------------------------------------------
 Mon Sep 10 14:23:00 CEST 2001 - lnussel@suse.de
 
 - moved icon in Control Center from Group "Misc" to "System"
