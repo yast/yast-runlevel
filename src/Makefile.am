@@ -6,6 +6,8 @@
 TAGS_DEPENDENCIES = *.ycp
 ETAGS_ARGS = $(TAGS_DEPENDENCIES)
 
+YCPCFLAGS = -I.
+
 myyncludedir = $(yncludedir)/runlevel
 
 agent_SCRIPTS = 
@@ -25,6 +27,11 @@ module_DATA = RunlevelEd.ycp
 config_DATA = runlevel.y2cc
 
 desktop_DATA = runlevel.desktop
+
+runlevel:
+	ln -sf . runlevel
+
+ycpchook = runlevel
 
 EXTRA_DIST = $(client_DATA) $(myynclude_DATA) $(config_DATA) $(agent_SCRIPTS) $(scrconf_DATA) $(module_DATA) $(desktop_DATA)
 
