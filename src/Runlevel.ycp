@@ -22,6 +22,7 @@
     import "Progress";
 
     /**
+     * @struct service
      * One service is described by such map: <pre>
       "servicename" : $[
 	"defstart" : [ "2", "3", "5", ], // Default-Start comment
