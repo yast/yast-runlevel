@@ -22,6 +22,7 @@ import "RunlevelEd";
 import "Summary";
 import "Arch";
 import "Mode";
+import "ProductFeatures";
 
 include "runlevel/ui.ycp";
 
@@ -65,23 +66,30 @@ if(func == "MakeProposal") {
 
     // find out proposal parameters, ie. what it depends on
     // some architectures don't have X at all
-    boolean x11_needed = Arch::x11_setup_needed; // it is a constant
-    boolean x11_selected = Pkg::IsSelected ("XFree86");
+    boolean x11_needed = Arch::x11_setup_needed;		// constant
+    boolean x11_selected = Pkg::IsSelected ("XFree86");		// variable
     // But if we install over VNC, we want RL 5 (and kdm) even though
     // there's no X.
-    boolean vnc = Mode::vnc;
-    y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3",
-		 x11_needed, x11_selected, vnc);
+    boolean vnc = Mode::vnc;					// constant
+    // we can be overriden
+    string forced_runlevel = ProductFeatures::runlevel;		// constant
+    y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3, forced: '%4'",
+		 x11_needed, x11_selected, vnc, forced_runlevel);
 
     // check only what the user can change at this time
+    // Initially the module variables are nil so the condition triggers
     if (RunlevelEd::x11_selected != x11_selected ||
 	force_reset)
     {
 	// update parameters
 	RunlevelEd::x11_selected = x11_selected;
 
-	// do the proposal - it is simple
+	// do the proposal
 	RunlevelEd::default = ((x11_needed && x11_selected) || vnc)? "5": "3";
+	if (forced_runlevel != "")
+	{
+	    RunlevelEd::default = forced_runlevel;
+	}
     }
     string proposal = RunlevelEd::ProposalSummary ();
 
