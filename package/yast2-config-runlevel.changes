@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Dec  6 11:14:04 CET 2001 - pblahos@suse.cz
+
+- Added modules _auto and _write because of autoinstallation.
+- When nfsserver is enabled but portmap not, enables portmap too.
+
+-------------------------------------------------------------------
 Mon Dec  3 11:14:20 CET 2001 - pblahos@suse.cz
 
 - Uses y2autoconf and create-spec 

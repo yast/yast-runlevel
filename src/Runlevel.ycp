@@ -90,6 +90,7 @@
      *    no links, set default, otherwise do nothing, "default" -- set
      *    defaults.
      * @return success state
+     * FIXME: think about enabling portmapper
      */
     global define boolean ServiceAdjust (string name, string action) ``{
 	if (!SCR::Read (.init.scripts.exists, name))
@@ -231,6 +232,22 @@
     }
 
     /**
+     * Read only services
+     */
+    global define void ReadServices () ``{
+	map details = SCR::Read (.init.scripts.runlevels);
+	services = SCR::Read (.init.scripts.comments);
+	services = mapmap (`k, `v, services, ``{
+	    // play tennis
+	    map second_service = lookup (details, k, $[]);
+	    service_list = add (service_list, k);
+	    v = add (v, "start", lookup (second_service, "start", []));
+	    v = add (v, "stop" , lookup (second_service, "stop",  []));
+	    return [ k, v ];
+	});
+    }
+
+    /**
      * FIXME: is it used somewhere? update comment.
      * Is service disabled? Check "disabled" key which reflects whether service is disabled by some START_-like variable.
      * Otherwise it checks if it is disabled by unchecking all checkboxes...
@@ -247,6 +264,26 @@
     }
 
     /**
+     * If nfsserver runs, portmap has to run too.
+     * @return true if something was changed.
+     */
+    global define boolean AdjustNfsserver () ``{
+	if (!isDisabled (lookup (services, "nfsserver", $[])) && isDisabled (lookup (services, "portmap", $[])))
+	{
+	    y2error ("nfsserver is enabled, but portmap is not. Enabling portmap.");
+	    map service = lookup (services, "portmap", $[]);
+	    services = add (services, "portmap",
+		    union (service,
+			$[
+			"start": lookup (service, "defstart", []),
+			"dirty": true,
+			]));
+	    return true;
+	}
+	return false;
+    }
+
+    /**
      * Save changed services into proper runlevels. Save also changed
      * default runlevel.
      */
@@ -255,8 +292,10 @@
 	Progress::Simple (_("Saving changes to runlevels."), " ", prsize + 1, "");
 
 	if (default != default_orig)
-	    SCR::Write (.init.scripts.default_runlevel, new_default);
+	    SCR::Write (.init.scripts.default_runlevel, default);
 	Progress::NextStep ();
+
+	AdjustNfsserver ();
 
 	foreach (`k, `v, services, ``{
 	    Progress::Title (sformat (_("Service %1"), k));
@@ -331,4 +370,68 @@
 	return 0 != size (lookup (detail, "start", []));
     }
 
+    /**
+     * Export user settings.
+     * @return user settings
+     */
+    global define map Export () ``{
+	AdjustNfsserver ();
+	map svc = filter (`k, `v, services, ``{
+	    return lookup (v, "dirty", false);
+	});
+	map ret = $[ "services" : svc ];
+	if (default != default_orig)
+	{
+	    ret = add (ret, "default", default);
+	}
+	return ret;
+    }
+    /**
+     * Import user settings
+     * @param s user settings
+     * @return success state
+     */
+    global define boolean Import (map s) ``{
+	runlevels= SCR::Read (.init.scripts.runlevel_list);
+	if (0 == size (runlevels))
+	{
+	    runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+	}
+
+	//..
+	default= SCR::Read (.init.scripts.default_runlevel);
+	default_orig = default;
+
+	map details = SCR::Read (.init.scripts.runlevels);
+	services = SCR::Read (.init.scripts.comments);
+	services = mapmap (`k, `v, services, ``{
+	    // play tennis
+	    map second_service = lookup (details, k, $[]);
+	    service_list = add (service_list, k);
+	    v = add (v, "start", lookup (second_service, "start", []));
+	    v = add (v, "stop" , lookup (second_service, "stop",  []));
+	    return [ k, v ];
+	});
+	// and finaly process map beeing imported
+	map new = lookup (s, "services", $[]);
+	if (size (new) > 0)
+	{
+	    foreach (`k, `v, new, ``{
+		if (nil == lookup (services, k, nil))
+		{
+		    y2error ("Service %1 is not installed on target system.", k);
+		    return;
+		}
+		v = add (v, "dirty", true);
+		services = add (services, k, v);
+	    });
+	}
+	// default
+	if (haskey (s, "default"))
+	{
+	    default = lookup (s, "default", nil);
+	    default_orig = "---";
+	}
+	return true;
+    }
 }
