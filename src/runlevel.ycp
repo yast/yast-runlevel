@@ -19,8 +19,8 @@
     import "Progress";
     import "Wizard";
     import "Popup";
+    import "Sequencer";
 
-    include "wizard/sequencer.ycp";
     include "runlevel/ui.ycp";
 
     Wizard::CreateDialog ();
@@ -59,7 +59,7 @@
 	    ],
 	];
 
-    if (`finish == WizardSequencer (aliases, main_sequence))
+    if (`finish == Sequencer::Run (aliases, main_sequence))
     {
 	RunlevelEd::Write ();
     }

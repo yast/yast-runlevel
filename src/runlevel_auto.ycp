@@ -28,8 +28,7 @@ y2milestone("Runlevel auto started");
 import "RunlevelEd";
 import "Progress";
 import "Wizard";
-
-include "wizard/sequencer.ycp";
+import "Sequencer";
 
 include "runlevel/ui.ycp";
 
@@ -83,7 +82,7 @@ else if (func == "Change") {
         Wizard::SetDesktopIcon("runlevel");
         Wizard::DisableAbortButton ();
 	Wizard::RestoreHelp (getHelpProgress ());
-	ret = WizardSequencer (aliases, main_sequence);
+	ret = Sequencer::Run (aliases, main_sequence);
 	UI::CloseDialog ();
 
 }
