@@ -26,12 +26,12 @@
     global define getHelpProgress () ``{
 	return
 	    // help text
-	    _("<P><BIG><B>Runlevel editor intialization</B></BIG><BR>
+	    _("<P><BIG><B>Runlevel editor initialization</B></BIG><BR>
 Please wait.</P>")
 	    +
 	    // warning
-	    _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings in the
- next dialogs, your system may not function properly.</P>")
+	    _("<p><b>Note!</b> The runlevel editor is an expert tool. Please only change settings if
+ you know what you are doing; otherwise your system might not function properly afterwards.</p>")
 	    ;
     }
 
@@ -41,19 +41,18 @@ Please wait.</P>")
     global define getHelpMain () ``{
 	return
 	    // help text
-	    _("<P><BIG><B>Change of default runlevel and detailed start/stop behavior of system services.</B></BIG></P>")
+	    _("<p><big><b>With the runlevel editor you can set the default runlevel and specify in detail
+ which system services you want to be started in which runlevel.</b></big></p>")
 	    +
 	    // warning
-	    _("<P><B>Note!</B> The runlevel editor is an expert tool. If you change settings in the
- next dialogs, your system may not function properly.</P>")
+	    _("<p><b>Warning!</b> The runlevel editor is an expert tool. Only change settings if you know
+ what you are doing, otherwise your system might not function properly afterwards.</p>")
 	    +
-	    // The change does not occure immediately. After reboot system boots into given runlevel.
-	    _("<P>Changes to <B>default runlevel after booting</B> will only take effect after you reboot your computer.</P>")
+	    // The change does not occur immediately. After a reboot the system boots into the specified runlevel.
+	    _("<p>Changes to the <b>default runlevel</b> will take effect next time you boot your computer.</p>")
 	    +
-	    _("<P>The button <B>Edit runlevel details...</B>
- will open a new dialog containing a full summary of
- the available services and their actual status
- with complete manipulation.</P>")
+	    _("<p>To change the behaviour of runlevels and system services in detail, click <b>Runlevel properties...</b>.
+	    You will also be able to start and stop services directly.</p>")
 	    ;
     }
 
@@ -193,7 +192,7 @@ Select runlevels in which to run currently selected service.<ul>
 		),
 	    `VStretch (),
 	    // pushbutton
-	    `PushButton (`id (`edit), _("Edit &runlevel details...")),
+	    `PushButton (`id (`edit), _("Runlevel &properties...")),
 	    `VStretch ()
 	    );
 	// window label
@@ -228,12 +227,12 @@ Select runlevels in which to run currently selected service.<ul>
 		else if (`next == ret)
 		    {
 			// ask and save...?
-			if (! UI::YesNoPopup (_("Now the changes to runlevels \nwill be saved.")))
+			if (! UI::YesNoPopup (_("Changes made to the runlevels \nwill now be saved.")))
 			    {
 				continue;
 			    }
 			saveDefaultRunlevel (default_runlevel);
-			UI::MessagePopup (_("The new configuration \nwas stored successfully."));
+			UI::MessagePopup (_("The new configuration \nwas saved successfully."));
 		    }
 		break;
 	    }
