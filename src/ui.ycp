@@ -498,31 +498,6 @@ Please wait.</P>")
     }
 
     /**
-     * Orphan help. Find a dialog for it.
-     * help text for main dialog
-     * @return help text
-     */
-    global define string getHelpMain () ``{
-	return
-	    // help text
-	    _("<p><b>With the runlevel editor you can set the default runlevel and specify in detail
- which system services you want to be started in which runlevel.</b></p>")
-	    +
-	    // warning
-	    _("<p><b>Warning!</b> The runlevel editor is an expert tool. Only change settings if you know
- what you are doing, otherwise your system might not function properly afterwards.</p>")
-	    +
-	    // The change does not occur immediately. After a reboot the system boots into the specified runlevel.
-	    _("<p>Changes to the <b>default runlevel</b> will take effect next time you boot your computer.</p>")
-	    +
-	    // help text
-	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Runlevel properties</b>.
- You will also be able to start and stop services directly.</p>
-")
-	    ;
-    }
-
-    /**
      * Enable or disable a service in some runlevels.
      * Set the variables and update the ui (rl columns).
      * @param service_name	a service
@@ -991,6 +966,9 @@ Select runlevels in which to run the currently selected service.<ul>
 <li><b>Enable all services:</b> Activates all services in their standard runlevels.</li>
 </ul></p>
 ")
+	    +
+	    // The change does not occur immediately. After a reboot the system boots into the specified runlevel.
+	    _("<p>Changes to the <b>default runlevel</b> will take effect next time you boot your computer.</p>")
 	    ;
     }
 
@@ -1236,16 +1214,23 @@ both of them?")))
 	Wizard::SetScreenShotName ("runlevel-2-simple");
 	map service = $[];
 
+	string help_text =
+	    // help text
+	    _("<p><b>With the runlevel editor you can set the default runlevel and specify in detail
+ which system services you want to be started in which runlevel.</b></p>")
+	    +
+	    // warning
+	    _("<p><b>Warning!</b> The runlevel editor is an expert tool. Only change settings if you know
+ what you are doing, otherwise your system might not function properly afterwards.</p>")
+	    +
+	    // help text
+	    _("<p>To change the behavior of runlevels and system services in detail, click <b>Expert mode</b>.</p>
+")
+	    ;
+
 	term contents = `VBox (
 	    `VSpacing (0.4),
 	    ModeTabs (`simple),
-/*
-	    `HBox (
-		// preserve 2 spaces at the end.
-		`Label (_("Current runlevel:  ")),
-		`Label (`opt (`outputField, `hstretch), getRunlevelDescr (RunlevelEd::current))
-		),
-*/
 	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
 		    `header (_("Service"), _("Enabled"), _("Description")),

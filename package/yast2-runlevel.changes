@@ -1,8 +1,11 @@
 -------------------------------------------------------------------
-Thu Jun 12 18:15:31 CEST 2003 - mvidner@suse.de
+Fri Jun 20 15:53:51 CEST 2003 - mvidner@suse.cz
 
-- Default is simple mode (#13789).	        	! Does not work yet
+- Added a simple mode, made it the default dialog (#13789).
 - Fix service_status=enable in autoyast (#27169).
+- Autoyast: allow not changing the runlevel.
+- Strange runlevels do not overwrite service name (#25776).
+- Call insserv with force when writing, report errors (#27370).
 - using Label and Popup
 - 2.8.1
 
