@@ -16,13 +16,17 @@
 
 {
     /**
+     * Topologically sort a directed acyclic graph, ie. linearize a
+     * partial ordering.
      * (what if the graph is a multigraph??)
-     * @param g A directed acyclic graph as a map:
+     * @param g A DAG as a map:
      *  nodes are keys, values are lists of nodes that are reached
      *  by an edge from the respective key.
-     * @return a list containing the keys of the map in topological order
-     *  or nil if the graph is cyclic
-     *  (or a partial result and an indication of where the cycle is?)
+     * @return [out, rest]<br>
+     *  out: a list containing the keys of the map in topological order<br>
+     *  rest: a list, empty if the graph was acyclic, otherwise it is
+     *   a superset of the nodes forming the cycle
+     *   and "out" is a partial result
      */
     global define list(string) TopologicalSort (map g) ``{
 	list out = [];
@@ -41,7 +45,7 @@
 	    if (size (next_m) == 0)
 	    {
 		// the graph is cyclic!
-		return nil;
+		break;
 	    }
 	    foreach (any vertex, any dummy, next_m, ``{
 		out = add (out, vertex);
@@ -55,7 +59,14 @@
 		});
 	    });
 	}
-	return out;
+
+	list rest = maplist (any k, any v, in_degree, ``( k )); //mapkeys
+	if (size (rest) > 0)
+	{
+	    y2error ("Cyclic subgraph found, remainder has %1 nodes: %2",
+		     size (rest), rest);
+	}
+	return [out, rest];
     }
 
     /**
