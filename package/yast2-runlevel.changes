@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Wed Jul 31 14:42:17 CEST 2002 - mvidner@suse.cz
+
+- Do not enable boot services in ordinary runlevels (#17234).
+- Moved private code back from yast2.rpm.
+- WM close button means abort.
+- Added comments for translators.
+- 2.6.13
+
+-------------------------------------------------------------------
 Thu Jul 25 21:35:48 CEST 2002 - arvin@suse.de
 
 - fixed file list
