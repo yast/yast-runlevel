@@ -688,6 +688,60 @@ Select runlevels in which to run currently selected service.<ul>
 	return ret;
     }
     /**
+     * Add service by hand.
+     * @return new service
+     */
+    global define map addService () ``{
+	term rls = `HBox ();
+	foreach (`i, Runlevel::runlevels, ``{
+	    rls = add (rls, `CheckBox (`id (i), "&" + i));
+	});
+	UI::OpenDialog (`VBox (
+		    `Heading (`opt (`hstretch), _("Add service")),
+		    `VSpacing (1),
+		    `TextEntry (`id (`name), _("Service &name")),
+		    `Label (`opt (`hstretch), _("Starts in these runlevels by default:")),
+		    rls,
+		    `VSpacing (1),
+		    `TextEntry (`id (`des), _("&Description (optional)"), ""),
+		    `VSpacing (1),
+		    `HBox (`PushButton (`id (`ok), UI::OKButtonLabel ()), `PushButton (`id (`cancel), UI::CancelButtonLabel ()))
+		    ));
+	symbol ret = nil;
+	string name = "";
+	boolean r = false;
+	while (true)
+	{
+	    ret = UI::UserInput ();
+	    if (`ok == ret)
+	    {
+		name = UI::QueryWidget (`id (`name), `Value);
+		if (nil == name || "" == name || haskey (Runlevel::services, name))
+		{
+		    UI::MessagePopup (_("Invalid service name. You did not specify service\nname or the name you specified is already in use."));
+		    continue;
+		}
+		list def = [];
+		foreach (`i, Runlevel::runlevels, ``{
+		    if (UI::QueryWidget (`id (i), `Value))
+		    {
+			def = add (def, i);
+		    }
+		});
+		map m = $[ "dirty" : true, "defstart" : def, "start" : def, "description" : UI::QueryWidget (`id (`des), `Value) ];
+		Runlevel::services = add (Runlevel::services, name, m);
+		break;
+	    }
+	    if (`cancel == ret)
+	    {
+		name = "";
+		break;
+	    }
+	}
+	UI::CloseDialog ();
+	return name;
+    }
+    /**
      * Main dialog for changing services.
      * @return symbol for wizard sequencer
      */
@@ -787,9 +841,11 @@ Select runlevels in which to run currently selected service.<ul>
 		`HBox (rls)
 		),
 	    `HBox (
+		`PushButton (`id (`add), _("A&dd")),
+		`HStretch (),
 		`PushButton (`id (`clear), _("&Clear")),
 		`PushButton (`id (`clear_all), _("Clea&r All")),
-		`PushButton (`id (`default), _("&Default"))
+		`PushButton (`id (`default), _("D&efault"))
 		)
 	    );
 	// dialog caption.
@@ -822,6 +878,17 @@ Select runlevels in which to run currently selected service.<ul>
 		    }
 		    break;
 		}
+		if (`add == ret)
+		{
+		    string name = addService ();
+		    if ("" != name)
+		    {
+			UI::ChangeWidget (`id (`table), `Items, servicesToTable ());
+			UI::ChangeWidget (`id (`table), `CurrentItem, name);
+			while (nil != UI::PollInput ()) {}
+			ret = `table;
+		    }
+		}
 		if (`clear == ret)
 		{
 		    service = Runlevel::ServiceInfo (current_service);
@@ -838,7 +905,7 @@ Select runlevels in which to run currently selected service.<ul>
 		}
 		if (`clear_all == ret)
 		{
-		    Runlevel::ReadServices ();
+		    Runlevel::ClearServices ();
 		    UI::ChangeWidget (`id (`table), `Items, servicesToTable ());
 		    ret = `table;
 		}

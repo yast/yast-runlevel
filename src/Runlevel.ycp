@@ -232,18 +232,20 @@
     }
 
     /**
-     * Read only services
+     * Set all dirty services as clean and tries to read
+     * original "start"/"stop" for them.
      */
-    global define void ReadServices () ``{
-	map details = SCR::Read (.init.scripts.runlevels);
-	services = SCR::Read (.init.scripts.comments);
+    global define void ClearServices () ``{
 	services = mapmap (`k, `v, services, ``{
-	    // play tennis
-	    map second_service = lookup (details, k, $[]);
-	    service_list = add (service_list, k);
-	    v = add (v, "start", lookup (second_service, "start", []));
-	    v = add (v, "stop" , lookup (second_service, "stop",  []));
-	    return [ k, v ];
+	    if (lookup (v, "dirty", false))
+	    {
+		v = add (v, "dirty", false);
+		map r = SCR::Read (.init.scripts.runlevel, k);
+		r = lookup (r, k, $[]);
+		v = add (v, "start", lookup (r, "start", []));
+		v = add (v, "stop", lookup (r, "stop", []));
+	    }
+	    return [k, v];
 	});
     }
 
@@ -419,8 +421,7 @@
 	    foreach (`k, `v, new, ``{
 		if (nil == lookup (services, k, nil))
 		{
-		    y2error ("Service %1 is not installed on target system.", k);
-		    return;
+		    y2milestone ("Service %1 is not installed on target system, adding it by hand.", k);
 		}
 		v = add (v, "dirty", true);
 		services = add (services, k, v);

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Dec 11 09:14:20 CET 2001 - pblahos@suse.cz
+
+- Added dialog for adding services in _auto mode.
+
+-------------------------------------------------------------------
 Thu Dec  6 11:14:04 CET 2001 - pblahos@suse.cz
 
 - Added modules _auto and _write because of autoinstallation.
