@@ -1,128 +1,141 @@
 /**
- * File:
- *   ui.ycp
- *
- * Module:
- *   Runlevel Editor
- *
- * Summary:
- *   Runlevel Editor data gathering.
- *
- * Authors:
- *   Petr Blahos <pblahos@suse.cz>
+ * File:	clients/RunlevelEd_auto.ycp
+ * Package:	Configuration of RunlevelEd
+ * Summary:	Client for autoinstallation
+ * Authors:	XXmaintainerXX <XXemailXX>
  *
  * $Id$
  *
- * See summary.
+ * This is a client for autoinstallation. It takes its arguments,
+ * goes through the configuration and return the setting.
+ * Does not do any changes to the configuration.
  */
+
+/**
+ * @param function to execute
+ * @param map/list of RunlevelEd settings
+ * @return map edited settings, Summary or boolean on success depending on called function
+ * @example map mm = $[ "FAIL_DELAY" : "77" ];
+ * @example map ret = WFM::CallFunction ("RunlevelEd_auto", [ "Summary", mm ]);
+ */
+
 {
-    textdomain "runlevel";
+textdomain "runlevel";
 
-    import "RunlevelEd";
-    import "Progress";
-    import "Wizard";
+y2milestone("----------------------------------------");
+y2milestone("Runlevel auto started");
 
-    include "wizard/sequencer.ycp";
-    include "runlevel/ui.ycp";
+import "RunlevelEd";
+import "Progress";
+import "Wizard";
 
-    list args = WFM::Args ();
-    map settings = select (WFM::Args (), 0, $[]);
+include "wizard/sequencer.ycp";
+include "runlevel/ui.ycp";
 
-    // you know what this means
-    boolean do_abort_now = false;
+any ret = nil;
+string func = "";
+map param = $[];
 
-    // We read service status when dialog with services is shown.
-    // We read status for services taken from list of services (service_list)
-    // and then update map services.
-    integer fetching_service_index = 0;
-    // when fetching_service_status becomes false, we stop fetching services
-    boolean fetching_service_status = false;
-
-    string current_service = "";
-
-    // index into table column for each runlevel
-    map runlevel2tableindex = $[];
+/* Check arguments */
+if(size(Args()) > 0 && is(Args(0), string)) {
+	func = WFM::Args(0);
+	if(size(Args()) > 1 && is(Args(1), map))
+		param = WFM::Args(1);
+}
+y2debug("func=%1", func);
+y2debug("param=%1", param);
 
 
-    // We take data from underlying system
-    // RunlevelEd::Read ();
 
-    RunlevelEd::Import (settings);
-    // and patch them with supplied map
-    y2milestone("Imported: (%1)", settings);
+// you know what this means
+boolean do_abort_now = false;
+
+// We read service status when dialog with services is shown.
+// We read status for services taken from list of services (service_list)
+// and then update map services.
+integer fetching_service_index = 0;
+// when fetching_service_status becomes false, we stop fetching services
+boolean fetching_service_status = false;
+
+string current_service = "";
+
+// index into table column for each runlevel
+map runlevel2tableindex = $[];
 
 
-    integer id = 2;
-    foreach (`i, RunlevelEd::runlevels, ``{
-	runlevel2tableindex = add (runlevel2tableindex, i, id);
-	id = id + 1;
-    });
+// We take data from underlying system
+// RunlevelEd::Read ();
+integer id = 2;
+foreach (`i, RunlevelEd::runlevels, ``{
+		runlevel2tableindex = add (runlevel2tableindex, i, id);
+		id = id + 1;
+		});
 
-    //
-    // maps for sequencer
-    //
-    map aliases = $[
-	"start" :            ``(runMain ()),
+//
+// maps for sequencer
+//
+map aliases = $[
+"start" :            ``(runMain ()),
 	"complex" :          ``(runAutoDialog ()),
 	];
 
-    map main_sequence = $[
-	"ws_start" : "start",
+map main_sequence = $[
+"ws_start" : "start",
 	"start" : $[ `next : `finish , `abort : `abort, `edit : "complex", ],
 	"complex" : $[ `next : `finish, `abort : `abort ],
 	];
 
 
-    define set_contents()
-	``{
-	term contents =
-	    `VBox(
-		  `VSpacing(1),
-		  `RichText( `id(`summary), RunlevelEd::Summary()),
-		  `VSpacing(0.5),
-		  `HBox(
-		      // button label
-			`PushButton(`id(`configure), _("&Configure Runlevels")),
-			`HStretch(),
-		      // button label
-			`PushButton(`id(`reset), _("&Reset Configuration"))
-			),
-		  `VSpacing(1)
-		  );
-	// dialog heading
-	Wizard::SetContents(_("Runlevel Configuration"),
-			    contents, "", true, true);
-    }
+/* Import Data*/
+if(func == "Import") {
+	ret = RunlevelEd::Import(param);
+}
+/* Create a  summary*/
+else if(func == "Summary") {
+	ret = RunlevelEd::Summary();
+}
+/* Reset configuration */
+else if (func == "Reset") {
+	RunlevelEd::Import($[]);
+	ret = $[];
+}
+/* Change configuration (run AutoSequence) */
+else if (func == "Change") {
+	Wizard::CreateDialog ();
+	Wizard::DisableAbortButton ();
+	Wizard::RestoreHelp (getHelpProgress ());
+	ret = WizardSequencer (aliases, main_sequence);
+	UI::CloseDialog ();
 
-    set_contents();
-    any result = nil;
-    any ret = nil;
-    repeat {
-	ret = UI::UserInput();
-	if (ret == `configure)
-	{
+}
+/* Return actual state */
+else if (func == "Result") {
+	ret = RunlevelEd::Export();
+}
+/* Write givven settings */
+else if (func == "Write") {
+	import "Progress";
+	RunlevelEd::write_only = true;
+	Progress::off();
+	ret = RunlevelEd::Write();
+	Progress::on();
+}
+/* Unknown function */
+else {
+	y2error("Unknown function: %1", func);
+	ret = false;
+}
 
-	    Wizard::CreateDialog ();
-	    Wizard::DisableAbortButton ();
-	    Wizard::RestoreHelp (getHelpProgress ());
-	    result = WizardSequencer (aliases, main_sequence);
-	    UI::CloseDialog ();
-	    if (result == `next || result == `finish)
-	    {
-		settings = RunlevelEd::Export ();
-	    }
-	    RunlevelEd::Import(settings);
-	    set_contents();
-	}
-	else if ( ret == `reset)
-	{
-	    settings= $[];
-	    RunlevelEd::Import(settings);
-	    set_contents();
-	}
-    } until (ret == `back || ret == `next || ret ==`key || ret == `abort);
+y2debug("ret=%1", ret);
+y2milestone("Runlevel auto finished");
+y2milestone("----------------------------------------");
 
-    return [ret, settings];
+return ret;
+
+/* EOF */
+}
+
+
 
 }
 
