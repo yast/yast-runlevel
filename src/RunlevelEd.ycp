@@ -457,10 +457,15 @@ Further dependency checking will be disabled."));
 		Progress::Title (sformat (_("Service %1"), k));
 		// save!
 		list start = lookup (v, "start", []);
+		/*
+		// This was an additional safety measure.
+		// The dependencies and the easy mode make it obsolete.
+		// #21214
 		if (contains (lookup (v, "defstart", []), "B"))
 		{
 		    start = union (start, [ "B" ]);
 		}
+		*/
 		Runlevel::ServiceFinetune (k, start);
 	    }
 	    else
