@@ -21,6 +21,7 @@ import "Progress";
 import "RunlevelEd";
 import "Summary";
 import "Arch";
+import "Mode";
 
 include "runlevel/ui.ycp";
 
@@ -66,9 +67,13 @@ if(func == "MakeProposal") {
     // some architectures don't have X at all
     boolean x11_needed = Arch::x11_setup_needed; // it is a constant
     boolean x11_selected = Pkg::IsSelected ("XFree86");
-    y2milestone ("x11_setup_needed: %1, x11_selected: %2",
-		 x11_needed, x11_selected );
-    
+    // But if we install over VNC, we want RL 5 (and kdm) even though
+    // there's no X.
+    boolean vnc = Mode::vnc;
+    y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3",
+		 x11_needed, x11_selected, vnc);
+
+    // check only what the user can change at this time
     if (RunlevelEd::x11_selected != x11_selected ||
 	force_reset)
     {
@@ -76,7 +81,7 @@ if(func == "MakeProposal") {
 	RunlevelEd::x11_selected = x11_selected;
 
 	// do the proposal - it is simple
-	RunlevelEd::default = (x11_needed && x11_selected)? "5": "3";
+	RunlevelEd::default = ((x11_needed && x11_selected) || vnc)? "5": "3";
     }
     string proposal = RunlevelEd::ProposalSummary ();
 
