@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Nov 29 08:54:55 CET 2001 - pblahos@suse.cz
+
+- New function ServiceEnabled.
+- Added 3rd parameter to select to satisfy new libycp.
+
+-------------------------------------------------------------------
 Tue Nov 27 10:37:08 CET 2001 - pblahos@suse.cz
 
 - Removed START_ variables.

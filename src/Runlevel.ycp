@@ -22,7 +22,7 @@
     import "Progress";
 
     /**
-     * One service is described by such map:
+     * One service is described by such map: <pre>
       "servicename" : $[
 	"defstart" : [ "2", "3", "5", ], // Default-Start comment
 	"defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
@@ -38,7 +38,7 @@
 	"started" : 0, // return from rcservice status (integer)
 
 	"dirty" : false, // was the entry changed?
-      ]
+      ]</pre>
      */
     //
     //
@@ -310,6 +310,25 @@
 	    }
 	});
 	return dirty;
+    }
+
+    /**
+     * Returns true if any link in /etc/init.d/rc?.d/ exists for this
+     * script. If service does not exist, logs an error.
+     * @param name service name
+     * @return true if service is set to run in any runlevel
+     */
+    global define boolean ServiceEnabled (string name) ``{
+	// Fhis is an info achieved just by a call of
+	// the 2 main agent calls. Nothing about service
+	// status is beeing obtained.
+	if (!SCR::Read (.init.scripts.exists, name))
+	{
+	    y2error ("Service does not exist: %1", name);
+	    return $[];
+	}
+	map detail = lookup (SCR::Read (.init.scripts.runlevel, name), name, $[]);
+	return 0 != size (lookup (detail, "start", []));
     }
 
 }

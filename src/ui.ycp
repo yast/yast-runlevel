@@ -170,7 +170,7 @@ Select runlevels in which to run currently selected service.<ul>
 		fetching_service_status = false;
 		return ;
 	    }
-	    string service_name = select (Runlevel::service_list, fetching_service_index);
+	    string service_name = select (Runlevel::service_list, fetching_service_index, "");
 	    fetching_service_index = fetching_service_index + 1;
 	    map service = lookup (Runlevel::services, service_name, $[]);
 	    Runlevel::services = add (Runlevel::services, service_name, add (service, "started", Runlevel::RunInitScript (service_name, "status")));
@@ -473,7 +473,7 @@ Select runlevels in which to run currently selected service.<ul>
 		fetching_service_status = false;
 		return ;
 	    }
-	    string service_name = select (Runlevel::service_list, fetching_service_index);
+	    string service_name = select (Runlevel::service_list, fetching_service_index, "");
 	    fetching_service_index = fetching_service_index + 1;
 	    map service = lookup (Runlevel::services, service_name, $[]);
 	    integer started = Runlevel::RunInitScript (service_name, "status");
