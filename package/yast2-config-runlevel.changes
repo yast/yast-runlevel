@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Aug  6 10:42:23 CEST 2001 - pblahos@suse.cz
+
+- Add documentation to package.
+- Most of the system interaction moved to agent.
+
+-------------------------------------------------------------------
 Fri Aug  3 13:29:17 CEST 2001 - pblahos@suse.cz
 
 - Completed in-line comments.

@@ -57,7 +57,8 @@
     // there is "service" : map
     // map will be described later
     /***
-        <tt>
+        Main structure containing all settings in runlevel editor is map with following tuples:<br>
+        <pre>
       "servicename" : $[
         "defstart" : [ "2", "3", "5", ], // Default-Start comment
         "defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
@@ -76,7 +77,7 @@
 
         "dirty" : false, // was the entry changed?
       ]
-      </tt>
+      </pre>
      */
     map services = $[];
     list service_list = [];

@@ -22,38 +22,24 @@
      * Get current runlevel into global current_runlevel.
      */
     global define readCurrentRunlevel () ``{
-        map out = SCR (`Execute (.target.bash_output, "/sbin/runlevel"));
-        list l = splitstring (lookup (out, "stdout", ""), " \t\n");
-        current_runlevel = ((size (l) < 2) ? "?" : select (l, 1));
+        current_runlevel = SCR (`Read (.init.scripts.current_runlevel));
     }
 
     /**
      * Get default runlevel from /etc/inittab
      */
     global define readDefaultRunlevel () ``{
-        map out = SCR (`Execute (
-            .target.bash_output,
-            "/bin/cat /etc/inittab | /bin/grep 'id:.:initdefault:' | /bin/sed -e s/id://g -e s/:initdefault://g"));
-        default_runlevel = sformat ("%1", tointeger (lookup (out, "stdout", "5")));
+        default_runlevel = SCR (`Read (.init.scripts.default_runlevel));
         default_runlevel_orig = default_runlevel;
     }
 
     /**
      * Writes default runlevel into /etc/inittab.
      * @param new_default New default runlevel.
-     * @return integer 0 on success, -1 otherwise.
+     * @return integer 0 for success, -1 otherwise
      */
     global define saveDefaultRunlevel (string new_default) ``{
-        string tmp = SCR (`Read (.target.tmpdir)) + "/inittab";
-        if (0 == SCR (`Execute (
-            .target.bash,
-            sformat ("/usr/bin/sed s/^id:.:initdefault:/id:%1:initdefault:/g /etc/inittab > %2", new_default, tmp)
-            )))
-            {
-                SCR (`Execute (.target.bash, sformat ("cp %1 /etc/inittab; chmod 0644 %1; chown root:root %1", tmp)));
-                return 0;
-            }
-        return -1;
+        return SCR (`Write (.init.scripts.default_runlevel, new_default));
     }
 
     /**
@@ -91,6 +77,8 @@
         map details = SCR (`Read (.init.scripts.runlevels));
         services = SCR (`Read (.init.scripts.comments));
         services = mapmap (`k, `v, services, ``{
+            // play tennis
+            map second_service = lookup (details, k, $[]);
             if (haskey (start_variables_all, k))
                 {
                     string start_val = SCR (`Read (add (.rc.system, lookup (start_variables_all, k))));
@@ -101,21 +89,9 @@
                     v = add (v, "START", true);
                 }
             service_list = add (service_list, k);
-            list start = [];
-            list stop = [];
-            foreach (`i, runlevels, ``{
-                if (contains (lookup (details, i + "S", []), k))
-                    {
-                        start = add (start, i);
-                    }
-                /* we do not use this info !!!
-                if (contains (lookup (details, i + "K", []), k))
-                    {
-                        stop = add (stop, i);
-                    }
-                */
-            });
-            return [ k, add (add (v, "start", start), "stop", stop) ];
+            v = add (v, "start", lookup (second_service, "start", []));
+            v = add (v, "stop" , lookup (second_service, "stop",  []));
+            return [ k, v ];
         });
     }
 
@@ -124,14 +100,11 @@
      * Changes global runlevels.
      */
     global define readRunlevelList () ``{
-        map out = SCR (`Execute (.target.bash_output,"/usr/bin/awk '/^[^#]..*\\/etc\\/init\\.d\\/rc / { print $2 }' /etc/inittab"));
-        if (0 != lookup (out, "exit"))
+        runlevels= SCR (`Read (.init.scripts.runlevel_list));
+        if (0 == size (runlevels))
             {
-                out = add (out, "stdout", "S\n0\n1\n2\n3\n4\n5\n6\n");
+                runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
             }
-        runlevels = filter (`j, splitstring (lookup (out, "stdout", ""), "\n"), ``{
-            return j != "";
-        });
         integer id = 2;
         foreach (`i, runlevels, ``{
             runlevel2tableindex = add (runlevel2tableindex, i, id);
@@ -151,7 +124,7 @@
                     string commandline = sformat ("/sbin/insserv %1,start=", k);
                     string add_comma = "";
                     list start = disabled ? [] : lookup (v, "start", []);
-                    if (contains (lookup (v, "defstart"), "B"))
+                    if (contains (lookup (v, "defstart", []), "B"))
                         {
                             start = union (start, [ "B" ]);
                         }
