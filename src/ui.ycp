@@ -17,7 +17,7 @@
  */
 {
     textdomain "runlevel";
-    
+
     include "ui/common_popups.ycp";
 
     /**
@@ -57,7 +57,7 @@ Please wait.</P>")
     }
 
     /**
-     * help text services dialog 
+     * help text services dialog
      */
     global define getHelpComplex () ``{
 	// help text
@@ -96,9 +96,9 @@ Select runlevels in which to run currently selected service.<ul>
 	    _("Exit without saving"),
 	    // message box text
 	    _("All your changes in the setup procedure\nwill be lost if you continue."),
-	    // push button 
+	    // push button
 	    _("&Exit without saving"),
-	    // push button 
+	    // push button
 	    _("&Cancel abort"),
 	    `focus_yes
 	    );
@@ -165,7 +165,7 @@ Select runlevels in which to run currently selected service.<ul>
 		    levels = add (levels, `item (`id (i), i, default_runlevel == i));
 		}
 	});
-	
+
 	term contents = `VBox (
 	    `VStretch (),
 	    // label in dialog
@@ -197,7 +197,7 @@ Select runlevels in which to run currently selected service.<ul>
 	// window label
 	UI::SetWizardContents (_("Runlevel editor: default runlevel"), contents, getHelpMain (), true, true);
 	UI::ReplaceWizardNextButton (`PushButton (`id (`next), FinishButtonLabel()));
-	
+
 	any ret = nil;
 	while (true)
 	    {
@@ -227,6 +227,10 @@ Select runlevels in which to run currently selected service.<ul>
 		    }
 		else if (`next == ret)
 		    {
+			if (default_runlevel_orig == default_runlevel)
+			    {
+				break;
+			    }
 			// ask and save...?
 			if (! UI::YesNoPopup (_("Changes made to the runlevels \nwill now be saved.")))
 			    {
@@ -340,7 +344,7 @@ Select runlevels in which to run currently selected service.<ul>
 	    }
 	return s;
     }
-    
+
     /**
      * Checks what services should run in this runlevel and do not run
      * or what services run but should not run.
@@ -376,7 +380,7 @@ Select runlevels in which to run currently selected service.<ul>
 			s = s + _("Following services run in current\nrunlevel although they should not:");
 			s = s + "\n" + formatLine (should_not_run, 35) + "\n\n";
 		    }
-		
+
 		if (size (should_run) > 0)
 		    {
 			// list of services will follow
@@ -528,7 +532,7 @@ Select runlevels in which to run currently selected service.<ul>
 		    )
 		)
 	    );
-	// dialog caption. 
+	// dialog caption.
 	UI::SetWizardContents (_("Runlevel editor: details"), contents, getHelpComplex (), true, true);
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = lookup (services, current_service);
@@ -561,6 +565,10 @@ Select runlevels in which to run currently selected service.<ul>
 		    }
 		if (`next == ret)
 		    {
+			if (default_runlevel_orig == default_runlevel && !dirtyServices ())
+			    {
+				break;
+			    }
 			// save changes...
 			if (UI::YesNoPopup (_("Now the changes to runlevels \nwill be saved.")))
 			    {
@@ -655,6 +663,6 @@ Select runlevels in which to run currently selected service.<ul>
 			UI::ChangeWidget (`id (`table), `Item (current_service, lookup (runlevel2tableindex, ret)), checked);
 		    }
 	    }
-	return ret;      
+	return ret;
     }
 }
