@@ -143,8 +143,11 @@
 	    out = out + fill + sformat ("%1", i);
 	    fill = ",";
 	});
+	// we must remove it first because insserv start=... adds
+	// runlevels, not replace runlevels!!
+	integer ret = SCR::Execute (.target.bash, sformat ("/sbin/insserv -r %1", name));
 	if ("" == out)
-	    return SCR::Execute (.target.bash, sformat ("/sbin/insserv -r %1", name));
+	    return 0 == ret;
 	return 0 == SCR::Execute (.target.bash, sformat ("/sbin/insserv %1,start=%2", name, out));
     }
 
@@ -321,7 +324,7 @@
 		string commandline = "";
 		if (size (start)>0)
 		{
-		    commandline = sformat ("/sbin/insserv %1,start=", k);
+		    commandline = sformat ("/sbin/insserv -r %1; /sbin/insserv %1,start=", k);
 		    foreach (`i, start, ``{
 			commandline = commandline + add_comma + i;
 			add_comma = ",";
