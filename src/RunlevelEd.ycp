@@ -540,11 +540,29 @@ Further dependency checking will be disabled."));
 	default_orig = default;
 
 	// and finaly process map being imported
-	list new = lookup (s, "services", []);
+	list new = s["services"]:[];
 	map tmp_services = listmap(map service, new,  ``{
-	    string name = lookup(service,"service_name","");
-	    list start = splitstring(lookup(service,"service_start",""), " ");
-	    list stop = splitstring(lookup(service,"service_stop",""), " ");
+	    string name = service["service_name"]:"";
+		list stop = [];
+		list start = [];
+		if (haskey(service, "service_status"))
+		{
+			if (service["service_status"]:"" == "enable")
+			{
+				map info = ServiceInfo(name);
+				start = info["start"]:[];
+				stop = info["stop"]:[];
+			} else if (service["service_status"]:"" == "disable") {
+				start = [];
+				stop = [];
+			}
+		}
+		else
+		{
+			start = splitstring(service["service_start"]:"", " ");
+			stop = splitstring(service["service_stop"]:"", " ");
+		}
+
 	    map service_map = $[];
 	    service_map = add(service_map,"start",start);
 	    service_map = add(service_map,"stop",stop);
