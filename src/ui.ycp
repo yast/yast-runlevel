@@ -60,6 +60,20 @@
 	});
     }
     /**
+     * Update the long description text box
+     * @param service @ref service
+     */
+    global define void updateDescription (map service) ``{
+	// For the box, use the long description.
+	// The short one as a fallback. #20853
+	string descr = service["description"]:"";
+	if (descr == "")
+	{
+	    descr = service["shortdescription"]:"";
+	}
+	UI::ChangeWidget (`id (`description), `Value, descr);
+    }
+    /**
      * Sets runlevel columns in the table.
      * @param service_name which line
      * @param service @ref service
@@ -300,7 +314,14 @@ Select runlevels in which to run the currently selected service.<ul>
 	    foreach (`i, RunlevelEd::runlevels, ``{
 		item = add (item, (contains (rl, i)? i : " "));
 	    });
-	    item = add (item, lookup (v, "description", ""));
+	    // For the table, use the short description.
+	    // The long one as a fallback. #20853
+	    string descr = v["shortdescription"]:"";
+	    if (descr == "")
+	    {
+		descr = v["description"]:"";
+	    }
+	    item = add (item, descr);
 	    items = add (items, item);
 	});
 	return items;
@@ -932,6 +953,7 @@ because they depend on it:
 		updateStatusColumn (current_service, started);
 	    }
 	    updateRlCheckBoxes (service);
+	    updateDescription (service);
 	}
 
 	/**
@@ -961,16 +983,22 @@ because they depend on it:
 	// headers in table
 	header = add (header, _("Description"));
 	term contents = `VBox (
-	    `VSpacing (0.5),
+	    `VSpacing (0.4),
 	    `HBox (
 		// preserve 2 spaces at the end.
 		`Label (_("Current runlevel:  ")),
 		`Label (`opt (`outputField, `hstretch), getRunlevelDescr (RunlevelEd::current))
 		),
-	    `VSpacing (0.5),
+	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
 		    header,
 		    servicesToTable ()
+		),
+	    `VSquash (
+		`HBox (
+		    `VSpacing (3.4), // 3+borders in qt, 3 in curses
+		    `RichText (`id (`description), `opt (`shrinkable), "")
+		    )
 		),
 	    `VBox (
 		// label above checkboxes
@@ -993,7 +1021,7 @@ because they depend on it:
 		    // menubutton label
 		    `MenuButton (_("Set/&Reset"), [
 				 // menu item
-		        `item (`id (`to_enable), /*`opt (`key_F3),*/ _("&Enable the service")),
+			`item (`id (`to_enable), /*`opt (`key_F3),*/ _("&Enable the service")),
 				 // menu item
 			`item (`id (`to_disable), /*`opt (`key_F5),*/ _("&Disable the service")),
 				 // menu item
@@ -1171,9 +1199,10 @@ both of them?")))
 			   `PushButton (`id (`cancel), `opt (`key_F9),
 					UI::CancelButtonLabel ()))
 		    ));
-	symbol ret = nil; // TODO any (symbol|string)
+	UI::SetFocus (`id (`name));
+
+	any ret = nil; // (symbol|string)
 	string name = "";
-	boolean r = false;
 	while (true)
 	{
 	    ret = UI::UserInput ();
@@ -1251,7 +1280,7 @@ name or the name specified is already in use."));
 	 * Sets columns 0-S (runlevels) in table so they are synchronized with checkboxes.
 	 */
 	define void refreshTableLine2 () ``{
-	    updateRlColumns (current_service, service);
+	    updateRlColumns (current_service, service, nil);
 	    UI::ChangeWidget (`id (`table), `Item (current_service, 1),
 			      service["dirty"]:false ? CheckMark : " ");
 	}
