@@ -1,6 +1,9 @@
 -------------------------------------------------------------------
-Wed Jan 15 14:45:19 CET 2003 - mvidner@suse.de
+Fri Jan 17 17:38:30 CET 2003 - mvidner@suse.de
 
+- Show the short description in the table and the long one
+  in a box below (#20853).
+- Make it possible to disable a service in the boot run level (#21214).
 - Added function key shortcuts in ncurses.
 - 2.7.0
 
