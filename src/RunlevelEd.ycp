@@ -33,7 +33,7 @@
      * Like "requires" but in reverse direction.
      * Used for stopping and disabling services.
      */
-    map what_requires = $[];
+    map<string, list<string> >  what_requires = $[];
 
     /**
      * A graph where nodes are scripts or system facilities
