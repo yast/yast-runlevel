@@ -15,7 +15,7 @@
 {
     textdomain "runlevel";
 
-    import "Runlevel";
+    import "RunlevelEd";
     import "Progress";
     import "Wizard";
 
@@ -42,10 +42,10 @@
     Wizard::DisableAbortButton ();
     Wizard::RestoreHelp (getHelpProgress ());
 
-    Runlevel::Read ();
+    RunlevelEd::Read ();
 
     integer id = 2;
-    foreach (`i, Runlevel::runlevels, ``{
+    foreach (`i, RunlevelEd::runlevels, ``{
 	runlevel2tableindex = add (runlevel2tableindex, i, id);
 	id = id + 1;
     });
@@ -66,7 +66,7 @@
 
     if (`finish == WizardSequencer (aliases, main_sequence))
     {
-	Runlevel::Write ();
+	RunlevelEd::Write ();
 	UI::MessagePopup (_("The new configuration \nwas saved successfully."));
     }
     UI::CloseDialog ();

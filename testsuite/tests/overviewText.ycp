@@ -1,11 +1,11 @@
 // tests overviewText
 {
     include "testsuite.ycp";
-    import "Runlevel";
+    import "RunlevelEd";
     include "runlevel/ui.ycp";
 
-    Runlevel::current = "3";
-    Runlevel::services = $[
+    RunlevelEd::current = "3";
+    RunlevelEd::services = $[
 	"a" : $[
 	    "start" : ["0", "3"],
 	    "started" : 0,

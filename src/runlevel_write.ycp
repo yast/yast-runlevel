@@ -16,16 +16,16 @@
  * See summary.
  */
 {
-    import "Runlevel";
+    import "RunlevelEd";
     import "Progress";
 
     list args = WFM::Args ();
     map settings = select (WFM::Args (), 0, $[]);
 
     Progress::off ();
-    Runlevel::Read ();
-    Runlevel::Import (settings);
-    Runlevel::Write ();
+    RunlevelEd::Read ();
+    RunlevelEd::Import (settings);
+    RunlevelEd::Write ();
     Progress::on ();
     return true;
 }
