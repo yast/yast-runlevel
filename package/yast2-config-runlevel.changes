@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Aug 30 09:15:31 CEST 2001 - pblahos@suse.cz
+
+- libycp-devel added to needforbuild. Needed for testsuite.
+
+-------------------------------------------------------------------
 Tue Aug 21 16:38:55 CEST 2001 - pblahos@suse.cz
 
 - Some texts fixed.
