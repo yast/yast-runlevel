@@ -279,8 +279,8 @@
 
     /**
      * Returns items for default runlevel combo box.
-     * (Excludes 0, 6, S and B)
-     * @param mode if `auto, adds Unchanged. if `proposal, only 3 and 5
+     * (Excludes 0, 1, 6, S and B)
+     * @param mode if `auto, adds Unchanged. if `proposal, only 2, 3 and 5
      * @return list List of items. Default is selected.
      */
     define list getDefaultPicker (symbol mode) ``{
@@ -289,6 +289,12 @@
 	if (mode == `auto)
 	{
 	    rls = prepend (rls, "");
+	}
+	else if (mode == `proposal)
+	{
+	    // We could read the list from SCR (#37071) but
+	    // inittab in the inst-sys is pre-lsb so we have to override it
+	    rls = ["2", "3", "5"];
 	}
 
 	foreach (string i, rls, ``{
