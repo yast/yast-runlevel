@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Mar 12 10:29:54 CET 2004 - mvidner@suse.cz
+
+- repropose only if the conditions have changed (#35601)
+- added a wizard icon (jhumpol)
+
+-------------------------------------------------------------------
 Mon Mar  8 15:34:55 CET 2004 - mvidner@suse.cz
 
 - do not cache the proposal of the default run level (#35292)

@@ -24,7 +24,10 @@
 
     include "runlevel/toposort.ycp";
 
-    global boolean proposal_valid = false;
+    /**
+     * Proposal parameter: if it changes, we repropose
+     */
+    global boolean x11_selected = nil;
 
     /**
      * Like "requires" but in reverse direction.
