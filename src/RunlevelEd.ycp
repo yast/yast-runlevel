@@ -508,16 +508,22 @@ Further dependency checking will be disabled."));
 	list tmp_services = maplist(string service_name, map service_data, svc, ``{
 	    string  service_start = mergestring(lookup(service_data,"start",[]), " ");
 	    string service_stop = mergestring(lookup(service_data,"stop",[]), " ");
-	    map service_map =
-	    $[
-	      "service_name":service_name,
-	      "service_start":service_start,
-	      "service_stop":service_stop
-	    ];
+	    
+	    map service_map = $[];	    
+	    service_map["service_name"] = service_name;
+	    if (size(service_start) > 0 )
+	    {
+		service_map["service_start"] = service_start;
+	    }
+	    if (size(service_stop) > 0 )
+	    {
+		service_map["service_stop"] = service_stop;
+	    }
+	    
 	    return (service_map);
 	});
 	map ret = $[ "services" : tmp_services ];
-	if (default != default_orig)
+	if (default != default_orig && default != "")
 	{
 	    ret = add (ret, "default", default);
 	}
@@ -544,31 +550,33 @@ Further dependency checking will be disabled."));
 	list new = s["services"]:[];
 	map tmp_services = listmap(map service, new,  ``{
 	    string name = service["service_name"]:"";
-		list stop = [];
-		list start = [];
-		if (haskey(service, "service_status"))
+	    list stop = [];
+	    list start = [];
+	    if (haskey(service, "service_status"))
+	    {
+		if (service["service_status"]:"" == "enable")
 		{
-			if (service["service_status"]:"" == "enable")
-			{
-				map info = Runlevel::ServiceInfo(name);
-				y2milestone("service info for %1: %2", name, info);
-				start = info["start"]:[];
-				stop = info["stop"]:[];
-			}
-			else if (service["service_status"]:"" == "disable")
-			{
-				start = [];
-				stop = [];
-			}
+		    map info = Runlevel::ServiceInfo(name);
+		    y2milestone("service info for %1: %2", name, info);
+		    start = info["start"]:[];
+		    stop = info["stop"]:[];
 		}
-		else
+		else if (service["service_status"]:"" == "disable")
 		{
-			start = splitstring(service["service_start"]:"", " ");
-			stop = splitstring(service["service_stop"]:"", " ");
+		    start = [];
+		    stop = [];
 		}
+	    }
+	    else
+	    {
+		start = splitstring(service["service_start"]:"", " ");
+		stop = splitstring(service["service_stop"]:"", " ");
+	    }
 
 	    map service_map = $[];
+	    if (size(start) > 0 )
 	    service_map = add(service_map,"start",start);
+	    if (size(stop) > 0 )
 	    service_map = add(service_map,"stop",stop);
 	    return([name,service_map]);
 	});
@@ -633,10 +641,9 @@ Further dependency checking will be disabled."));
 		    string item = sformat (
 			// summary item: %1 service name,
 			// %2, %3 list of runlevels it starts/stops in
-			_("<p><b>%1</b><br> Start: %2<br> Stop: %3</p>"),
+			_("<p><b>%1</b><br> Start: %2</p>"),
 			k,
-			mergestring(v["start"]:[], " "),
-			mergestring(v["stop"]:[], " ")
+			mergestring(v["start"]:[], " ")
 			);
 		    sum = Summary::AddListItem(sum, item );
 		}
