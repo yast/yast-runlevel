@@ -186,12 +186,12 @@ map cmdline = $[
 	],
 	"runlevels" : $[
 	    // translators: command line help text for "runlevels" option
-	    "help": _("Coma separated list of runlevels"),
+	    "help": _("Comma separated list of runlevels"),
 	    "type": "string",
 	],
 	"service": $[
 	    // translators: command line help text for "service" option
-	    "help": _("Coma separated service names"),
+	    "help": _("Comma separated service names"),
 	    "type": "string",
 	],
 	"defaults": $[

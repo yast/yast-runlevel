@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Jan 26 13:52:45 CET 2005 - mlazar@suse.cz
+
+- fixed typing error: Coma -> Comma
+
+-------------------------------------------------------------------
 Wed Jan 26 13:41:21 CET 2005 - mlazar@suse.cz
 
 - improved command line
