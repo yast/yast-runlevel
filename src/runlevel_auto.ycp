@@ -31,7 +31,7 @@ import "Wizard";
 import "Sequencer";
 import "Progress";
 
-include "runlevel/ui.ycp";
+include "runlevel/wizard.ycp";
 
 any ret = nil;
 string func = "";
