@@ -131,7 +131,7 @@
      * /etc/insserv.conf:
      *   system_requires["$network"] == ["network", "+pcmcia", "+hotplug"];
      */
-    map system_requires = $[];
+    map<string, list<string> > system_requires = $[];
 
     /**
      * Read settings
@@ -141,7 +141,7 @@
 	// progress caption
 	Progress::Simple (_("Initializing runlevel editor. Please wait."), " ", 7, "");
 	Progress::NextStep ();
-	runlevels= (list) SCR::Read (.init.scripts.runlevel_list);
+	runlevels= (list<string>) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))
 	{
 	    runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
@@ -156,7 +156,7 @@
 	default_orig = default;
 	Progress::NextStep ();
 
-	system_requires = (map) SCR::Read (.init.insserv_conf);
+	system_requires = (map<string, list<string> >) SCR::Read (.init.insserv_conf);
 	Progress::NextStep ();
 
 	map details = (map) SCR::Read (.init.scripts.runlevels);
@@ -168,17 +168,17 @@
 		// identity implicit; only the first script provides a facility
 		if (f != k && !haskey (what_provides, f))
 		{
-		    what_provides = add (what_provides, f, k);
+		    what_provides[f] = k;
 		}
 	    });
 
-	    service_list = add (service_list, k);
+	    service_list[size(service_list)] = k;
 
 
 	    // play tennis
-	    map second_service = lookup (details, k, $[]);
-	    v = add (v, "start", lookup (second_service, "start", []));
-	    v = add (v, "stop" , lookup (second_service, "stop",  []));
+	    map second_service = details[k]:$[];
+	    v["start"] = second_service["start"]:[];
+	    v["stop"] = second_service["stop"]:[];
 	    return $[ k: v ];
 	});
 	buildRequires ();
@@ -198,7 +198,7 @@
 	foreach (string service, map comments, services, ``{
 	    addRequires (service, (list<string>) (comments["reqstart"]:[]));
 	});
-	foreach (string sys_f, list req, system_requires, ``{
+	foreach (string sys_f, list<string> req, system_requires, ``{
 	    addRequires (sys_f, req);
 	});
     }
@@ -213,7 +213,7 @@
 	list<string> req_s = filter (string f, req_facilities,
 			     ``( substring (f, 0, 1) != "+"));
 	req_s = maplist (string f, req_s, ``( what_provides[f]:f ));
-	requires = (map<string, list<string> > ) add (requires, service, req_s);
+	requires[service] = req_s;
     }
 
     /**
@@ -239,7 +239,7 @@
 	y2debug ("DEPGRAPH %1: %2", service, s_req);
 	// sort it
 	list r = TopologicalSort (s_req);
-	list sorted = r[0]:[];
+	list<string> sorted = r[0]:[];
 	list rest = r[1]:[];
 	if (size (rest) > 0)
 	{
@@ -255,7 +255,7 @@ Further dependency checking will be disabled."));
 	// remove the original service
 	sorted = remove (sorted, 0);
 	// reverse it so that the required services are first
-	return reverse (sorted);
+	return (list<string>) reverse (sorted);
     }
 
     /**
@@ -327,7 +327,7 @@ Further dependency checking will be disabled."));
 	    boolean init_ok = true;
 	    if (init_time)
 	    {
-		list start = services[service, "start"]:[];
+		list<string> start = services[service, "start"]:[];
 
 		if (one)
 		{
@@ -395,11 +395,11 @@ Further dependency checking will be disabled."));
 	services = mapmap (string k, map v, services, ``{
 	    if (v["dirty"]:false)
 	    {
-		v = add (v, "dirty", false);
+		v["dirty"] = false;
 		map r = (map) SCR::Read (.init.scripts.runlevel, k);
 		r = r[k]:$[];
-		v = add (v, "start", r["start"]:[]);
-		v = add (v, "stop", r["stop"]:[]);
+		v["start"] = r["start"]:[];
+		v["stop"] = r["stop"]:[];
 	    }
 	    return $[k: v];
 	});
@@ -537,7 +537,7 @@ Further dependency checking will be disabled."));
 	map ret = $[ "services" : tmp_services ];
 	if (default != default_orig && default != "")
 	{
-	    ret = add (ret, "default", default);
+	    ret["default"] = default;
 	}
 	return ret;
     }
@@ -548,7 +548,7 @@ Further dependency checking will be disabled."));
      * @return success state
      */
     global define boolean Import (map s) ``{
-	runlevels= (list) SCR::Read (.init.scripts.runlevel_list);
+	runlevels = (list<string>) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))
 	{
 	    runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
@@ -587,9 +587,9 @@ Further dependency checking will be disabled."));
 
 	    map service_map = $[];
 	    if (size(start) > 0 )
-	    service_map = add(service_map,"start",start);
+	    service_map["start"] = start;
 	    if (size(stop) > 0 )
-	    service_map = add(service_map,"stop",stop);
+	    service_map["stop"] = stop;
 	    return($[name:service_map]);
 	});
 
@@ -600,8 +600,8 @@ Further dependency checking will be disabled."));
 		{
 		    y2milestone ("Service %1 is not installed on target system, adding it by hand.", k);
 		}
-		v = add (v, "dirty", true);
-		services = add (services, k, v);
+		v["dirty"] = true;
+		services[k] = v;
 	    });
 	}
 	else

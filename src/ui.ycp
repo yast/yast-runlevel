@@ -32,7 +32,7 @@
     global define list startStopService (string service_name, string command);
     global define boolean LongContinueCancelHeadlinePopup (string headline, term richtext, integer hdim, integer vdim);
     global define void setServiceToDefault (string service_name);
-    global define map tomap_true (list l);
+    global define map<string, boolean> tomap_true (list<string> l);
 
     global string current_service = "";
 
@@ -175,12 +175,12 @@
      * Get the status if not known yet.
      */
     global define void changeService1 (map service) ``{
-	if (lookup (service, "started", -1) < 0)
+	if (service["started"]:-1 < 0)
 	{
 	    integer started = Runlevel::RunInitScript (current_service,
 						       "status");
-	    service = add (service, "started", started);
-	    RunlevelEd::services = add (RunlevelEd::services, current_service, service);
+	    service["started"] = started;
+	    RunlevelEd::services[current_service] = service;
 	    updateStatusColumn (current_service, started);
 	}
 	updateRlCheckBoxes (service);
@@ -199,7 +199,7 @@
 	foreach (string i, RunlevelEd::runlevels, ``{
 	    if ((boolean) UI::QueryWidget (`id (i), `Value))
 	    {
-		start_in = add (start_in, i);
+		start_in[size(start_in)] = i;
 	    }
 	});
 	if (service["start"]:[] != start_in)
@@ -208,8 +208,7 @@
 				 "start": start_in,
 				 "dirty": true
 				 ]);
-	    RunlevelEd::services = add (RunlevelEd::services,
-				      service_name, service);
+	    RunlevelEd::services[service_name] = service;
 	}
 	return service;
     }
@@ -287,9 +286,9 @@
 	foreach (string i, rls, ``{
 	    if ("0" != i && "6" != i && "S" != i && "B" != i)
 	    {
-		items = add (items, `item (`id (i),
+		items[size(items)] = `item (`id (i),
 					   RunlevelEd::getRunlevelDescr (i),
-					   i == RunlevelEd::default));
+					   i == RunlevelEd::default);
 	    }
 	});
 	return items;
@@ -453,7 +452,7 @@
 		col = col + 1;
 	    }
 	    // next
-	    items = add (items, item);
+	    items[size(items)] = item;
 	});
 	return items;
     }
@@ -505,8 +504,8 @@
 	map service = RunlevelEd::services[service_name]:$[];
 	integer started = Runlevel::RunInitScript (service_name, "status");
 
-	RunlevelEd::services = add (RunlevelEd::services, service_name,
-				  add (service, "started", started));
+	RunlevelEd::services[service_name] = add (service, "started", started);
+
 	if (use_func)
 	{
             updateStatusInTable(service_name, service, started);
@@ -546,12 +545,12 @@ Please wait.</P>")
 	}
 	else
 	{
-	    map start = tomap_true (service["start"]:[]);
+	    map<string, boolean> start = tomap_true (service["start"]:[]);
 	    foreach (string rl, rls, ``{
-		start = add (start, rl, enable);
+		start = (map<string, boolean>) add (start, rl, enable);
 	    });
-	    start = filter (any k, boolean v, start, ``( v == true));
-	    start_in = mapkeys (start);
+	    start = (map<string, boolean>) filter (string k, boolean v, start, ``( v == true));
+	    start_in = (list<string>) mapkeys (start);
 	}
 
 	if (service["start"]:[] != start_in)
@@ -560,8 +559,7 @@ Please wait.</P>")
 				 "start": start_in,
 				 "dirty": true
 				 ]);
-	    RunlevelEd::services = add (RunlevelEd::services,
-				      service_name, service);
+	    RunlevelEd::services[service_name] = service;
 
 	    updateRlColumns (service_name, service, rls);
 	    updateSimpleStatusColumn (service_name, service);
@@ -585,7 +583,7 @@ Please wait.</P>")
 	    }
 	    else
 	    {
-		missing = add (missing, s);
+		missing[size(missing)] = s;
 		return false;
 	    }
 	});
@@ -644,7 +642,7 @@ Please wait.</P>")
 	string command = enable? "start": "stop";
 
 	// get dependent services
-	list dep_s = RunlevelEd::ServiceDependencies (service_name, enable);
+	list<string> dep_s = RunlevelEd::ServiceDependencies (service_name, enable);
 	y2debug ("DEP: %1", dep_s);
 
 	// filter ones that are ok already
@@ -860,8 +858,8 @@ and enabled, because it depends on them:
 	// and we may be adding output of a different command
 	// but it is only tested against zero anyway
 	map service = RunlevelEd::services[service_name]:$[];
-	service = add (service, "started", started);
-	RunlevelEd::services = add (RunlevelEd::services, service_name, service);
+	service["started"] = started;
+	RunlevelEd::services[service_name] = service;
 	// this won't work in simple mode
 	// make a map "item"->column_number, depending on mode
 	// then the functions can consult it and do nothing if not present
@@ -910,22 +908,22 @@ and enabled, because it depends on them:
      * @return string overview text
      */
     global define string overviewText () ``{
-	list should_not_run = [];
-	list should_run = [];
+	list<string> should_not_run = [];
+	list<string> should_run = [];
 	foreach (string k, map v, RunlevelEd::services, ``{
 	    if (RunlevelEd::StartContainsImplicitly  (v["start"]:[],
 						      RunlevelEd::current))
 		{   // it should run
 		    if (0 != v["started"]:-1)
 			{
-			    should_run = add (should_run, k);
+			    should_run[size(should_run)] = k;
 			}
 		}
 	    else
 		{
 		    if (0 == v["started"]:-1)
 			{
-			    should_not_run = add (should_not_run, k);
+			    should_not_run[size(should_not_run)] = k;
 			}
 		}
 	});
@@ -1463,7 +1461,7 @@ name or the name specified is already in use."));
 		foreach (string i, RunlevelEd::runlevels, ``{
 		    if ((boolean) UI::QueryWidget (`id (i), `Value))
 		    {
-			def = add (def, i);
+			def[size(def)] = i;
 		    }
 		});
 		map m = $[
@@ -1472,7 +1470,7 @@ name or the name specified is already in use."));
 		    "start" : def,
 		    "description" : UI::QueryWidget (`id (`des), `Value)
 		    ];
-		RunlevelEd::services = add (RunlevelEd::services, name, m);
+		RunlevelEd::services[name] = m;
 		break;
 	    }
 	    if (`cancel == ret)
@@ -1634,7 +1632,7 @@ disabled?\n"), nfs_adj)))
 		{
 		    // re-read from SCR
 		    service = Runlevel::ServiceInfo (current_service);
-		    RunlevelEd::services = add (RunlevelEd::services, current_service, service);
+		    RunlevelEd::services[current_service] = service;
 		    refreshTableLine2 ();
 		    ret = `table;
 		}
@@ -1717,12 +1715,11 @@ disabled?\n"), nfs_adj)))
      */
     global define void setServiceDisable (string service_name) ``{
 	map service = lookup (RunlevelEd::services, service_name, $[]);
-	RunlevelEd::services = add (RunlevelEd::services, service_name,
-			union (service,
+	RunlevelEd::services[service_name] = union (service,
 			       $[
 				   "start": [],
 				   "dirty": true,
-				   ]));
+				   ]);
     }
     /**
      * DUH, in fact ENABLES  the service.
@@ -1734,22 +1731,21 @@ disabled?\n"), nfs_adj)))
      */
     global define void setServiceToDefault (string service_name) ``{
 	map service = lookup (RunlevelEd::services, service_name, $[]);
-	RunlevelEd::services = add (RunlevelEd::services, service_name,
-			union (service,
+	RunlevelEd::services[service_name] = union (service,
 			       $[
 				   "start": lookup (service, "defstart", []),
 				   "dirty": true,
-				   ]));
+				   ]);
     }
-
+
     // favorite missing builtins
     /**
      * Converts a list to a map with values of true
      * @param l a list
      * @return a map
      */
-    global define map tomap_true (list<string> l) ``{
-	return listmap (string i, l, ``( $[i: true] ));
+    global define map<string, boolean> tomap_true (list<string> l) ``{
+	return (map<string, boolean>) listmap (string i, l, ``( $[i: true] ));
     }
 
     /**
