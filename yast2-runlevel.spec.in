@@ -28,13 +28,9 @@ Summary:	Configuration of runlevel
 %dir @agentdir@
 %dir @scrconfdir@
 @configdir@/runlevel.y2cc
-@agentdir@/ag_initscripts
-@scrconfdir@/initscripts.scr
-@scrconfdir@/insserv_conf.scr
 @clientdir@/runlevel.ycp
 @clientdir@/runlevel_auto.ycp
 @clientdir@/runlevel_write.ycp
 %dir @yncludedir@/runlevel
 @yncludedir@/runlevel/*.ycp
-@moduledir@/Runlevel.ycp
 %doc @docdir@
