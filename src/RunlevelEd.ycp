@@ -508,8 +508,8 @@ Further dependency checking will be disabled."));
 	list tmp_services = maplist(string service_name, map service_data, svc, ``{
 	    string  service_start = mergestring(lookup(service_data,"start",[]), " ");
 	    string service_stop = mergestring(lookup(service_data,"stop",[]), " ");
-	    
-	    map service_map = $[];	    
+
+	    map service_map = $[];
 	    service_map["service_name"] = service_name;
 	    if (size(service_start) > 0 )
 	    {
@@ -519,7 +519,7 @@ Further dependency checking will be disabled."));
 	    {
 		service_map["service_stop"] = service_stop;
 	    }
-	    
+
 	    return (service_map);
 	});
 	map ret = $[ "services" : tmp_services ];
