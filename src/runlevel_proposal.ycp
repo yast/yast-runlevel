@@ -73,7 +73,7 @@ if(func == "MakeProposal") {
     boolean vnc = Linuxrc::vnc ();				// constant
 
     // we can be overriden
-    string forced_runlevel = ProductFeatures::runlevel;		// constant
+    string forced_runlevel = ProductFeatures::GetFeature("globals", "runlevel");
     y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3, forced: '%4'",
 		 x11_needed, x11_selected, vnc, forced_runlevel);
 
