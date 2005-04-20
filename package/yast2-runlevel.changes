@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Apr 20 16:44:10 CEST 2005 - mlazar@suse.cz
+
+- 2.12.0
+- adapted to new interface of ProductFeatures.ycp
+
+-------------------------------------------------------------------
 Fri Mar  4 08:58:17 CET 2005 - mlazar@suse.cz
 
 - merged proofed texts
