@@ -286,7 +286,7 @@
 	    {
 		items[size(items)] = `item (`id (i),
 					   RunlevelEd::getRunlevelDescr (i),
-					   i == RunlevelEd::default);
+					   i == RunlevelEd::default_runlevel);
 	    }
 	});
 	return items;
@@ -1160,7 +1160,7 @@ Select runlevels in which to run the currently selected service.<ul>
 			    continue;
 			}
 		    }
-		    RunlevelEd::default = (string) UI::QueryWidget (`id (`default_rl), `Value);
+		    RunlevelEd::default_runlevel = (string) UI::QueryWidget (`id (`default_rl), `Value);
 		    break;
 		}
 		else if (`table == ret)
@@ -1188,8 +1188,8 @@ Select runlevels in which to run the currently selected service.<ul>
 		}
 		else if (`to_enable == ret)
 		{
-		    list<string> default = RunlevelEd::services[current_service, "defstart"]:[];
-		    EnableDisableServiceDep (current_service, default, true);
+		    list<string> default_runlevel = RunlevelEd::services[current_service, "defstart"]:[];
+		    EnableDisableServiceDep (current_service, default_runlevel, true);
 		    service = RunlevelEd::services[current_service]:$[];
 		    changeService1 (service);
 		}
@@ -1580,7 +1580,7 @@ disabled?\n"), nfs_adj)))
 			    continue;
 			}
 		    }
-		    RunlevelEd::default = (string) UI::QueryWidget (`id (`default_rl), `Value);
+		    RunlevelEd::default_runlevel = (string) UI::QueryWidget (`id (`default_rl), `Value);
 		    break;
 		}
 		else if (`add == ret)

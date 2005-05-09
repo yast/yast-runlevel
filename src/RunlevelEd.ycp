@@ -103,7 +103,7 @@
     /**
      * Default runlevel (after boot)
      */
-    global string default = "";
+    global string default_runlevel = "";
 
     /**
      * Backup of default runlevel.
@@ -160,8 +160,8 @@
 	Progress::NextStep ();
 
 	//..
-	default = (string) SCR::Read (.init.scripts.default_runlevel);
-	default_orig = default;
+	default_runlevel = (string) SCR::Read (.init.scripts.default_runlevel);
+	default_orig = default_runlevel;
 	Progress::NextStep ();
 
 	system_requires = (map<string, list<string> >) SCR::Read (.init.insserv_conf);
@@ -420,7 +420,7 @@ Further dependency checking will be disabled."));
      * @return boolean true if service is disabled
      */
     global define boolean isDisabled (map service) ``{
-	return !contains(service["start"]:[], default);
+	return !contains(service["start"]:[], default_runlevel);
     }
 
     /**
@@ -454,8 +454,8 @@ Further dependency checking will be disabled."));
 	// progress caption
 	Progress::Simple (_("Saving changes to runlevels."), " ", prsize + 1, "");
 
-	if (default != default_orig)
-	    SCR::Write (.init.scripts.default_runlevel, default);
+	if (default_runlevel != default_orig)
+	    SCR::Write (.init.scripts.default_runlevel, default_runlevel);
 	Progress::NextStep ();
 
 	map<string,map> failed = (map<string, map>)filter (string k, map v, services, ``{
@@ -492,7 +492,7 @@ Further dependency checking will be disabled."));
      * @return true if yes
      */
     global define boolean isDirty () ``{
-	if (default != default_orig)
+	if (default_runlevel != default_orig)
 	    return true;
 
 	boolean dirty = false;
@@ -563,9 +563,9 @@ Further dependency checking will be disabled."));
         {
 	    ret = $[ "services" : tmp_services ];
         }
-	if ( default != "")
+	if ( default_runlevel != "")
 	{
-	    ret["default"] = default;
+	    ret["default"] = default_runlevel;
 	}
 	return ret;
     }
@@ -583,8 +583,8 @@ Further dependency checking will be disabled."));
 	}
 
 	//..
-	default = (string) SCR::Read (.init.scripts.default_runlevel);
-	default_orig = default;
+	default_runlevel = (string) SCR::Read (.init.scripts.default_runlevel);
+	default_orig = default_runlevel;
 
 	// and finaly process map being imported
 	list<map> new = s["services"]:[];
@@ -637,7 +637,7 @@ Further dependency checking will be disabled."));
 	// default
 	if (haskey (s, "default"))
 	{
-	    default = s["default"]:"";
+	    default_runlevel = s["default"]:"";
 	    default_orig = "---";
 	}
 	return true;
@@ -681,7 +681,7 @@ Further dependency checking will be disabled."));
 	string sum = "";
 	// summary header
 	sum = Summary::OpenList(sum);
-	sum = Summary::AddListItem(sum,  getRunlevelDescr (default));
+	sum = Summary::AddListItem(sum,  getRunlevelDescr (default_runlevel));
 	sum = Summary::CloseList(sum);
 
 	return sum;
@@ -694,7 +694,7 @@ Further dependency checking will be disabled."));
 	``{
 	string sum = "";
         sum = Summary::AddHeader(sum, _("Default Runlevel"));
-        sum = Summary::AddLine(sum,  getRunlevelDescr (default));
+        sum = Summary::AddLine(sum,  getRunlevelDescr (default_runlevel));
 	// summary header
 	sum = Summary::AddHeader(sum, _("Services"));
 
@@ -769,11 +769,11 @@ global string GetCurrentRunlevel() {
     return current == "" ? "unknown" : current;
 }
 global string GetDefaultRunlevel() {
-    return default;
+    return default_runlevel;
 }
 
 global integer SetDefaultRunlevel(string rl) {
-    default = rl;
+    default_runlevel = rl;
     return 0;
 }
 

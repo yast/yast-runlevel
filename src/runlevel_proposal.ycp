@@ -51,7 +51,7 @@ define symbol RL() {
 
     any ret = UI::UserInput();
     if(ret == `ok) {
-	RunlevelEd::default = (string) UI::QueryWidget(`id(`default_rl), `Value);
+	RunlevelEd::default_runlevel = (string) UI::QueryWidget(`id(`default_rl), `Value);
 	UI::CloseDialog();
 	return `next;
     }
@@ -86,10 +86,10 @@ if(func == "MakeProposal") {
 	RunlevelEd::x11_selected = x11_selected;
 
 	// do the proposal
-	RunlevelEd::default = ((x11_needed && x11_selected) || vnc)? "5": "3";
+	RunlevelEd::default_runlevel = ((x11_needed && x11_selected) || vnc)? "5": "3";
 	if (forced_runlevel != "")
 	{
-	    RunlevelEd::default = forced_runlevel;
+	    RunlevelEd::default_runlevel = forced_runlevel;
 	}
     }
     string proposal = RunlevelEd::ProposalSummary ();
