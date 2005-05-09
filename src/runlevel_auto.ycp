@@ -77,7 +77,7 @@ else if (func == "Change") {
 	}
 
 	//..
-        RunlevelEd::default = (string) SCR::Read (.init.scripts.default_runlevel);
+        RunlevelEd::default_runlevel = (string) SCR::Read (.init.scripts.default_runlevel);
     }
     ret = RunlevelAutoSequence();
 }
