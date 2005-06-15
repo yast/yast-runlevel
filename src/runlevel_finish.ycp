@@ -1,0 +1,88 @@
+/**
+ * File:
+ *  runlevel_finish.ycp
+ *
+ * Module:
+ *  Step of base instalaltion finish
+ *
+ * Authors:
+ *  Jiri Srain <jsrain@suse.cz>
+ *
+ * $Id: printer_auto.ycp 20576 2004-12-15 15:00:18Z jsrain $
+ *
+ */
+
+{
+
+textdomain "runlevel";
+
+import "Mode";
+import "RunlevelEd";
+import "Directory";
+import "Update";
+
+any ret = nil;
+string func = "";
+map param = $[];
+
+void set_runlevel (integer runlevel)
+{
+    y2milestone ("setting default runlevel to %1", runlevel);
+    SCR::Write (.etc.inittab.id, sformat ("%1:initdefault:", runlevel));
+    SCR::Write (.etc.inittab, nil);
+}
+
+
+/* Check arguments */
+if(size(WFM::Args()) > 0 && is(WFM::Args(0), string)) {
+    func = (string)WFM::Args(0);
+    if(size(WFM::Args()) > 1 && is(WFM::Args(1), map))
+	param = (map)WFM::Args(1);
+}
+
+y2milestone ("starting runlevel_finish");
+y2debug("func=%1", func);
+y2debug("param=%1", param);
+
+if (func == "Info")
+{
+    return (any)$[
+	"steps" : 1,
+	// progress step title
+	"title" : _("Saving default runlevel..."),
+	"when" : [ `installation, `update, `autoinst ],
+    ];
+}
+else if (func == "Write")
+{
+    if ( !Mode::update () )
+    {
+	// see bug #32366 why we need this here
+	// and 30028
+	// now it is set in the initial proposal
+	// Fall back to 3 if we accidentally don't set it there
+	// otherwise it would be 0 (#35662)
+	set_runlevel (RunlevelEd::default_runlevel == ""?
+		      3 : tointeger (RunlevelEd::default_runlevel));
+    }
+    else
+    {
+	// Set default runlevel cause inittab will be overwritten by
+	// installing aaa_base
+
+	set_runlevel (Update::last_runlevel != -1 ? Update::last_runlevel : 3);
+    }
+
+}
+else
+{
+    y2error ("unknown function: %1", func);
+    ret = nil;
+}
+
+y2debug("ret=%1", ret);
+y2milestone("runlevel_finish finished");
+return ret;
+
+
+} /* EOF */

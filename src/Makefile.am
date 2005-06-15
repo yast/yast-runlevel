@@ -17,6 +17,7 @@ scrconf_DATA = insserv_conf.scr
 client_DATA =			\
 	runlevel.ycp		\
 	runlevel_auto.ycp	\
+	runlevel_finish.ycp	\
 	runlevel_proposal.ycp 
 
 myynclude_DATA =		\
