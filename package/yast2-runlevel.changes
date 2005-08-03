@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Aug  3 11:49:50 CEST 2005 - locilka@suse.cz
+
+- new maintainer
+- fixed bug #74582, descrption wasn't fully readable
+- 2.12.3
+
+-------------------------------------------------------------------
 Wed Jun 15 14:45:10 CEST 2005 - mlazar@suse.cz
 
 - 2.12.2
