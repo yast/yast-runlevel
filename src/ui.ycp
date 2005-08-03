@@ -1054,8 +1054,8 @@ Select runlevels in which to run the currently selected service.<ul>
 		),
 	    `VSquash (
 		`HBox (
-		    `VSpacing (3.4), // 3+borders in qt, 3 in curses
-		    `RichText (`id (`description), `opt (`shrinkable), "")
+		    `VSpacing (4.3), // 3+borders in qt, 3 in curses
+		    `RichText (`id (`description), `opt (`shrinkable, `vstretch), "")
 		    )
 		),
 	    `VBox (
@@ -1287,8 +1287,8 @@ and the service itself and disables their start at system boot time.</p>")
 		),
 	    `VSquash (
 		`HBox (
-		    `VSpacing (3.4), // 3+borders in qt, 3 in curses
-		    `RichText (`id (`description), `opt (`shrinkable), "")
+		    `VSpacing (4.3), // 3+borders in qt, 3 in curses
+		    `RichText (`id (`description), `opt (`shrinkable, `vstretch), "")
 		    )
 		),
 	    `HBox (
