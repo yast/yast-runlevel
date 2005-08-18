@@ -96,8 +96,8 @@ if(func == "MakeProposal") {
 
     ret = $[
 	"preformatted_proposal" : proposal,
-	"warning_level" : nil,
-	"warning" : nil,
+	// "warning_level" : nil,
+	// "warning" : nil,
     ];
 }
 /* run the module */
