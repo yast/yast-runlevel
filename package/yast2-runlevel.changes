@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Aug 18 07:36:26 CEST 2005 - locilka@suse.cz
+
+- Proposal should not return any `nil` as the value of the warning
+  and warning_level key (bug #105154).
+- 2.12.4
+
+-------------------------------------------------------------------
 Wed Aug  3 11:49:50 CEST 2005 - locilka@suse.cz
 
 - new maintainer
