@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Tue Nov  1 15:07:14 CET 2005 - locilka@suse.cz
+
+- fixed bug #129679, Speeding up reading the services' status by
+  reading only services which are listed there.
+  Switching to another mode would reread statuses which hadn't been
+  read before.
+- 2.13.0
+
+-------------------------------------------------------------------
 Thu Aug 18 07:36:26 CEST 2005 - locilka@suse.cz
 
 - Proposal should not return any `nil` as the value of the warning
