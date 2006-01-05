@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Thu Jan  5 10:08:24 CET 2006 - locilka@suse.cz
+
+- Preventing runlevel editor from getting stuck (#129679) by using
+  function Service::RunInitScriptWithTimeOut() instead of using
+  Service::RunInitScript()
+- Enabling [Abort] button, Disabling [Back] button to match the
+  real functionality of dialogs
+- 2.13.1
+
+-------------------------------------------------------------------
 Tue Nov  1 15:07:14 CET 2005 - locilka@suse.cz
 
 - fixed bug #129679, Speeding up reading the services' status by
