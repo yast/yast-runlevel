@@ -183,7 +183,7 @@
     define void changeService1 (map service) ``{
 	if (service["started"]:-1 < 0)
 	{
-	    integer started = Service::RunInitScript (current_service,
+	    integer started = Service::RunInitScriptWithTimeOut (current_service,
 						       "status");
 	    service["started"] = started;
 	    RunlevelEd::services[current_service] = service;
@@ -353,9 +353,20 @@
      * @return "Yes", "Yes*", "No", "No*" or "???"
      */
     define string BstatusText (boolean disabled, integer started) ``{
-	string state = (started<0) ? _("???") : (!disabled ? _("Yes") : _("No"));
-	if (started>=0 && (started>0 != disabled)) {
-	    state = state + "*";
+	// TRANSLATORS: Unknown service status, presented in table
+	string state = _("???");
+	if (disabled != nil) {
+	    // TRANSLATORS: Unknown service status presented in table
+	    state = (started<0) ? _("???") : (!disabled ?
+		// TRANSLATORS: Service status presented in table, Enabled: Yes
+		_("Yes")
+		:
+		// TRANSLATORS: Service status presented in table, Enabled: No
+		_("No")
+	    );
+	    if (started>=0 && (started>0 != disabled)) {
+		state = state + "*";
+	    }
 	}
 	return state;
     }
@@ -527,7 +538,7 @@
      */
     define void updateServiceStatus (boolean use_func, string service_name) ``{
 	if (RunlevelEd::services[service_name, "started"]:-1 < 0) {
-    	    integer started = Service::RunInitScript (service_name, "status");
+    	    integer started = Service::RunInitScriptWithTimeOut (service_name, "status");
 
 	    RunlevelEd::services[service_name, "started"] = started;
 
@@ -1133,6 +1144,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	    );
 	// dialog caption.
 	Wizard::SetContents (_("System Services (Runlevel): Details"), contents, getHelpComplex (), true, true);
+	Wizard::DisableBackButton ();
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = RunlevelEd::services[current_service]:$[];
@@ -1336,6 +1348,7 @@ and the service itself and disables their start at system boot time.</p>")
 	    );
 	// dialog caption.
 	Wizard::SetContentsButtons (_("System Services (Runlevel): Services"), contents, help_text, Label::BackButton(), Label::FinishButton());
+	Wizard::DisableBackButton ();
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = RunlevelEd::services[current_service]:$[];
@@ -1572,6 +1585,7 @@ name or the name specified is already in use."));
 	    );
 	// dialog caption.
 	Wizard::SetContentsButtons (_("System Services (Runlevel): Details"), contents, getHelpAuto (), Label::BackButton(), Label::FinishButton());
+	Wizard::DisableBackButton ();
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = RunlevelEd::services[current_service]:$[];

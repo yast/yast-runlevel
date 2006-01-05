@@ -89,7 +89,7 @@ symbol RunlevelSequence() {
 
     Wizard::CreateDialog ();
     Wizard::SetDesktopIcon("runlevel");
-    Wizard::DisableAbortButton ();
+    Wizard::DisableBackButton ();
     Wizard::RestoreHelp (getHelpProgress ());
 
     symbol ret = Sequencer::Run (aliases, sequence);
@@ -112,7 +112,7 @@ symbol RunlevelAutoSequence() {
 
     Wizard::CreateDialog ();
     Wizard::SetDesktopIcon("runlevel");
-    Wizard::DisableAbortButton ();
+    Wizard::DisableBackButton ();
     Wizard::RestoreHelp (getHelpProgress ());
 
     symbol ret = Sequencer::Run (aliases, auto_sequence);
