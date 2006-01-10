@@ -23,6 +23,7 @@
     import "Summary";
     import "Report";
     import "CommandLine";
+    import "Mode";
 
     include "runlevel/toposort.ycp";
 
@@ -454,8 +455,16 @@ Further dependency checking will be disabled."));
 	// progress caption
 	Progress::Simple (_("Saving changes to runlevels."), " ", prsize + 1, "");
 
-	if (default_runlevel != default_orig)
+	if (default_runlevel != default_orig) {
 	    SCR::Write (.init.scripts.default_runlevel, default_runlevel);
+	    // This is a Write process in the autoinstallation
+	    // Call the init script to reinitialize, enhancement #137800
+	    if (Mode::autoinst()) {
+		y2milestone("Default runlevel has been changed, reinitializing ... %1",
+		    SCR::Execute(.target.bash_output, "/sbin/telinit q")
+		);
+	    }
+	}
 	Progress::NextStep ();
 
 	map<string,map> failed = (map<string, map>)filter (string k, map v, services, ``{

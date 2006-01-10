@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Tue Jan 10 10:42:09 CET 2006 - locilka@suse.cz
+
+- Fixing bug/enhancement #137800
+  Adding a feature to reinitialize to the selected default runlevel
+  during the autoinstallation in the runlevel's Write() process
+  by calling (`/sbin/telinit q`).
+- 2.13.2
+
+-------------------------------------------------------------------
 Thu Jan  5 10:08:24 CET 2006 - locilka@suse.cz
 
 - Preventing runlevel editor from getting stuck (#129679) by using
