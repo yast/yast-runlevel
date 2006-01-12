@@ -1,0 +1,138 @@
+/**
+ * File:	clients/runlevel_proposal.ycp
+ * Package:	System Services (Runlevel) (formerly known as Runlevel Editor)
+ * Summary:	Default runlevel proposal
+ * Authors:	Michal Svec <msvec@suse.cz>
+ *
+ * $Id$
+ */
+
+{
+
+textdomain "runlevel";
+
+/* The main () */
+y2milestone("----------------------------------------");
+y2milestone("Runlevel proposal started");
+y2milestone("Arguments: %1", WFM::Args());
+
+import "Label";
+import "RunlevelEd";
+import "Summary";
+import "Arch";
+import "ProductFeatures";
+import "Linuxrc";
+
+include "runlevel/ui.ycp";
+
+string func = (string) WFM::Args(0);
+map param = (map) WFM::Args(1);
+map ret = $[];
+
+define symbol RL() {
+
+    UI::OpenDialog(`VBox(
+	/* Heading label */
+	`Heading( _("Set Default Runlevel") ),
+	`VSpacing( 0.7 ),
+	    /* ComboBox label */
+	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Default Runlevel:"), getDefaultPicker (`proposal)),
+	`VSpacing( 0.5 ),
+	`HBox(
+	    `HStretch(),
+	    `HWeight(1, `PushButton(`id(`ok), `opt(`default, `key_F10),
+	    Label::OKButton() )),
+	    `HStretch(),
+	    `HWeight(1, `PushButton(`id(`cancel), `opt (`key_F9),
+	    Label::CancelButton())),
+	    `HStretch()
+	)
+    ));
+
+    any ret = UI::UserInput();
+    if(ret == `ok) {
+	RunlevelEd::default_runlevel = (string) UI::QueryWidget(`id(`default_rl), `Value);
+	UI::CloseDialog();
+	return `next;
+    }
+    UI::CloseDialog();
+    return `back;
+}
+
+/* create a textual proposal */
+if(func == "MakeProposal") {
+    boolean force_reset = param["force_reset"]:false;
+
+    // find out proposal parameters, ie. what it depends on
+    // some architectures don't have X at all
+    boolean x11_needed = Arch::x11_setup_needed ();		// constant
+    boolean x11_selected = Pkg::IsSelected ("xorg-x11");	// variable
+    // But if we install over VNC, we want RL 5 (and kdm) even though
+    // there's no X.
+
+    boolean vnc = Linuxrc::vnc ();				// constant
+
+    // we can be overriden
+    string forced_runlevel = (string)ProductFeatures::GetFeature("globals", "runlevel");
+    y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3, forced: '%4'",
+		 x11_needed, x11_selected, vnc, forced_runlevel);
+
+    // check only what the user can change at this time
+    // Initially the module variables are nil so the condition triggers
+    if (RunlevelEd::x11_selected != x11_selected ||
+	force_reset)
+    {
+	// update parameters
+	RunlevelEd::x11_selected = x11_selected;
+
+	// do the proposal
+	RunlevelEd::default_runlevel = ((x11_needed && x11_selected) || vnc)? "5": "3";
+	if (forced_runlevel != "")
+	{
+	    RunlevelEd::default_runlevel = forced_runlevel;
+	}
+    }
+    string proposal = RunlevelEd::ProposalSummary ();
+
+    ret = $[
+	"preformatted_proposal" : proposal,
+	// "warning_level" : nil,
+	// "warning" : nil,
+    ];
+}
+/* run the module */
+else if(func == "AskUser") {
+    map stored = RunlevelEd::Export();
+    symbol result = RL(); //(symbol) WFM::CallFunction("runlevel", [.propose]);
+    if(result != `next) RunlevelEd::Import(stored);
+    y2debug("stored=%1", stored);
+    y2debug("result=%1", result);
+    ret = $[ "workflow_sequence" : result ];
+}
+/* create titles */
+else if(func == "Description") {
+    ret = $[
+	/* Rich text title */
+	"rich_text_title" : _("Default Runlevel"),
+	/* MenuButton title */
+	"menu_title" : _("Default &Runlevel"),
+	"id" : "runlevel",
+    ];
+}
+/* write the proposal */
+else if(func == "Write") {
+    y2milestone ("Not writing yet, will be done in inst_finish");
+}
+/* unknown function */
+else {
+    y2error("unknown function: %1", func);
+}
+
+/* Finish */
+y2debug("ret=%1",ret);
+y2milestone("Runlevel proposal finished");
+y2milestone("----------------------------------------");
+return ret;
+
+/* EOF */
+}

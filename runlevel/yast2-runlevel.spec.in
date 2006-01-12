@@ -1,0 +1,41 @@
+@HEADER-COMMENT@
+
+# neededforbuild  yast2-devel-packages
+
+@HEADER@
+Requires:       yast2
+Provides:	yast2-config-runlevel
+Obsoletes:	yast2-config-runlevel
+Provides:	yast2-trans-runlevel
+Obsoletes:	yast2-trans-runlevel
+BuildArchitectures:     noarch
+Summary:	Configuration of runlevel
+
+%description
+-
+
+@PREP@
+
+@BUILD@
+
+@INSTALL@
+
+@CLEAN@
+
+%files
+%defattr(-,root,root)
+%dir @desktopdir@
+@desktopdir@/runlevel.desktop
+%dir @scrconfdir@
+@scrconfdir@/insserv_conf.scr
+%dir @clientdir@
+@clientdir@/runlevel.ycp
+@clientdir@/runlevel_auto.ycp
+@clientdir@/runlevel_proposal.ycp
+@clientdir@/runlevel_finish.ycp
+%dir @yncludedir@/runlevel
+@yncludedir@/runlevel/*.ycp
+%dir @moduledir@
+@moduledir@/RunlevelEd.ycp
+@moduledir@/RunlevelEd.ybc
+%doc @docdir@

@@ -1,0 +1,125 @@
+/**
+ * File:	wizard.ycp
+ * Module:	System Services (Runlevel) (formerly known as Runlevel Editor)
+ * Summary:	Wizards definitions
+ * Authors:	Petr Blahos <pblahos@suse.cz>, 2001
+ *		Martin Lazar <mlazar@suse.cz>, 2004
+ *
+ * $Id$
+ *
+ */
+{
+textdomain "runlevel";
+
+import "RunlevelEd";
+import "Wizard";
+import "Sequencer";
+
+include "runlevel/ui.ycp";
+
+symbol ReadDialog() ``{
+//    Wizard::RestoreHelp(HELPS["read"]:"");
+    boolean ret = RunlevelEd::Read();
+    return ret ? `next : `abort;
+}
+
+/**
+ * Write settings dialog
+ * @return `abort if aborted and `next otherwise
+ */
+symbol WriteDialog() ``{
+//    Wizard::RestoreHelp(HELPS["write"]:"");
+    boolean ret = RunlevelEd::Write();
+    return ret ? `next : `abort;
+}
+
+
+symbol MainSequence() {
+
+    map aliases = $[
+        "complex" : ``(ComplexDialog ()),
+	"simple" : ``(SimpleDialog ()),
+    ];
+
+    map main_sequence = $[
+	"ws_start" : "simple", //TODO implement DecideComplexity
+	"simple" : $[
+    	    `next : `finish,
+	    `abort : `abort,
+    	    `complex : "complex",
+	],
+	"complex" : $[
+    	    `next : `finish,
+	    `abort : `abort,
+    	    `simple : "simple",
+	],
+    ];
+
+
+    symbol ret = Sequencer::Run (aliases, main_sequence);
+    
+    return ret;
+
+}
+
+symbol RunlevelSequence() {
+
+    map aliases = $[
+	"read"  : [ ``( ReadDialog() ), true ],
+	"main"	:   ``( MainSequence() ),
+	"write" : [ ``( WriteDialog() ), true ]
+    ];
+
+    map sequence = $[
+	"ws_start" : "read",
+	"read" : $[
+	    `abort	: `abort,
+	    `next	: "main"
+	],
+	"main" : $[
+	    `cancel	: `abort,
+	    `abort	: `abort,
+	    `finish	: "write"
+	],
+	"write" : $[
+	    `abort	: `abort,
+	    `next	: `next
+	]
+    ];
+
+    Wizard::CreateDialog ();
+    Wizard::SetDesktopIcon("runlevel");
+    Wizard::DisableBackButton ();
+    Wizard::RestoreHelp (getHelpProgress ());
+
+    symbol ret = Sequencer::Run (aliases, sequence);
+
+    UI::CloseDialog();
+    return ret;
+}
+
+symbol RunlevelAutoSequence() {
+
+    map aliases = $[
+	"auto" :          ``(AutoDialog ()),
+    ];
+
+    map auto_sequence = $[
+	"ws_start" : "auto",
+	"auto" : $[ `next : `finish, `abort : `abort ],
+    ];
+
+
+    Wizard::CreateDialog ();
+    Wizard::SetDesktopIcon("runlevel");
+    Wizard::DisableBackButton ();
+    Wizard::RestoreHelp (getHelpProgress ());
+
+    symbol ret = Sequencer::Run (aliases, auto_sequence);
+    
+    UI::CloseDialog();
+    return ret;
+
+}
+
+}

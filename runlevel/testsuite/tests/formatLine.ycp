@@ -1,0 +1,22 @@
+// tests formatLine
+{
+    // testedfiles: ui.ycp Testsuite.ycp
+
+    include "testsuite.ycp";
+    include "runlevel/ui.ycp";
+
+    string s = "";
+    list splited = [];
+
+    s = formatLine (["a", ], 15);
+    splited = splitstring (s, "\n");
+    DUMP (splited);
+
+    s = formatLine (["a", "b", "c", "d", "e", ], 15);
+    splited = splitstring (s, "\n");
+    DUMP (splited);
+
+    s = formatLine (["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", ], 15);
+    splited = splitstring (s, "\n");
+    DUMP (splited);
+}

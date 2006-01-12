@@ -1,0 +1,27 @@
+/**
+ * YaST2 test case for runlevel editor
+ *
+ * tests function dirtyServices
+ */
+{
+    // testedfiles: RunlevelEd.ycp Testsuite.ycp
+
+    include "testsuite.ycp";
+    import "RunlevelEd";
+
+    RunlevelEd::services = $[
+        "a" : $[ ],
+        "b" : $["start" : [ "1", ]],
+        ];
+    DUMP (RunlevelEd::isDirty ());
+    RunlevelEd::services = (map<string,map>) $[
+        "a" : $["dirty" : true ],
+        "b" : $["start" : [ "1", ]],
+        ];
+    DUMP (RunlevelEd::isDirty ());
+    RunlevelEd::services = $[
+        "a" : $["dirty" : false ],
+        "b" : $["start" : [ "1", ],"dirty" : true ],
+        ];
+    DUMP (RunlevelEd::isDirty ());
+}

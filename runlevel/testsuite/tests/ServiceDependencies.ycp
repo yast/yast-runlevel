@@ -1,0 +1,55 @@
+// test for Read and related functions
+{
+    // these are read before testsuite.ycp installs dummy SCR handlers
+    map<string,map> comments = (map<string,map>) SCR::Read (.target.ycp, "tests/scripts.ycp.out");
+    map insserv_conf = (map) SCR::Read (.target.ycp, "tests/insserv_conf.ycp.out");
+
+    // testedfiles: toposort.ycp RunlevelEd.ycp Report.ycp Testsuite.ycp
+
+    include "testsuite.ycp";
+    import "Progress";
+    import "Report";
+    import "RunlevelEd";
+    include "runlevel/toposort.ycp";
+
+    Progress::off ();
+    Report::DisplayErrors (false, 0);
+
+    DUMP (size (comments));
+
+    // assume all the services are enabled
+    map all_enabled = mapmap (string service, map descr, comments, ``(
+				  $[service : $[
+				      "start": descr["defstart"]:[],
+				      // unused
+				      "stop": descr["defstop"]:[],
+				      ]]
+				  ));
+    map all_disabled = mapmap (string service, map descr, comments, ``(
+				  $[service : $[
+				      "start": [],
+				      // unused
+				      "stop": [],
+				      ]]
+				  ));
+    map READ = $[
+	"init" : $[
+	    "insserv_conf": insserv_conf,
+	    "scripts" : $[
+		"runlevel_list" : [ "0", "1", "2", "3", "5", "6", "S", ],
+		"current_runlevel" : "5",
+		"default_runlevel" : "5",
+		"comments" : comments,
+		"runlevels" : all_enabled,
+		]
+	    ]
+	];
+
+
+    TEST ( ``(RunlevelEd::Read ()), [READ], nil);
+    DUMP (size (RunlevelEd::services));
+    DUMP (RunlevelEd::ServiceDependencies ("xntpd", true));
+    DUMP (RunlevelEd::ServiceDependencies ("xntpd", false));
+    DUMP (RunlevelEd::ServiceDependencies ("portmap", true));
+    DUMP (RunlevelEd::ServiceDependencies ("portmap", false));
+}

@@ -1,0 +1,17 @@
+// test for serServiceToDefault
+{
+    // testedfiles: ui.ycp Testsuite.ycp
+
+    include "testsuite.ycp";
+    include "runlevel/ui.ycp";
+    import "RunlevelEd";
+
+    RunlevelEd::services = $[
+	"a" : $[
+	    "start" : [ "1", "2" ],
+	    "defstart" : [ "3", "4" ],
+	    ]
+	];
+    setServiceToDefault ("a");
+    DUMP (RunlevelEd::services);
+}

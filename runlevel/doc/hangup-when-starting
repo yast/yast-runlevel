@@ -1,0 +1,14 @@
+* Bug report: "If I start service foo, yast hangs!"
+
+It may be a case of a daemon that does not detach itself from its
+controlling terminal.
+
+Seen in bugs 16323 (scanlogd), 21773 (mysql)
+On command line, do rcfoo start
+ps ax |grep foo
+ls -l /proc/$pid/fd
+ will probably show a fd attached to the terminal.
+Or try rcfoo start 2>&1 |cat	 # 22836 (pure-ftpd)
+#25386 gpm
+#33051 lisa
+#16555.

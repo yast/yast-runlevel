@@ -1,0 +1,37 @@
+// test for TopologicalSort
+{
+    // testedfiles: toposort.ycp Testsuite.ycp
+
+    include "testsuite.ycp";
+    include "runlevel/toposort.ycp";
+
+    DUMP ("TopologicalSort");
+
+    map<string, list<string> > g_empty = $[];
+    DUMP (TopologicalSort (g_empty));
+
+    map<string, list<string> > g_loop = $[
+	"v1": [ "v1", ],
+	];
+    DUMP (TopologicalSort (g_loop));
+
+    map<string, list<string> > g = $[
+	"v1": [ "v2", "v3", ],
+	"v2": [ "v3", "v4", ],
+	"v3": [ "v6", ],
+	"v4": [ "v6", ],
+	"v5": [ "v4", ],
+	"v6": [ ],
+	"v7": [ "v6", ],
+	"v8": [ "v9", ],
+	"v9": [ ],
+	"v10": [ ],
+	];
+    DUMP (TopologicalSort (g));
+
+    DUMP ("ReachableSubgraph");
+    DUMP (ReachableSubgraph (g, "v1"));
+
+    DUMP ("ReverseGraph");
+    DUMP (ReverseGraph (g));
+}
