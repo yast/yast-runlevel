@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Jan 12 14:00:33 CET 2006 - locilka@suse.cz
+
+- Just another fix for the previous entry. `/sbin/telinit q` didn't
+  work because of some unknown reason.
+  Calling `/sbin/telinit (2|3|5)` instead.
+- 2.13.3
+
+-------------------------------------------------------------------
 Tue Jan 10 10:42:09 CET 2006 - locilka@suse.cz
 
 - Fixing bug/enhancement #137800
