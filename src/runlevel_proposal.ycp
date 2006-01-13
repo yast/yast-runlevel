@@ -22,6 +22,7 @@ import "Summary";
 import "Arch";
 import "ProductFeatures";
 import "Linuxrc";
+import "Mode";
 
 include "runlevel/ui.ycp";
 
@@ -86,7 +87,9 @@ if(func == "MakeProposal") {
 	RunlevelEd::x11_selected = x11_selected;
 
 	// do the proposal
-	RunlevelEd::default_runlevel = ((x11_needed && x11_selected) || vnc)? "5": "3";
+    if( ! Mode::autoinst() ) {
+    	RunlevelEd::default_runlevel = ((x11_needed && x11_selected) || vnc)? "5": "3";
+    }
 	if (forced_runlevel != "")
 	{
 	    RunlevelEd::default_runlevel = forced_runlevel;

@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jan 13 13:46:36 CET 2006 - ug@suse.de
+
+- Fixing bug/enhancement #137800
+  proposal does not set the runlevel now in autoinstall
+- 2.13.4
+
+-------------------------------------------------------------------
 Thu Jan 12 14:00:33 CET 2006 - locilka@suse.cz
 
 - Reverting the previous change, will be solved in the
