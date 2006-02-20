@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Mon Feb 20 11:51:08 CET 2006 - locilka@suse.cz
+
+- Fixing #149071, Installation over SSH will set the default
+  runlevel to "3" because no X-configuration is offered during the
+  second stage installation.
+- Replacing RPM BuildRequires (yast2-devel-packages) with list of
+  needed packages.
+- 2.13.5
+
+-------------------------------------------------------------------
 Fri Jan 13 13:46:36 CET 2006 - ug@suse.de
 
 - Fixing bug/enhancement #137800
