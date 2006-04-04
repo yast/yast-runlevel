@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Apr  4 14:47:38 CEST 2006 - locilka@suse.cz
+
+- Preventing from frozen runlevel editor when an init script
+  freezes during the manual start/stop/reread_status using the
+  timeout functionality (#160881).
+- 2.13.7
+
+-------------------------------------------------------------------
 Thu Mar 23 09:10:37 CET 2006 - locilka@suse.cz
 
 - Added checking for root permissions into the module startup
