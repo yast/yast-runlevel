@@ -26,6 +26,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
+    import "FileUtils";
 
     define string StartedText (integer started);
     define string BstatusText (boolean disabled, integer started);
@@ -882,7 +883,17 @@ and enabled, because it depends on them:
     define list startStopService (string service_name,
 					 string command) ``{
 	UI::OpenDialog (`Label (service_name + " " + command));
-	map out = Service::RunInitScriptOutput (service_name, command);
+	y2milestone("%1 -> %2", service_name, command);
+	string log_filename = sformat("%1/runlevel_out", (string) SCR::Read(.target.tmpdir));
+	integer cmd_run = Service::RunInitScriptWithTimeOut (
+	    service_name,
+	    command + sformat(" 2>&1 1>%1", log_filename)
+	);
+	map out = $[ "exit" : cmd_run ];
+	if (FileUtils::Exists(log_filename)) {
+	    out["stdout"] = (string) SCR::Read(.target.string, log_filename);
+	}
+	
 	UI::CloseDialog ();
 
 	integer exit = out["exit"]:-1;
