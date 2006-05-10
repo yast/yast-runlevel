@@ -185,7 +185,7 @@
 	if (service["started"]:-1 < 0)
 	{
 	    integer started = Service::RunInitScriptWithTimeOut (current_service,
-						       "status");
+		"status" + sformat(" 2>&1 1>%1/runlevel_out", SCR::Read(.target.tmpdir)));
 	    service["started"] = started;
 	    RunlevelEd::services[current_service] = service;
 	    updateStatusColumn (current_service, started);
@@ -539,7 +539,8 @@
      */
     define void updateServiceStatus (boolean use_func, string service_name) ``{
 	if (RunlevelEd::services[service_name, "started"]:-1 < 0) {
-    	    integer started = Service::RunInitScriptWithTimeOut (service_name, "status");
+    	    integer started = Service::RunInitScriptWithTimeOut (service_name,
+		"status" + sformat(" 2>&1 1>%1/runlevel_out", SCR::Read(.target.tmpdir)));
 
 	    RunlevelEd::services[service_name, "started"] = started;
 

@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Wed May 10 16:33:15 CEST 2006 - locilka@suse.cz
+
+- Redirecting stdout and stderr into the temporary file when
+  checking the service status using the .background agent.
+  There was a buggy behavior for some services that were checked
+  wrong - unifying all calls (#173418).
+- 2.13.8
+
+-------------------------------------------------------------------
 Tue Apr  4 14:47:38 CEST 2006 - locilka@suse.cz
 
 - Preventing from frozen runlevel editor when an init script
