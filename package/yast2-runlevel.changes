@@ -9,6 +9,7 @@ Tue Sep 19 16:40:51 CEST 2006 - locilka@suse.cz
   mode instead of a popup window only (#206664).
 - Function getDefaultPicker has been moved from ui.ycp into the
   RunlevelEd module to work faster.
+- Fixed testsuite for moved getDefaultPicker function.
 - 2.13.9
 
 -------------------------------------------------------------------
