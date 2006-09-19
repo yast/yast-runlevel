@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Tue Sep 19 16:40:51 CEST 2006 - locilka@suse.cz
+
+- In VNC installation, users are warned that VNC would not work
+  properly unless they select runlevel 5.
+- In SSH installation, users are warned that SSH needs a network
+  mode if they select runlevel 2 (both #166918).
+- Runlevel proposal has been rewritten to operate in a full-screen
+  mode instead of a popup window only (#206664).
+- Function getDefaultPicker has been moved from ui.ycp into the
+  RunlevelEd module to work faster.
+- 2.13.9
+
+-------------------------------------------------------------------
 Wed May 10 16:33:15 CEST 2006 - locilka@suse.cz
 
 - Redirecting stdout and stderr into the temporary file when

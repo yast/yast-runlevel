@@ -279,38 +279,6 @@
     }
 
     /**
-     * Returns items for default runlevel combo box.
-     * (Excludes 0, 1, 6, S and B)
-     * @param mode if `auto, adds Unchanged. if `proposal, only 2, 3 and 5
-     * @return list List of items. Default is selected.
-     */
-    define list getDefaultPicker (symbol mode) ``{
-	list items = [];
-	list<string> rls = RunlevelEd::runlevels;
-	if (mode == `auto)
-	{
-	    rls = prepend (rls, "");
-	}
-	else if (mode == `proposal)
-	{
-	    // We could read the list from SCR (#37071) but
-	    // inittab in the inst-sys is pre-lsb so we have to override it
-	    rls = ["2", "3", "5"];
-	}
-
-	foreach (string i, rls, ``{
-	    // which ones to avoid: #36110
-	    if ("0" != i && "1" != i && "6" != i && "S" != i && "B" != i)
-	    {
-		items[size(items)] = `item (`id (i),
-					   RunlevelEd::getRunlevelDescr (i),
-					   i == RunlevelEd::default_runlevel);
-	    }
-	});
-	return items;
-    }
-
-    /**
      * @param	rll	a list of runlevels or nil, meaning "all"
      * @return		"in [these] runlevels" (translated)
      */
@@ -1098,7 +1066,7 @@ Select runlevels in which to run the currently selected service.<ul>
 		),
 	    */
 	    // combo box label
-	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker (`complex)),
+	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), RunlevelEd::getDefaultPicker (`complex)),
 
 	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
@@ -1571,7 +1539,7 @@ name or the name specified is already in use."));
 	term contents = `VBox (
 	    `VSpacing (0.4),
 	    // combo box label
-	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), getDefaultPicker (`auto)),
+	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Set default runlevel after booting to:"), RunlevelEd::getDefaultPicker (`auto)),
 
 	    `VSpacing (0.4),
 	    `Table (`id (`table), `opt (`notify, `immediate),
