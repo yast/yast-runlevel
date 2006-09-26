@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Sep 26 16:00:36 CEST 2006 - locilka@suse.cz
+
+- Added new marvelous help for runlevel in installation proposal
+  thanks to rwalter (bug #206664, comment #8).
+- 2.13.10
+
+-------------------------------------------------------------------
 Tue Sep 19 16:40:51 CEST 2006 - locilka@suse.cz
 
 - In VNC installation, users are warned that VNC would not work

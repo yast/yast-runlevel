@@ -110,25 +110,35 @@ define symbol RLDialog () {
 	))
     );
 
+    // made by rwalter@novell.com, bug #206664 comment #8
     // help for runlevel - installation proposal, part 1
-    // partly 'stolen' from http://www.novell.com/documentation/suse91/suselinux-adminguide/html/ch13s02.html
-    string help = _("<p><b><big>Default Runlevel</big></b><br />
-In Linux, runlevels define how the system is started.
-After booting, the system starts as defined in <tt>/etc/inittab</tt>
-in the line <tt>initdefault</tt>.
-Usually this is <tt>3</tt> or <tt>5</tt>.
-</p>") +
-
+    string help = _("<p><b><big>Selecting the Default Runlevel</big</b></p>") +
+    
     // help for runlevel - installation proposal, part 2
-    _("<p><b><big>Available Runlevels</big></b>
-<li><tt>2</tt> - Local multiuser mode without remote network
-(no network service is available).</li>
-<li><tt>3</tt> - Full multiuser mode with network
-(no GUI is available).</li>
-<li><tt>5</tt> - Full multiuser mode with network and X display manager
-(<tt>KDM</tt>, <tt>GDM</tt> or <tt>XDM</tt>; based on set of packages
-selected for the installation).</li>
-</p>");
+    _("<p>The runlevel is the setting that helps determine which services are
+available by default. Select the level that includes the services this system
+should allow when the system starts.</p>") +
+
+    // help for runlevel - installation proposal, part 3
+    _("<p>Runlevel <b>2</b> allows multiple users to log in to the system locally, but
+no network or network services are available.  This setting is rarely used as
+the default.</p>") +
+
+    // help for runlevel - installation proposal, part 4
+    _("<p>Runlevel <b>3</b> allows both local and remote logins and enables the
+network and any configured network services.  This setting does not start the
+graphical login manager, so graphical user interfaces cannot be used
+immediately.</p>") +
+
+    // help for runlevel - installation proposal, part 5
+    _("<p>Runlevel <b>5</b> is the most common default runlevel for workstations.  In
+addition to the network, it starts the X display manager, which allows
+graphical logins.  It also starts any other configured services.</p>") +
+
+    // help for runlevel - installation proposal, part 6
+    _("<p>If you are not sure what to select, runlevel <b>5</b> is generally a good
+choice for workstations.  Runlevel <b>3</b> is often used on servers that do
+not have a monitor and should not use graphical interfaces.</p>");
 
     Wizard::CreateDialog ();
     Wizard::SetTitleIcon ("yast-runlevel");
