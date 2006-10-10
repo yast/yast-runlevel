@@ -11,11 +11,6 @@
 
 textdomain "runlevel";
 
-/* The main () */
-y2milestone("----------------------------------------");
-y2milestone("Runlevel proposal started");
-y2milestone("Arguments: %1", WFM::Args());
-
 import "Label";
 import "RunlevelEd";
 import "Summary";
@@ -23,46 +18,173 @@ import "Arch";
 import "ProductFeatures";
 import "Linuxrc";
 import "Mode";
+import "Wizard";
+import "Popup";
 
-include "runlevel/ui.ycp";
+/* The main () */
+y2milestone("----------------------------------------");
+y2milestone("Runlevel proposal started");
+y2milestone("Arguments: %1", WFM::Args());
 
 string func = (string) WFM::Args(0);
 map param = (map) WFM::Args(1);
 map ret = $[];
 
-define symbol RL() {
-
-    UI::OpenDialog(`VBox(
-	/* Heading label */
-	`Heading( _("Set Default Runlevel") ),
-	`VSpacing( 0.7 ),
-	    /* ComboBox label */
-	    `ComboBox (`id (`default_rl), `opt (`hstretch), _("&Default Runlevel:"), getDefaultPicker (`proposal)),
-	`VSpacing( 0.5 ),
-	`HBox(
-	    `HStretch(),
-	    `HWeight(1, `PushButton(`id(`ok), `opt(`default, `key_F10),
-	    Label::OKButton() )),
-	    `HStretch(),
-	    `HWeight(1, `PushButton(`id(`cancel), `opt (`key_F9),
-	    Label::CancelButton())),
-	    `HStretch()
-	)
-    ));
-
-    any ret = UI::UserInput();
-    if(ret == `ok) {
-	RunlevelEd::default_runlevel = (string) UI::QueryWidget(`id(`default_rl), `Value);
-	UI::CloseDialog();
-	return `next;
+// Bugzilla #166918
+boolean CheckSelectedRunlevel (string selected_runlevel) {
+    if (selected_runlevel == nil) {
+	y2error("CheckSelectedRunlevel(nil)");
+	return true;
     }
-    UI::CloseDialog();
-    return `back;
+
+    boolean vnc = Linuxrc::vnc ();
+    boolean ssh = Linuxrc::usessh ();
+
+    // VNC needs runlevel 5
+    if (vnc && selected_runlevel != "5") {
+	y2warning("VNC nstallation, but selected mode is %1", selected_runlevel);
+	return Popup::YesNo (
+	    sformat (
+		// popup question, %1 means the current runlevel (number)
+		_("VNC needs runlevel 5 to run correctly.
+No graphical system login will be available
+after the computer is rebooted.
+
+Are you sure you want to use runlevel %1 instead?"),
+		selected_runlevel
+	    )
+	);
+    // SSH (installation) needs network
+    } else if (ssh && ! contains(["3", "5"], selected_runlevel)) {
+	y2warning("SSHD nstallation, but selected mode is %1", selected_runlevel);
+	return Popup::YesNo (
+	    sformat (
+		// popup question, %1 means the current runlevel (number)
+		_("SSH needs running network.
+You have selected a non-network runlevel.
+Recommended runlevels are 3 or 5.
+
+Are you sure you want to use %1 instead?"),
+		selected_runlevel
+	    )
+	);
+    }
+    
+    return true;
+}
+
+define symbol RLDialog () {
+
+    term known_runlevels = `VBox();
+    string currently_selected_runlevel = "";
+
+    list <term> runlevels = (list <term>) sort (RunlevelEd::getDefaultPicker (`proposal));
+
+    foreach (term one_runlevel, runlevels, {
+	string current_id = one_runlevel[0,0]:"";
+
+	known_runlevels = add (known_runlevels,
+	    `Left (`RadioButton (
+		`id (current_id),
+		sformat ("&%1", one_runlevel[1]:"")
+	    ))
+	);
+	
+	if ((boolean) one_runlevel[2]:false == true)
+	    currently_selected_runlevel = current_id;
+    });
+    
+    // dialog caption
+    string title =  _("Set Default Runlevel");
+
+    term contents = `VBox (
+	`RadioButtonGroup (`id (`selected_runlevel), `Frame (
+	    // frame label
+	    _("Available Runlevels"),
+	    `HSquash (
+		`MarginBox (
+		    0.5, 0.5,
+		    known_runlevels
+		)
+	    )
+	))
+    );
+
+    // made by rwalter@novell.com, bug #206664 comment #8
+    // help for runlevel - installation proposal, part 1
+    string help = _("<p><b><big>Selecting the Default Runlevel</big</b></p>") +
+    
+    // help for runlevel - installation proposal, part 2
+    _("<p>The runlevel is the setting that helps determine which services are
+available by default. Select the level that includes the services this system
+should allow when the system starts.</p>") +
+
+    // help for runlevel - installation proposal, part 3
+    _("<p>Runlevel <b>2</b> allows multiple users to log in to the system locally, but
+no network or network services are available.  This setting is rarely used as
+the default.</p>") +
+
+    // help for runlevel - installation proposal, part 4
+    _("<p>Runlevel <b>3</b> allows both local and remote logins and enables the
+network and any configured network services.  This setting does not start the
+graphical login manager, so graphical user interfaces cannot be used
+immediately.</p>") +
+
+    // help for runlevel - installation proposal, part 5
+    _("<p>Runlevel <b>5</b> is the most common default runlevel for workstations.  In
+addition to the network, it starts the X display manager, which allows
+graphical logins.  It also starts any other configured services.</p>") +
+
+    // help for runlevel - installation proposal, part 6
+    _("<p>If you are not sure what to select, runlevel <b>5</b> is generally a good
+choice for workstations.  Runlevel <b>3</b> is often used on servers that do
+not have a monitor and should not use graphical interfaces.</p>");
+
+    Wizard::CreateDialog ();
+    Wizard::SetTitleIcon ("yast-runlevel");
+    Wizard::HideAbortButton ();
+    Wizard::SetContentsButtons (title, contents, help, Label::CancelButton(), Label::AcceptButton());
+
+    if (currently_selected_runlevel != "" && currently_selected_runlevel != nil) {
+	UI::ChangeWidget (`id (`selected_runlevel), `CurrentButton, currently_selected_runlevel);
+    }
+
+    symbol dialog_ret = nil;
+
+    while (true) {
+	any ret = UI::UserInput();
+	y2milestone ("UI Ret: %1", ret);
+	
+	if (ret == `next || ret == `ok) {
+	    string selected_runlevel = (string) UI::QueryWidget (`id(`selected_runlevel), `CurrentButton);
+
+	    // if the selected runlevel is OK
+	    // or user explicitly accepts the wrong runlevel...
+	    if (CheckSelectedRunlevel (selected_runlevel)) {
+		dialog_ret = `next;
+		RunlevelEd::default_runlevel = selected_runlevel;
+		break;
+	    // next loop
+	    } else {
+		continue;
+	    }
+	} else {
+	    dialog_ret = `back;
+	    break;
+	} 
+    }
+    y2milestone("Selected Runlevel: %1", RunlevelEd::default_runlevel);
+
+    Wizard::CloseDialog();
+
+    return dialog_ret;
 }
 
 /* create a textual proposal */
 if(func == "MakeProposal") {
     boolean force_reset = param["force_reset"]:false;
+
+    string warning = "";
 
     // find out proposal parameters, ie. what it depends on
     // some architectures don't have X at all
@@ -88,29 +210,49 @@ if(func == "MakeProposal") {
 	RunlevelEd::x11_selected = x11_selected;
 
 	// do the proposal
-    if( ! Mode::autoinst() ) {
-    	RunlevelEd::default_runlevel = ((x11_needed && x11_selected) || vnc)? "5": "3";
-	// ssh installation, no X-configuration possible, #149071
-	if (ssh) RunlevelEd::default_runlevel = "3";
-    }
-	if (forced_runlevel != "")
-	{
+	if (! Mode::autoinst()) {
+    	    RunlevelEd::default_runlevel = ((x11_needed && x11_selected) || vnc) ? "5": "3";
+	    // ssh installation, no X-configuration possible, #149071
+	    if (ssh) RunlevelEd::default_runlevel = "3";
+	}
+
+	if (forced_runlevel != "") {
 	    RunlevelEd::default_runlevel = forced_runlevel;
 	}
+
+
     }
+
+    // Bugzilla #166918
+    if (vnc && RunlevelEd::default_runlevel != "5") {
+	warning = warning +
+	    // proposal warning, VNC needs runlevel 5, but the selected one is not 5
+	    _("<li>VNC needs runlevel 5 to run correctly.
+No graphical system login will be available after the computer is rebooted.</li>");
+    }
+    if (ssh && ! contains (["3", "5"], RunlevelEd::default_runlevel)) {
+	warning = warning +
+	    // proposal warning, SSH needs runlevel 3 or 5, but the selected one is neither one of them
+	    _("<li>SSH needs runlevel 3 or 5, but you have currently selected a non-network one.</li>");
+    }
+
     string proposal = RunlevelEd::ProposalSummary ();
 
     ret = $[
 	"preformatted_proposal" : proposal,
-	// "warning_level" : nil,
-	// "warning" : nil,
     ];
+
+    // set warning, if it is not empty
+    if (warning != "") {
+	ret["warning_level"] = `warning;
+	ret["warning"]       = "<ul>" + warning + "</ul>";
+    }
 }
 /* run the module */
 else if(func == "AskUser") {
     map stored = RunlevelEd::Export();
-    symbol result = RL(); //(symbol) WFM::CallFunction("runlevel", [.propose]);
-    if(result != `next) RunlevelEd::Import(stored);
+    symbol result = RLDialog();
+    if (result != `next) RunlevelEd::Import (stored);
     y2debug("stored=%1", stored);
     y2debug("result=%1", result);
     ret = $[ "workflow_sequence" : result ];
