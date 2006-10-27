@@ -38,4 +38,5 @@ Summary:	Configuration of runlevel
 %dir @moduledir@
 @moduledir@/RunlevelEd.ycp
 @moduledir@/RunlevelEd.ybc
+@schemadir@/autoyast/rnc/runlevels.rnc
 %doc @docdir@
