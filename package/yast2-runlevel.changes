@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Oct 27 09:33:17 CEST 2006 - locilka@suse.cz
+
+- Added runlevels.rnc for AutoYaST profile validation (#215248).
+- 2.13.11
+
+-------------------------------------------------------------------
 Tue Sep 26 16:00:36 CEST 2006 - locilka@suse.cz
 
 - Added new marvelous help for runlevel in installation proposal
