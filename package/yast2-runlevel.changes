@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jan 18 17:22:10 CET 2007 - locilka@suse.cz
+
+- Consistent button labels vs. help text (#235792).
+- 2.15.0
+
+-------------------------------------------------------------------
 Fri Oct 27 09:30:19 CEST 2006 - locilka@suse.cz
 
 - Added runlevels.rnc for AutoYaST profile validation (#215248).
