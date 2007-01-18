@@ -1292,10 +1292,10 @@ Select runlevels in which to run the currently selected service.<ul>
 ")
 	    +
 	    // help text
-	    // Activate is a button
-	    _("<p><b>Activate</b> starts the selected service and services
+	    // 'Enable' is a button, 'Disable' is a button
+	    _("<p><b>Enable</b> starts the selected service and services
 that it depends on and enables them to start at system boot time.
-Likewise, <b>Deactivate</b> stops services that depend on a given service
+Likewise, <b>Disable</b> stops services that depend on a given service
 and the service itself and disables their start at system boot time.</p>")
 	    +
 	    // help text
@@ -1312,20 +1312,22 @@ and the service itself and disables their start at system boot time.</p>")
 	    `Table (`id (`table), `opt (`notify, `immediate),
 		    `header (_("Service"), _("Enabled"), _("Description")),
 		    servicesToTable (`simple)
-		),
+	    ),
 	    `VSquash (
 		`HBox (
 		    `VSpacing (4.3), // 3+borders in qt, 3 in curses
 		    `RichText (`id (`description), `opt (`shrinkable, `vstretch), "")
 		    )
-		),
-	    `HBox (
-		// Button label
-		`PushButton (`id (`enable), `opt (`key_F3),  _("Ena&ble")),
-		// Button label
-		`PushButton (`id (`disable), `opt (`key_F5), _("&Disable"))
+	    ),
+	    `Left (
+		`HBox (
+		    // Button label
+		    `PushButton (`id (`enable), `opt (`key_F3),  _("&Enable")),
+		    // Button label
+		    `PushButton (`id (`disable), `opt (`key_F5), _("&Disable"))
 		)
-	    );
+	    )
+	);
 	// dialog caption.
 	Wizard::SetContentsButtons (_("System Services (Runlevel): Services"), contents, help_text, Label::BackButton(), Label::FinishButton());
 	Wizard::DisableBackButton ();
