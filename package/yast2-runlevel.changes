@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Mar 13 11:08:48 CET 2007 - locilka@suse.cz
+
+- Removed unneded BuildRequires (faster build)
+- 2.15.1
+
+-------------------------------------------------------------------
 Thu Jan 18 17:22:10 CET 2007 - locilka@suse.cz
 
 - Consistent button labels vs. help text (#235792).
