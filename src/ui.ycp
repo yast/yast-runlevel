@@ -27,6 +27,7 @@
     import "Label";
     import "Popup";
     import "FileUtils";
+    import "String";
 
     define string StartedText (integer started);
     define string BstatusText (boolean disabled, integer started);
@@ -184,8 +185,13 @@
     define void changeService1 (map service) ``{
 	if (service["started"]:-1 < 0)
 	{
-	    integer started = Service::RunInitScriptWithTimeOut (current_service,
-		"status" + sformat(" 2>&1 1>%1/runlevel_out", SCR::Read(.target.tmpdir)));
+	    string outfile = sformat ("'%1/runlevel_out_%2'", SCR::Read(.target.tmpdir), String::Quote(current_service));
+
+	    integer started = Service::RunInitScriptWithTimeOut (
+		current_service,
+		"status" + sformat(" 2>&1 1>%1", outfile)
+	    );
+
 	    service["started"] = started;
 	    RunlevelEd::services[current_service] = service;
 	    updateStatusColumn (current_service, started);
@@ -507,8 +513,12 @@
      */
     define void updateServiceStatus (boolean use_func, string service_name) ``{
 	if (RunlevelEd::services[service_name, "started"]:-1 < 0) {
-    	    integer started = Service::RunInitScriptWithTimeOut (service_name,
-		"status" + sformat(" 2>&1 1>%1/runlevel_out", SCR::Read(.target.tmpdir)));
+	    string file_out = sformat ("'%1/runlevel_out_%2'", SCR::Read (.target.tmpdir), String::Quote (service_name));
+
+    	    integer started = Service::RunInitScriptWithTimeOut (
+		service_name,
+		"status" + sformat (" 2>&1 1>%1", file_out)
+	    );
 
 	    RunlevelEd::services[service_name, "started"] = started;
 
@@ -842,7 +852,6 @@ and enabled, because it depends on them:
 	return ModifyServiceDep (service_name, [], enable, false, true);
     }
 
-
     /**
      * Starts/stops/checks status of a service
      * @param service_name service to start/stop
@@ -853,7 +862,9 @@ and enabled, because it depends on them:
 					 string command) ``{
 	UI::OpenDialog (`Label (service_name + " " + command));
 	y2milestone("%1 -> %2", service_name, command);
-	string log_filename = sformat("%1/runlevel_out", (string) SCR::Read(.target.tmpdir));
+
+	string log_filename = sformat ("'%1/runlevel_out_%2'", (string) SCR::Read(.target.tmpdir), String::Quote(service_name));
+
 	integer cmd_run = Service::RunInitScriptWithTimeOut (
 	    service_name,
 	    command + sformat(" 2>&1 1>%1", log_filename)
