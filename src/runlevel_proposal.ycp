@@ -142,8 +142,10 @@ not have a monitor and should not use graphical interfaces.</p>");
 
     Wizard::CreateDialog ();
     Wizard::SetTitleIcon ("yast-runlevel");
-    Wizard::HideAbortButton ();
-    Wizard::SetContentsButtons (title, contents, help, Label::CancelButton(), Label::AcceptButton());
+    
+    Wizard::SetContentsButtons (title, contents, help, Label::BackButton(), Label::AcceptButton());
+    Wizard::SetAbortButton (`cancel, Label::CancelButton());
+    Wizard::DisableBackButton();
 
     if (currently_selected_runlevel != "" && currently_selected_runlevel != nil) {
 	UI::ChangeWidget (`id (`selected_runlevel), `CurrentButton, currently_selected_runlevel);
@@ -169,7 +171,7 @@ not have a monitor and should not use graphical interfaces.</p>");
 		continue;
 	    }
 	} else {
-	    dialog_ret = `back;
+	    dialog_ret = `cancel;
 	    break;
 	} 
     }
