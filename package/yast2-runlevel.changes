@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Aug 29 15:04:37 CEST 2007 - locilka@suse.cz
+
+- Fixed used buttons in runlevel proposal (#305899).
+- 2.15.3
+
+-------------------------------------------------------------------
 Thu Jul 12 09:44:41 CEST 2007 - locilka@suse.cz
 
 - Changed using temporary files handling to prevent from collisions
