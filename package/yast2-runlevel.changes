@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Nov  1 16:10:27 CET 2007 - locilka@suse.cz
+
+- Removed dependency on yast2-update
+- Client runlevel_finish doesn't rewrite runlevel configuration in
+  case of update - /etc/inittab is not owned by yast2-runlevel.
+- 2.16.0
+
+-------------------------------------------------------------------
 Wed Aug 29 15:04:37 CEST 2007 - locilka@suse.cz
 
 - Fixed used buttons in runlevel proposal (#305899).
