@@ -5,9 +5,6 @@
 BuildRequires:	perl-XML-Writer update-desktop-files yast2 yast2-devtools yast2-testsuite
 Requires:       yast2
 
-# Required only in Inst-Sys
-# Requires:	yast2-update
-
 Provides:	yast2-config-runlevel
 Obsoletes:	yast2-config-runlevel
 Provides:	yast2-trans-runlevel

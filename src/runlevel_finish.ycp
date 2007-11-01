@@ -19,7 +19,6 @@ textdomain "runlevel";
 import "Mode";
 import "RunlevelEd";
 import "Directory";
-import "Update";
 
 any ret = nil;
 string func = "";
@@ -67,10 +66,7 @@ else if (func == "Write")
     }
     else
     {
-	// Set default runlevel cause inittab will be overwritten by
-	// installing aaa_base
-
-	set_runlevel (Update::last_runlevel != -1 ? Update::last_runlevel : 3);
+	y2milestone ("Update mode, no need to set runlevel again...");
     }
 
 }
