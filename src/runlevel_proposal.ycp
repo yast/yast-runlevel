@@ -125,7 +125,7 @@ no network or network services are available.  This setting is rarely used as
 the default.</p>") +
 
     // help for runlevel - installation proposal, part 4
-    _("<p>Runlevel <b>3</b> allows both local and remote logins and enables the
+    _("<p>Runlevel <b>3</b> allows both, local and remote logins and enables the
 network and any configured network services.  This setting does not start the
 graphical login manager, so graphical user interfaces cannot be used
 immediately.</p>") +
