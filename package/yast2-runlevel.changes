@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Feb 19 14:09:14 CET 2008 - locilka@suse.cz
+
+- merged proofed texts
+- 2.13.12
+
+-------------------------------------------------------------------
 Fri Oct 27 09:33:17 CEST 2006 - locilka@suse.cz
 
 - Added runlevels.rnc for AutoYaST profile validation (#215248).
