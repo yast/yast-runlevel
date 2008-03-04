@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Mar  4 12:54:28 CET 2008 - locilka@suse.cz
+
+- Using SetTitleIcon instead of SetDesktopIcon (bnc #366355).
+- 2.16.1
+
+-------------------------------------------------------------------
 Thu Nov  1 16:10:27 CET 2007 - locilka@suse.cz
 
 - Removed dependency on yast2-update
