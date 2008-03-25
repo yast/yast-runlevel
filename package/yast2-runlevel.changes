@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Mar 25 16:30:43 CET 2008 - locilka@suse.cz
+
+- Fixed exception in runlevel_proposal, sometimes both VNC and SSH
+  installation methods can be used together. Proposing runlevel (3
+  or 5) depending on the current UI (X: 5, Text: 3) (bnc #373604).
+- 2.16.2
+
+-------------------------------------------------------------------
 Mon Mar 17 12:43:32 CET 2008 - jsrain@suse.cz
 
 - added 'StartupNotify=true' to the desktop file (bnc #304964)
