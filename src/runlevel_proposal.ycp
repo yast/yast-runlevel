@@ -205,24 +205,34 @@ if(func == "MakeProposal") {
 
     // check only what the user can change at this time
     // Initially the module variables are nil so the condition triggers
-    if (RunlevelEd::x11_selected != x11_selected ||
-	force_reset)
-    {
+    if (RunlevelEd::x11_selected != x11_selected || force_reset) {
 	// update parameters
 	RunlevelEd::x11_selected = x11_selected;
 
 	// do the proposal
 	if (! Mode::autoinst()) {
-    	    RunlevelEd::default_runlevel = ((x11_needed && x11_selected) || vnc) ? "5": "3";
-	    // ssh installation, no X-configuration possible, #149071
-	    if (ssh) RunlevelEd::default_runlevel = "3";
+	    // the default runlevel selection
+	    RunlevelEd::default_runlevel = (x11_needed && x11_selected) ? "5":"3";
+
+	    // Both VNC and SSH installation, let's assume that user wants
+	    // to continue later using the same runlevel as it uses now
+	    // bnc #373604
+	    if (vnc && ssh) {
+		map display_info = UI::GetDisplayInfo();
+		// if currently installing in TextMode, 3 is selected, otherwise 5
+		RunlevelEd::default_runlevel = (display_info["TextMode"]:false == true) ? "3":"5";
+	    // VNC installation
+	    } else if (vnc) {
+		RunlevelEd::default_runlevel = "5";
+	    // ssh installation, no X-configuration possible, bnc #149071
+	    } else if (ssh) {
+		RunlevelEd::default_runlevel = "3";
+	    }
 	}
 
 	if (forced_runlevel != "") {
 	    RunlevelEd::default_runlevel = forced_runlevel;
 	}
-
-
     }
 
     // Bugzilla #166918
@@ -249,6 +259,8 @@ No graphical system login will be available after the computer is rebooted.</li>
 	ret["warning_level"] = `warning;
 	ret["warning"]       = "<ul>" + warning + "</ul>";
     }
+
+    y2milestone ("Runlevel proposal: %1", ret);
 }
 /* run the module */
 else if(func == "AskUser") {
