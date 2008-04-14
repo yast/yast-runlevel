@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Apr 14 12:27:32 CEST 2008 - locilka@suse.cz
+
+- Unified Button Labels: OK instead of Accept (fate #120373).
+- 2.16.3
+
+-------------------------------------------------------------------
 Tue Mar 25 16:30:43 CET 2008 - locilka@suse.cz
 
 - Fixed exception in runlevel_proposal, sometimes both VNC and SSH
