@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon May  5 14:29:19 CEST 2008 - locilka@suse.cz
+
+- Propose runlevel 5 for live installation.
+- 2.16.5
+
+-------------------------------------------------------------------
 Mon Apr 28 12:21:50 CEST 2008 - jsrain@suse.cz
 
 - store runlevel during live installation (bnc #381426)

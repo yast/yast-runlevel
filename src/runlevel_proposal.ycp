@@ -192,6 +192,7 @@ if(func == "MakeProposal") {
     // some architectures don't have X at all
     boolean x11_needed = Arch::x11_setup_needed ();		// constant
     boolean x11_selected = Pkg::IsSelected ("xorg-x11");	// variable
+    boolean live_medium = Mode::live_installation();
     // But if we install over VNC, we want RL 5 (and kdm) even though
     // there's no X.
 
@@ -200,8 +201,9 @@ if(func == "MakeProposal") {
 
     // we can be overriden
     string forced_runlevel = (string)ProductFeatures::GetFeature("globals", "runlevel");
-    y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3, ssh %4, forced: '%5'",
-		 x11_needed, x11_selected, vnc, ssh, forced_runlevel);
+
+    y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3, ssh %4, forced: '%5', live_medium: %6",
+		 x11_needed, x11_selected, vnc, ssh, forced_runlevel, live_medium);
 
     // check only what the user can change at this time
     // Initially the module variables are nil so the condition triggers
@@ -212,7 +214,8 @@ if(func == "MakeProposal") {
 	// do the proposal
 	if (! Mode::autoinst()) {
 	    // the default runlevel selection
-	    RunlevelEd::default_runlevel = (x11_needed && x11_selected) ? "5":"3";
+	    // see also bnc #381426 for live-medium
+	    RunlevelEd::default_runlevel = ((x11_needed && x11_selected) || live_medium) ? "5":"3";
 
 	    // Both VNC and SSH installation, let's assume that user wants
 	    // to continue later using the same runlevel as it uses now
