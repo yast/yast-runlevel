@@ -2,6 +2,8 @@
 Thu Jun 12 10:53:00 CEST 2008 - locilka@suse.cz
 
 - [Cancel] [Back] [Finish] (bnc #398502)
+- Special treatment for special service restart: xdm and earlyxdm
+  (bnc #399608)
 
 -------------------------------------------------------------------
 Fri May 16 16:40:22 CEST 2008 - jsrain@suse.cz
