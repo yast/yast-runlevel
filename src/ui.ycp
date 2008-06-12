@@ -1341,6 +1341,7 @@ and the service itself and disables their start at system boot time.</p>")
 	);
 	// dialog caption.
 	Wizard::SetContentsButtons (_("System Services (Runlevel): Services"), contents, help_text, Label::BackButton(), Label::FinishButton());
+	Wizard::SetAbortButton (`abort, Label::CancelButton());
 	Wizard::DisableBackButton ();
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
@@ -1578,6 +1579,7 @@ name or the name specified is already in use."));
 	    );
 	// dialog caption.
 	Wizard::SetContentsButtons (_("System Services (Runlevel): Details"), contents, getHelpAuto (), Label::BackButton(), Label::FinishButton());
+	Wizard::SetAbortButton (`abort, Label::CancelButton());
 	Wizard::DisableBackButton ();
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
