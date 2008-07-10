@@ -125,17 +125,21 @@ no network or network services are available.  This setting is rarely used as
 the default.</p>") +
 
     // help for runlevel - installation proposal, part 4
+    _("<p>Runlevel <b>4</b> is an expert user mode. Don't use it unless you really
+need it.</p>") +
+
+    // help for runlevel - installation proposal, part 5
     _("<p>Runlevel <b>3</b> allows both local and remote logins and enables the
 network and any configured network services.  This setting does not start the
 graphical login manager, so graphical user interfaces cannot be used
 immediately.</p>") +
 
-    // help for runlevel - installation proposal, part 5
+    // help for runlevel - installation proposal, part 6
     _("<p>Runlevel <b>5</b> is the most common default runlevel for workstations.  In
 addition to the network, it starts the X display manager, which allows
 graphical logins.  It also starts any other configured services.</p>") +
 
-    // help for runlevel - installation proposal, part 6
+    // help for runlevel - installation proposal, part 7
     _("<p>If you are not sure what to select, runlevel <b>5</b> is generally a good
 choice for workstations.  Runlevel <b>3</b> is often used on servers that do
 not have a monitor and should not use graphical interfaces.</p>");

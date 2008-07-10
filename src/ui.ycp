@@ -1149,7 +1149,9 @@ Select runlevels in which to run the currently selected service.<ul>
 
 	while (`next != ret && `back != ret && `abort != ret && `simple != ret)
 	    {
-		if (ret != nil) y2milestone("RET: %1", ret);
+		if (ret != nil && ret != `table)
+		    y2milestone("RET: %1", ret);
+
 		// Kludge, because a `Table still does not have a shortcut.
 		// #16116
 		UI::SetFocus (`id (`table));
@@ -1340,7 +1342,7 @@ and the service itself and disables their start at system boot time.</p>")
 	    )
 	);
 	// dialog caption.
-	Wizard::SetContentsButtons (_("System Services (Runlevel): Services"), contents, help_text, Label::BackButton(), Label::FinishButton());
+	Wizard::SetContentsButtons (_("System Services (Runlevel): Services"), contents, help_text, Label::BackButton(), Label::OKButton());
 	Wizard::SetAbortButton (`abort, Label::CancelButton());
 	Wizard::DisableBackButton ();
 
@@ -1587,7 +1589,7 @@ name or the name specified is already in use."));
 		)
 	    );
 	// dialog caption.
-	Wizard::SetContentsButtons (_("System Services (Runlevel): Details"), contents, getHelpAuto (), Label::BackButton(), Label::FinishButton());
+	Wizard::SetContentsButtons (_("System Services (Runlevel): Details"), contents, getHelpAuto (), Label::BackButton(), Label::OKButton());
 	Wizard::SetAbortButton (`abort, Label::CancelButton());
 	Wizard::DisableBackButton ();
 
