@@ -73,7 +73,7 @@ else if (func == "Change") {
         RunlevelEd::runlevels = (list<string>) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (RunlevelEd::runlevels))
 	{
-            RunlevelEd::runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+            RunlevelEd::runlevels = ["0", "1", "2", "3", "4", "5", "6", "S", ];
 	}
 
 	//..

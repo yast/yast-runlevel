@@ -152,8 +152,14 @@
 	runlevels= (list<string>) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))
 	{
-	    runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+	    runlevels = ["0", "1", "2", "3", "4", "5", "6", "S", ];
 	}
+
+	if (! contains (runlevels, "4")) {
+	    y2milestone ("Adding runlevel 4");
+	    runlevels = sort (add (runlevels, "4"));
+	}
+
 	Progress::NextStep ();
 
 	current = (string) SCR::Read (.init.scripts.current_runlevel);
@@ -456,6 +462,16 @@ Further dependency checking will be disabled."));
 
 	if (default_runlevel != default_orig)
 	    SCR::Write (.init.scripts.default_runlevel, default_runlevel);
+
+	if (default_runlevel == "4") {
+	    // If not in use, the whole runlevel is commented out!
+	    y2milestone ("Runlevel 4 in use!");
+	    SCR::Execute (.target.bash, "sed --in-place 's/^\\(#\\)\\(l4:4:wait:\\/etc\\/init.d\\/rc 4\\)/\\2/' /etc/inittab");
+	} else {
+	    y2milestone ("Runlevel %1 in use...", default_runlevel);
+	    SCR::Execute (.target.bash, "sed --in-place 's/^\\(l4:4:wait:\\/etc\\/init.d\\/rc 4\\)/#\\1/' /etc/inittab");
+	}
+
 	Progress::NextStep ();
 
 	map<string,map> failed = (map<string, map>)filter (string k, map v, services, ``{
@@ -579,7 +595,7 @@ Further dependency checking will be disabled."));
 	runlevels = (list<string>) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))
 	{
-	    runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+	    runlevels = ["0", "1", "2", "3", "4", "5", "6", "S", ];
 	}
 
 	//..
@@ -914,16 +930,21 @@ global integer ServiceRemove(string service, list<string> rls)
     global list getDefaultPicker (symbol mode) ``{
         list items = [];
         list<string> rls = RunlevelEd::runlevels;
+
         if (mode == `auto)
         {
+	    if (! contains (rls, "4")) rls = sort (add (rls, "4"));
             rls = prepend (rls, "");
         }
         else if (mode == `proposal)
         {
             // We could read the list from SCR (#37071) but
             // inittab in the inst-sys is pre-lsb so we have to override it
-            rls = ["2", "3", "5"];
+	    //
+	    // "4" added because of FATE #303798
+            rls = ["2", "3", "4", "5"];
         }
+	y2milestone ("Mode %1 items %2", mode, rls);
 
         foreach (string i, rls, ``{
             // which ones to avoid: #36110
