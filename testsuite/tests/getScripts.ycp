@@ -8,10 +8,6 @@
     // testedfiles: RunlevelEd.ycp Testsuite.ycp
 
     include "testsuite.ycp";
-    import "RunlevelEd";
-    import "Progress";
-
-    Progress::off ();
 
     // outdated, does not matter
     map insserv_conf = $[
@@ -54,8 +50,20 @@
 		"current_runlevel" : "5",
 		"default_runlevel" : "5",
                 ]
-            ]
+            ],
+    	    "target" : $[
+        	"size" : -1,
+    	    ],
         ];
+    TESTSUITE_INIT ([READ, $[], $[]], nil);
+
+    import "RunlevelEd";
+
+    import "Progress";
+
+    Progress::off ();
+
+
 
     TEST (``(RunlevelEd::Read ()), [READ] , 0);
     DUMP (RunlevelEd::services);

@@ -3,6 +3,14 @@
     // testedfiles: ui.ycp Testsuite.ycp
 
     include "testsuite.ycp";
+
+    map READ = $[
+        "target" : $[
+            "size" : -1,
+        ],
+    ];
+    TESTSUITE_INIT ([READ, $[], $[]], nil);
+
     import "RunlevelEd";
     include "runlevel/ui.ycp";
 

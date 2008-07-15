@@ -9,13 +9,6 @@
     include "testsuite.ycp";
     import "Progress";
     import "Report";
-    import "RunlevelEd";
-    include "runlevel/toposort.ycp";
-
-    Progress::off ();
-    Report::DisplayErrors (false, 0);
-
-    DUMP (size (comments));
 
     // assume all the services are enabled
     map all_enabled = mapmap (string service, map descr, comments, ``(
@@ -32,6 +25,7 @@
 				      "stop": [],
 				      ]]
 				  ));
+
     map READ = $[
 	"init" : $[
 	    "insserv_conf": insserv_conf,
@@ -42,8 +36,23 @@
 		"comments" : comments,
 		"runlevels" : all_enabled,
 		]
-	    ]
+	    ],
+    	    "target" : $[
+        	"size" : -1,
+    	    ],
 	];
+    TESTSUITE_INIT ([READ, $[], $[]], nil);
+
+    import "RunlevelEd";
+    include "runlevel/toposort.ycp";
+
+    Progress::off ();
+    Report::DisplayErrors (false, 0);
+
+    DUMP (size (comments));
+
+
+
 
 
     TEST ( ``(RunlevelEd::Read ()), [READ], nil);
