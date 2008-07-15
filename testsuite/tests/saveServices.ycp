@@ -7,10 +7,6 @@
     // testedfiles: RunlevelEd.ycp Service.ycp Testsuite.ycp
 
     include "testsuite.ycp";
-    import "RunlevelEd";
-    import "Progress";
-
-    Progress::off ();
 
     map READ = $[
 	"init": $[
@@ -18,7 +14,18 @@
 		"exists": true,
 		],
 	    ],
+    	    "target" : $[
+        	"size" : -1,
+    	    ],
 	];
+    TESTSUITE_INIT ([READ, $[], $[]], nil);
+
+    import "RunlevelEd";
+    import "Progress";
+
+    Progress::off ();
+
+
     map EXEC = $[
 	"target": $[
 	    "bash_output": $[ "exit": 0, "stdout": "", "stderr": "", ],
