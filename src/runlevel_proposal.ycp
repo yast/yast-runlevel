@@ -30,6 +30,8 @@ string func = (string) WFM::Args(0);
 map param = (map) WFM::Args(1);
 map ret = $[];
 
+RunlevelEd::Init();
+
 // Bugzilla #166918
 boolean CheckSelectedRunlevel (string selected_runlevel) {
     if (selected_runlevel == nil) {

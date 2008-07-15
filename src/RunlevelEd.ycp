@@ -1005,11 +1005,11 @@ global integer ServiceRemove(string service, list<string> rls)
     boolean already_initialized = false;
 
     /**
-     * Constructor...
+     * Init function.
      *
      * @see FATE #303798: YaST2 runlevel editor: offer easy enablement and configuration of runlevel 4
      */
-    global void RunlevelEd () {
+    global void Init () {
 	if (already_initialized)
 	    return;
 

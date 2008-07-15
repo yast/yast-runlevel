@@ -46,7 +46,7 @@ y2debug("func=%1", func);
 y2debug("param=%1", param);
 
 
-
+RunlevelEd::Init();
 // We take data from underlying system
 // RunlevelEd::Read ();
 
