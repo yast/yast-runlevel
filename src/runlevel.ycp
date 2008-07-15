@@ -211,7 +211,7 @@ map cmdline = $[
 y2milestone("----------------------------------------");
 y2milestone("System service (runlevel) started");
 
-
+RunlevelEd::Init();
 any ret = CommandLine::Run(cmdline);
     
 y2milestone("System service (runlevel) finished");
