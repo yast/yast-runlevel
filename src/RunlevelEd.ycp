@@ -23,8 +23,38 @@
     import "Summary";
     import "Report";
     import "CommandLine";
+    import "ProductControl";
+    import "ProductFeatures";
 
     include "runlevel/toposort.ycp";
+
+    // default value defined in control_file->defaults->rle_offer_rulevel_4
+    boolean offer_runlevel_4 = false;
+
+    /**
+     * Sets whether runlevel 4 should be supported.
+     *
+     * @param boolean new_state (true == supported)
+     * @see FATE #303798
+     */
+    global void SetRunlevel4Support (boolean new_state) {
+	if (new_state == nil) {
+	    y2error ("Wrong runlevel4 value");
+	    return;
+	}
+
+	offer_runlevel_4 = new_state;
+	y2milestone ("Runlevel 4 support set to: %1", offer_runlevel_4);
+    }
+
+    /**
+     * Returns whether runlevel 4 is supported in RLEd.
+     *
+     * @return boolean supported
+     */
+    global boolean GetRunlevel4Support () {
+	return offer_runlevel_4;
+    }
 
     /**
      * Proposal parameter: if it changes, we repropose
@@ -152,10 +182,14 @@
 	runlevels= (list<string>) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))
 	{
-	    runlevels = ["0", "1", "2", "3", "4", "5", "6", "S", ];
+	    if (GetRunlevel4Support()) {
+		runlevels = ["0", "1", "2", "3", "4", "5", "6", "S", ];
+	    } else {
+		runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+	    }
 	}
 
-	if (! contains (runlevels, "4")) {
+	if (GetRunlevel4Support() && ! contains (runlevels, "4")) {
 	    y2milestone ("Adding runlevel 4");
 	    runlevels = sort (add (runlevels, "4"));
 	}
@@ -595,7 +629,11 @@ Further dependency checking will be disabled."));
 	runlevels = (list<string>) SCR::Read (.init.scripts.runlevel_list);
 	if (0 == size (runlevels))
 	{
-	    runlevels = ["0", "1", "2", "3", "4", "5", "6", "S", ];
+	    if (GetRunlevel4Support()) {
+		runlevels = ["0", "1", "2", "3", "4", "5", "6", "S", ];
+	    } else {
+		runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+	    }
 	}
 
 	//..
@@ -933,7 +971,9 @@ global integer ServiceRemove(string service, list<string> rls)
 
         if (mode == `auto)
         {
-	    if (! contains (rls, "4")) rls = sort (add (rls, "4"));
+	    if (GetRunlevel4Support() && ! contains (rls, "4"))
+		rls = sort (add (rls, "4"));
+
             rls = prepend (rls, "");
         }
         else if (mode == `proposal)
@@ -942,7 +982,11 @@ global integer ServiceRemove(string service, list<string> rls)
             // inittab in the inst-sys is pre-lsb so we have to override it
 	    //
 	    // "4" added because of FATE #303798
-            rls = ["2", "3", "4", "5"];
+	    if (GetRunlevel4Support()) {
+        	rls = ["2", "3", "4", "5"];
+	    } else {
+		rls = ["2", "3", "5"];
+	    }
         }
 	y2milestone ("Mode %1 items %2", mode, rls);
 
@@ -958,5 +1002,26 @@ global integer ServiceRemove(string service, list<string> rls)
         return items;
     }
 
+    boolean already_initialized = false;
 
+    /**
+     * Constructor...
+     *
+     * @see FATE #303798: YaST2 runlevel editor: offer easy enablement and configuration of runlevel 4
+     */
+    global void RunlevelEd () {
+	if (already_initialized)
+	    return;
+
+	already_initialized = true;
+
+	boolean supported = ProductFeatures::GetBooleanFeature ("globals", "rle_offer_rulevel_4");
+
+	if (supported == nil) {
+	    y2milestone ("globals/rle_offer_rulevel_4 is missing in control file, runlevel 4 will not be supported");
+	    supported = false;
+	}
+
+	SetRunlevel4Support (supported);
+    }
 }
