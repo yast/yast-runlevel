@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Oct 13 14:18:18 CEST 2008 - locilka@suse.cz
+
+- Proposing default runlevel 3 if installed via serial console
+  (bnc #433707)
+- 2.17.2
+
+-------------------------------------------------------------------
 Tue Jul 15 15:50:06 CEST 2008 - locilka@suse.cz
 
 - Reading control file feature globals->rle_offer_rulevel_4
