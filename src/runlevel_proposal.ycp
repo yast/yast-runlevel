@@ -204,12 +204,13 @@ if(func == "MakeProposal") {
 
     boolean vnc = Linuxrc::vnc ();				// constant
     boolean ssh = Linuxrc::usessh ();				// constant
+    boolean serial = Linuxrc::serial_console ();		// constant
 
     // we can be overriden
     string forced_runlevel = (string)ProductFeatures::GetFeature("globals", "runlevel");
 
-    y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3, ssh %4, forced: '%5', live_medium: %6",
-		 x11_needed, x11_selected, vnc, ssh, forced_runlevel, live_medium);
+    y2milestone ("x11_setup_needed: %1, x11_selected: %2, vnc: %3, ssh %4, serial: %5, forced: %6, live_medium: %7",
+		 x11_needed, x11_selected, vnc, ssh, serial, forced_runlevel, live_medium);
 
     // check only what the user can change at this time
     // Initially the module variables are nil so the condition triggers
@@ -223,18 +224,22 @@ if(func == "MakeProposal") {
 	    // see also bnc #381426 for live-medium
 	    RunlevelEd::default_runlevel = ((x11_needed && x11_selected) || live_medium) ? "5":"3";
 
+	    // Installation via Serial Console expects using it later
+	    // bnc #433707
+	    if (serial) {
+		RunlevelEd::default_runlevel = "3";
 	    // Both VNC and SSH installation, let's assume that user wants
 	    // to continue later using the same runlevel as it uses now
 	    // bnc #373604
-	    if (vnc && ssh) {
+	    } else if (vnc == true && ssh == true) {
 		map display_info = UI::GetDisplayInfo();
 		// if currently installing in TextMode, 3 is selected, otherwise 5
 		RunlevelEd::default_runlevel = (display_info["TextMode"]:false == true) ? "3":"5";
 	    // VNC installation
-	    } else if (vnc) {
+	    } else if (vnc == true) {
 		RunlevelEd::default_runlevel = "5";
 	    // ssh installation, no X-configuration possible, bnc #149071
-	    } else if (ssh) {
+	    } else if (ssh == true) {
 		RunlevelEd::default_runlevel = "3";
 	    }
 	}
@@ -242,16 +247,18 @@ if(func == "MakeProposal") {
 	if (forced_runlevel != "") {
 	    RunlevelEd::default_runlevel = forced_runlevel;
 	}
+
+	y2milestone ("Default runlevel: %1", RunlevelEd::default_runlevel);
     }
 
     // Bugzilla #166918
-    if (vnc && RunlevelEd::default_runlevel != "5") {
+    if (vnc == true && RunlevelEd::default_runlevel != "5") {
 	warning = warning +
 	    // proposal warning, VNC needs runlevel 5, but the selected one is not 5
 	    _("<li>VNC needs runlevel 5 to run correctly.
 No graphical system login will be available after the computer is rebooted.</li>");
     }
-    if (ssh && ! contains (["3", "5"], RunlevelEd::default_runlevel)) {
+    if (ssh == true && ! contains (["3", "5"], RunlevelEd::default_runlevel)) {
 	warning = warning +
 	    // proposal warning, SSH needs runlevel 3 or 5, but the selected one is neither one of them
 	    _("<li>SSH needs runlevel 3 or 5, but you have currently selected a non-network one.</li>");
