@@ -1177,6 +1177,7 @@ Select runlevels in which to run the currently selected service.<ul>
 		}
 
 		current_service = (string) UI::QueryWidget (`id (`table), `CurrentItem);
+		y2milestone ("Current service: %1", current_service);
 
 		if (`abort == ret)
 		{
@@ -1418,15 +1419,16 @@ and the service itself and disables their start at system boot time.</p>")
 		    }
 		    break;
 	    }
-	    else if (`table == ret)
+	    else if (ret == `table)
 	    {
 		service = RunlevelEd::services[current_service]:$[];
 		updateDescription (service);
 	    }
 	    else if (ret == `disable)
-	    { //FIXME...
-		y2milestone ("%1", ret);
+	    {
+		y2milestone ("Current service: %1 / %2", current_service, ret);
 		boolean really = true;
+
 		if (contains (["xdm", "earlyxdm"], current_service)) {
 		    // yes-no popup. the user wants to stop xdm
 		    if (!Popup::YesNo ( _("This may kill your X session.\n\nProceed?"))) {
@@ -1434,12 +1436,13 @@ and the service itself and disables their start at system boot time.</p>")
 			really = false;
 		    }
 		}
+
 		if (really)
 		    SimpleSetServiceDep (current_service, false);
 	    }
 	    else if (`enable == ret)
-	    { //FIXME...
-		y2milestone ("%1", ret);
+	    {
+		y2milestone ("Current service: %1 / %2", current_service, ret);
 		SimpleSetServiceDep (current_service, true);
 	    }
 	}
@@ -1447,7 +1450,7 @@ and the service itself and disables their start at system boot time.</p>")
 	return (symbol) ret;
     }
 
-
+
     // Autoyast UI
     /**
      * Help text for auto-complex-screen
