@@ -205,6 +205,18 @@
 	Progress::NextStep ();
 
 	system_requires = (map<string, list<string> >) SCR::Read (.init.insserv_conf);
+
+	// bnc #435182
+	// new key: <interactive>
+	system_requires = filter (string key, list<string> val, system_requires, {
+	    if (regexpmatch (key, "\\$.+")) {
+		return true;
+	    } else {
+		y2warning ("Ignoring requirement: %1", key);
+		return false;
+	    }
+	});
+
 	Progress::NextStep ();
 
 	map details = (map) SCR::Read (.init.scripts.runlevels);
