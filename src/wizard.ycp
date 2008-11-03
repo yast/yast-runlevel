@@ -95,7 +95,7 @@ symbol RunlevelSequence() {
 
     Wizard::CreateDialog ();
     Wizard::SetTitleIcon("runlevel");
-    Wizard::DisableBackButton ();
+    Wizard::HideBackButton();
     Wizard::RestoreHelp (getHelpProgress ());
 
     symbol ret = Sequencer::Run (aliases, sequence);
@@ -118,7 +118,7 @@ symbol RunlevelAutoSequence() {
 
     Wizard::CreateDialog ();
     Wizard::SetTitleIcon("runlevel");
-    Wizard::DisableBackButton ();
+    Wizard::HideBackButton();
     Wizard::RestoreHelp (getHelpProgress ());
 
     symbol ret = Sequencer::Run (aliases, auto_sequence);

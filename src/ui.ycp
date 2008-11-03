@@ -1135,7 +1135,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	    );
 	// dialog caption.
 	Wizard::SetContents (_("System Services (Runlevel): Details"), contents, getHelpComplex (), true, true);
-	Wizard::DisableBackButton ();
+	Wizard::HideBackButton();
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = RunlevelEd::services[current_service]:$[];
@@ -1345,7 +1345,7 @@ and the service itself and disables their start at system boot time.</p>")
 	// dialog caption.
 	Wizard::SetContentsButtons (_("System Services (Runlevel): Services"), contents, help_text, Label::BackButton(), Label::OKButton());
 	Wizard::SetAbortButton (`abort, Label::CancelButton());
-	Wizard::DisableBackButton ();
+	Wizard::HideBackButton();
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = RunlevelEd::services[current_service]:$[];
@@ -1594,7 +1594,7 @@ name or the name specified is already in use."));
 	// dialog caption.
 	Wizard::SetContentsButtons (_("System Services (Runlevel): Details"), contents, getHelpAuto (), Label::BackButton(), Label::OKButton());
 	Wizard::SetAbortButton (`abort, Label::CancelButton());
-	Wizard::DisableBackButton ();
+	Wizard::HideBackButton();
 
 	UI::ChangeWidget (`id (`table), `CurrentItem, current_service);
 	service = RunlevelEd::services[current_service]:$[];
