@@ -151,7 +151,7 @@ not have a monitor and should not use graphical interfaces.</p>");
     
     Wizard::SetContentsButtons (title, contents, help, Label::BackButton(), Label::OKButton());
     Wizard::SetAbortButton (`cancel, Label::CancelButton());
-    Wizard::DisableBackButton();
+    Wizard::HideBackButton();
 
     if (currently_selected_runlevel != "" && currently_selected_runlevel != nil) {
 	UI::ChangeWidget (`id (`selected_runlevel), `CurrentButton, currently_selected_runlevel);
