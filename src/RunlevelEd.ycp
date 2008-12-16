@@ -672,6 +672,12 @@ Further dependency checking will be disabled."));
 		    start = [];
 		    stop = [];
 		}
+		// BNC #457992
+		// Reporting erroneous entries
+		else
+		{
+		    y2error ("Unsupported entry: %1 (should be enable/disable)", service);
+		}
 	    }
 	    else
 	    {

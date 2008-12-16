@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Dec 16 16:07:14 CET 2008 - locilka@suse.cz
+
+- A bit more strict Import function (bnc #457992).
+
+-------------------------------------------------------------------
 Mon Nov  3 16:14:30 CET 2008 - locilka@suse.cz
 
 - Hiding [Back] button instead of disabling it - according to the
