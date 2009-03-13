@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Mar 13 12:39:35 CET 2009 - locilka@suse.cz
+
+- Solving MenuButton shortcut conflicts (bnc #50003 c#39).
+
+-------------------------------------------------------------------
 Tue Dec 16 16:07:14 CET 2008 - locilka@suse.cz
 
 - A bit more strict Import function (bnc #457992).
