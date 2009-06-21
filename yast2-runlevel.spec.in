@@ -10,7 +10,7 @@ Obsoletes:	yast2-config-runlevel
 Provides:	yast2-trans-runlevel
 Obsoletes:	yast2-trans-runlevel
 BuildArchitectures:     noarch
-Summary:	Configuration of runlevel
+Summary:	YaST2 - Runlevel Editor
 
 %description
 -
