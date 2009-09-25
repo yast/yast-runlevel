@@ -293,7 +293,7 @@ else if(func == "Description") {
 	/* Rich text title */
 	"rich_text_title" : _("Default Runlevel"),
 	/* MenuButton title */
-	"menu_title" : _("Default &Runlevel"),
+	"menu_title" : _("&Default Runlevel"),
 	"id" : "runlevel",
     ];
 }
