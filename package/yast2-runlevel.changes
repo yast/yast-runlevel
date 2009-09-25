@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Mar 13 12:39:35 CET 2009 - locilka@suse.cz
+
+- Solving MenuButton shortcut conflicts (bnc #50003 c#39).
+
+-------------------------------------------------------------------
 Mon Nov  3 16:14:30 CET 2008 - locilka@suse.cz
 
 - Hiding [Back] button instead of disabling it - according to the
