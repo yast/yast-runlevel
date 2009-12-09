@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Dec  9 13:40:07 CET 2009 - locilka@suse.cz
+
+- Added new services proposal (FATE #305583).
+
+-------------------------------------------------------------------
 Fri Mar 13 12:39:35 CET 2009 - locilka@suse.cz
 
 - Solving MenuButton shortcut conflicts (bnc #50003 c#39).

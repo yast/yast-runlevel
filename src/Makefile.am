@@ -18,7 +18,8 @@ client_DATA =			\
 	runlevel.ycp		\
 	runlevel_auto.ycp	\
 	runlevel_finish.ycp	\
-	runlevel_proposal.ycp 
+	runlevel_proposal.ycp	\
+	services_proposal.ycp
 
 myynclude_DATA =		\
 	wizard.ycp		\
