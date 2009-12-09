@@ -56,6 +56,11 @@
 	return offer_runlevel_4;
     }
 
+    global boolean configuration_already_loaded = false;
+
+    global list <map <string, any> > services_proposal_settings = [];
+    global list <string> services_proposal_links = [];
+
     /**
      * Proposal parameter: if it changes, we repropose
      */
