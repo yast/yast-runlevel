@@ -18,9 +18,8 @@ X-SuSE-YaST-AutoInstClonable=true
 X-SuSE-YaST-AutoInstSchema=runlevels.rnc
 
 Icon=yast-runlevel
-Exec=/sbin/yast2 runlevel 
+Exec=xdg-su -c "/sbin/yast2 runlevel"
 
 Name=System Services (Runlevel)
 GenericName=Configure runlevels
-X-KDE-SubstituteUID=true
 StartupNotify=true
