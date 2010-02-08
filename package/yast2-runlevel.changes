@@ -1,4 +1,10 @@
 ------------------------------------------------------------------
+Mon Feb  8 14:49:58 CET 2010 - locilka@suse.cz
+
+- Better busy messages for adjusting services (BNC #446546).
+- 2.18.0
+
+------------------------------------------------------------------
 Wed Jan 13 18:56:03 CET 2010 - kmachalkova@suse.cz
 
 - Adjusted .desktop file(s) to wrap /sbin/yast2/ calls in xdg-su

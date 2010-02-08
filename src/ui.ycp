@@ -852,6 +852,32 @@ and enabled, because it depends on them:
 	return ModifyServiceDep (service_name, [], enable, false, true);
     }
 
+    // BNC #446546: Better busy message
+    string ServiceBusyMessage (string service_name, string command) {
+	string ret = nil;
+
+	switch (command) {
+	    case "start" :
+		// busy message
+		ret = sformat (_("Starting service %1 ..."), service_name);
+		break;
+	    case "stop" :
+		// busy message
+		ret = sformat (_("Stopping service %1 ..."), service_name);
+		break;
+	    case "status" :
+		// busy message
+		ret = sformat (_("Checking status of service %1 ..."), service_name);
+		break;
+	    default :
+		// busy message
+		ret = sformat (_("Running command %1 %2 ..."), service_name, command);
+		break;
+	}
+
+	return ret;
+    }
+
     /**
      * Starts/stops/checks status of a service
      * @param service_name service to start/stop
@@ -860,7 +886,7 @@ and enabled, because it depends on them:
      */
     define list startStopService (string service_name,
 					 string command) ``{
-	UI::OpenDialog (`Label (service_name + " " + command));
+	UI::OpenDialog (`Label (ServiceBusyMessage (service_name, command)));
 	y2milestone("%1 -> %2", service_name, command);
 
 	string log_filename = sformat ("'%1/runlevel_out_%2'", (string) SCR::Read(.target.tmpdir), String::Quote(service_name));
