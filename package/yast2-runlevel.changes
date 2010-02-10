@@ -1,4 +1,10 @@
 ------------------------------------------------------------------
+Wed Feb 10 17:17:14 CET 2010 - locilka@suse.cz
+
+- Fixed spec file.
+- 2.19.0
+
+------------------------------------------------------------------
 Mon Feb  8 14:49:58 CET 2010 - locilka@suse.cz
 
 - Better busy messages for adjusting services (BNC #446546).

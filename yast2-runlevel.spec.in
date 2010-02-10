@@ -31,16 +31,13 @@ boot.
 %dir @desktopdir@
 @desktopdir@/runlevel.desktop
 %dir @scrconfdir@
-@scrconfdir@/insserv_conf.scr
+@scrconfdir@/*.scr
 %dir @clientdir@
-@clientdir@/runlevel.ycp
-@clientdir@/runlevel_auto.ycp
-@clientdir@/runlevel_proposal.ycp
-@clientdir@/runlevel_finish.ycp
+@clientdir@/*.ycp
 %dir @yncludedir@/runlevel
 @yncludedir@/runlevel/*.ycp
 %dir @moduledir@
-@moduledir@/RunlevelEd.ycp
-@moduledir@/RunlevelEd.ybc
-@schemadir@/autoyast/rnc/runlevels.rnc
+@moduledir@/*.ycp
+@moduledir@/*.ybc
+@schemadir@/autoyast/rnc/*.rnc
 %doc @docdir@
