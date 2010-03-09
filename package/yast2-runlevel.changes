@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Mar  9 12:53:14 CET 2010 - locilka@suse.cz
+
+- Skipping starting boot.* scripts in services_proposal, they still
+  have to be enabled though (BNC #583773).
+- 2.17.7
+
+-------------------------------------------------------------------
 Thu Dec 17 13:16:52 CET 2009 - jsuchome@suse.cz
 
 - package services_proposal.ycp
