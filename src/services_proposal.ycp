@@ -296,20 +296,27 @@ boolean EnableAndStartServices (list <string> services) {
     services = (list <string>) union (all_needed_services, services);
 
     foreach (string service, services, {
+	// Check and enable service
+	if (Service::Enabled (service) != true && Service::Enable (service) != true) {
+	    y2error ("Unable to enable service %1", service);
+	    Report::Error (sformat(_("Cannot enable service %1"), service));
+	    ret = false;
+	}
+
+	// All boot.* scripts are skipped
+	// See BNC #583773
+	if (regexpmatch (service, "^boot\..*")) {
+	    y2warning ("Skipping service %1", service);
+	    return;
+	}
+
+	// Check and start service
 	if (Service::Status (service) == -1) {
 	    y2error ("Service name %1 is unknown", service);
 	    Report::Error (sformat (_("Unable to start and enable service %1.
 Service is not installed."), service));
 	    ret = false;
 	} else {
-	    // Check and enable service
-	    if (Service::Enabled (service) != true && Service::Enable (service) != true) {
-		y2error ("Unable to enable service %1", service);
-		Report::Error (sformat(_("Cannot enable service %1"), service));
-		ret = false;
-	    }
-
-	    // Check and start service
 	    if (Service::RunInitScriptWithTimeOut (service, "status") != 0 && Service::RunInitScriptWithTimeOut (service, "start") != 0) {
 		y2error ("Unable to start service %1", service);
 		Report::Error (sformat(_("Cannot start service %1"), service));
