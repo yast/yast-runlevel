@@ -1,3 +1,9 @@
+-------------------------------------------------------------------
+Tue Mar  9 12:53:14 CET 2010 - locilka@suse.cz
+
+- Skipping starting boot.* scripts in services_proposal, they still
+  have to be enabled though (BNC #583773).
+
 ------------------------------------------------------------------
 Wed Feb 10 17:17:14 CET 2010 - locilka@suse.cz
 
