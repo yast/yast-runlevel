@@ -183,7 +183,7 @@ string GetProposalSummary () {
 		);
 	    } else {
 		message = sformat (
-		    _("Service <i>%1</i> will be <b>disabled</b> and ports in firewall will be open <a href=\"%2\">(enable)</a>"),
+		    _("Service <i>%1</i> will be <b>disabled</b> and ports in firewall will be closed <a href=\"%2\">(enable)</a>"),
 		    one_service["label"]:"",
 		    sformat("toggle_service_%1", counter)
 		);
