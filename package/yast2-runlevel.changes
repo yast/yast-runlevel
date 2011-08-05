@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Aug  5 12:34:50 CEST 2011 - tgoettlicher@suse.de
+
+- fixed .desktop file (bnc #681249)
+
+-------------------------------------------------------------------
 Wed Jan  5 13:58:24 CET 2011 - locilka@suse.cz
 
 - Fixed services proposal (BNC #572736)
