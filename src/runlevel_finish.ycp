@@ -18,6 +18,7 @@ textdomain "runlevel";
 
 import "Mode";
 import "RunlevelEd";
+import "Systemd";
 import "Directory";
 
 any ret = nil;
@@ -29,6 +30,16 @@ void set_runlevel (integer runlevel)
     y2milestone ("setting default runlevel to %1", runlevel);
     SCR::Write (.etc.inittab.id, sformat ("%1:initdefault:", runlevel));
     SCR::Write (.etc.inittab, nil);
+
+    // create a default symlink for systemd if it is installed
+    if (Systemd::Installed())
+    {
+	Systemd::SetDefaultRunlevel(runlevel);
+    }
+    else
+    {
+	y2milestone("Systemd is not installed");
+    }
 }
 
 
