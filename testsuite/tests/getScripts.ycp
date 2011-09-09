@@ -51,10 +51,14 @@
 		"default_runlevel" : "5",
                 ]
             ],
-    	    "target" : $[
-        	"size" : -1,
-    	    ],
+	"target" : $[
+	    "stat" : $[ "isreg" : true ],
+	    "size" : 0,
+	    "string" : ""
+	]
         ];
+
+
     TESTSUITE_INIT ([READ, $[], $[]], nil);
 
     import "RunlevelEd";
@@ -98,7 +102,12 @@
 		"current_runlevel" : "5",
 		"default_runlevel" : "5",
                 ]
-            ]
+            ],
+	"target" : $[
+	    "stat" : $[ "isreg" : true ],
+	    "size" : 0,
+	    "string" : ""
+	]
         ];
 
     TEST (``(RunlevelEd::Read ()), [READ] , 0);
