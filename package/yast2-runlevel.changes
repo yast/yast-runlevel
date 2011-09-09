@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Sep  9 09:20:20 UTC 2011 - lslezak@suse.cz
+
+- systemd support (bnc#664548)
+- 2.21.1
+
+-------------------------------------------------------------------
 Mon Sep  5 16:45:06 UTC 2011 - lslezak@suse.cz
 
 - create default runlevel symlink for systemd (bnc#707418)
