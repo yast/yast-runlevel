@@ -25,6 +25,7 @@
     import "CommandLine";
     import "ProductControl";
     import "ProductFeatures";
+    import "Systemd";
 
     include "runlevel/toposort.ycp";
 
@@ -204,8 +205,8 @@
 	current = (string) SCR::Read (.init.scripts.current_runlevel);
 	Progress::NextStep ();
 
-	//..
-	default_runlevel = (string) SCR::Read (.init.scripts.default_runlevel);
+	// read the default from the current init system (systemd or classic init)
+	default_runlevel = Systemd::Running() ? tostring(Systemd::DefaultRunlevel()): (string) SCR::Read (.init.scripts.default_runlevel);
 	default_orig = default_runlevel;
 	Progress::NextStep ();
 
@@ -512,7 +513,15 @@ Further dependency checking will be disabled."));
 	Progress::Simple (_("Saving changes to runlevels."), " ", prsize + 1, "");
 
 	if (default_runlevel != default_orig)
+	{
 	    SCR::Write (.init.scripts.default_runlevel, default_runlevel);
+
+	    // write systemd default (if present) so it works also after switch to systemd
+	    if (Systemd::Installed())
+	    {
+		Systemd::SetDefaultRunlevel(tointeger(default_runlevel));
+	    }
+	}
 
 	if (default_runlevel == "4") {
 	    // If not in use, the whole runlevel is commented out!
@@ -653,8 +662,8 @@ Further dependency checking will be disabled."));
 	    }
 	}
 
-	//..
-	default_runlevel = (string) SCR::Read (.init.scripts.default_runlevel);
+	// read the default from the current init system (systemd or classic init)
+	default_runlevel = Systemd::Running() ? tostring(Systemd::DefaultRunlevel()): (string) SCR::Read (.init.scripts.default_runlevel);
 	default_orig = default_runlevel;
 
 	// and finaly process map being imported

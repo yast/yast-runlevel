@@ -17,6 +17,10 @@
     	    "target" : $[
         	"size" : -1,
     	    ],
+	"target" : $[
+	    "stat" : $[	"isreg" : true ],
+            "size" : 0,
+	]
 	];
     TESTSUITE_INIT ([READ, $[], $[]], nil);
 
