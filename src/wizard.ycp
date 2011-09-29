@@ -94,7 +94,7 @@ symbol RunlevelSequence() {
     ];
 
     Wizard::CreateDialog ();
-    Wizard::SetTitleIcon("runlevel");
+    Wizard::SetDesktopTitleAndIcon("runlevel");
     Wizard::HideBackButton();
     Wizard::RestoreHelp (getHelpProgress ());
 
@@ -117,7 +117,7 @@ symbol RunlevelAutoSequence() {
 
 
     Wizard::CreateDialog ();
-    Wizard::SetTitleIcon("runlevel");
+    Wizard::SetDesktopTitleAndIcon("runlevel");
     Wizard::HideBackButton();
     Wizard::RestoreHelp (getHelpProgress ());
 
