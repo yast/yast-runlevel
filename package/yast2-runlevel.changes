@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Oct 13 10:07:35 UTC 2011 - jsrain@site
+
+- add a possibility to restart a running service (bnc#723623)
+- 2.21.3
+
+-------------------------------------------------------------------
 Thu Sep 29 13:34:06 CEST 2011 - visnov@suse.cz
 
 - set dialog title
