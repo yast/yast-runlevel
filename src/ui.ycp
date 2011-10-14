@@ -1302,7 +1302,6 @@ Select runlevels in which to run the currently selected service.<ul>
 		    {
 			if (ret == `restart) {
 			    list ret = startStopService (current_service, "restart");
-			    y2internal ("Ret: %1", ret);
 			    Popup::LongText ("", `RichText(ret[1]:""), 70, 5);
 			} else {
 			    StartStopServiceDep (current_service, ret == `start);
