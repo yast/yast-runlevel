@@ -1103,6 +1103,8 @@ Select runlevels in which to run the currently selected service.<ul>
 				 // menu item
 		    `item (`id (`stop), _("S&top now ...")),
 				 // menu item
+		    `item (`id (`restart), _("R&estart now ...")),
+				 // menu item
 		    `item (`id (`status), _("&Refresh status ...")),
 		    ]),
 		`HStretch (),
@@ -1254,8 +1256,13 @@ Select runlevels in which to run the currently selected service.<ul>
 			Popup::Message (_("Each service was enabled\nin the appropriate runlevels."));
 		    }
 		}
-		else if (`start == ret || `stop == ret)
+		else if (`start == ret || `stop == ret || `restart == ret)
 		{
+		    // restarting a service which is not started equals to its starting
+		    // and dependency check is needed
+		    if (`restart == ret && 0 != Service::Status (current_service)) {
+			ret = `start;
+		    }
 		    boolean really = true;
 		    if (`stop == ret && contains (["xdm", "earlyxdm"], current_service))
 		    {
@@ -1267,7 +1274,13 @@ Select runlevels in which to run the currently selected service.<ul>
 		    }
 		    if (really)
 		    {
-			StartStopServiceDep (current_service, ret == `start);
+			if (ret == `restart) {
+			    list ret = startStopService (current_service, "restart");
+			    y2internal ("Ret: %1", ret);
+			    Popup::LongText ("", `RichText(ret[1]:""), 70, 5);
+			} else {
+			    StartStopServiceDep (current_service, ret == `start);
+			}
 		    }
 		}
 		else if (`status == ret)

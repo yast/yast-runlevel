@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Oct 13 10:07:35 UTC 2011 - jsrain@site
+
+- add a possibility to restart a running service (bnc#723623)
+- 2.17.9
+
+-------------------------------------------------------------------
 Wed Jan  5 13:58:24 CET 2011 - locilka@suse.cz
 
 - Fixed services proposal (BNC #572736)
