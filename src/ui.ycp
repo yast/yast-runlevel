@@ -1347,8 +1347,9 @@ Select runlevels in which to run the currently selected service.<ul>
 	    // 'Enable' is a button, 'Disable' is a button
 	    _("<p><b>Enable</b> starts the selected service and services
 that it depends on and enables them to start at system boot time.
-Likewise, <b>Disable</b> stops services that depend on a given service
-and the service itself and disables their start at system boot time.</p>")
+Likewise, <b>Disable</b> stops a service and all depending services
+and disables their start at system boot time.</p>
+")
 	    +
 	    // help text
 	    _("<p>An asterisk (*) after a service status means that the service is enabled but not running or is disabled but running now.</p>")

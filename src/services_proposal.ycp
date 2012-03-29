@@ -177,7 +177,7 @@ string GetProposalSummary () {
 	if (size (one_service["firewall_plugins"]:[]) > 0 && firewall_is_enabled) {
 	    if (one_service["enabled"]:false == true) {
 		message = sformat (
-		    _("Service <i>%1</i> will be <b>enabled</b> and ports in firewall will be open <a href=\"%2\">(disable)</a>"),
+		    _("Service <i>%1</i> will be <b>enabled</b> and ports in the firewall will be open <a href=\"%2\">(disable)</a>"),
 		    one_service["label"]:"",
 		    sformat("toggle_service_%1", counter)
 		);
@@ -460,11 +460,13 @@ The current setup does not provide any functionality now.</p>");
 
     // a help text, part 1
     return _("<p><big><b>Services</b></big><br>
-This installation proposal allows you to start and enable a service from list
-of services.</p>") +
+This installation proposal allows you to start and enable a service from the 
+list of services.</p>
+") +
     // a help text, part 2
-    _("<p>It may also open ports in firewall for a service if firewall is enabled
-and a particular service requires opening them.</p>");
+    _("<p>It may also open ports in the firewall for a service if firewall is enabled
+and a particular service requires opening them.</p>
+");
 }
 
 /* The main () */
