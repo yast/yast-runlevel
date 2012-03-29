@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Mar 29 15:53:14 CEST 2012 - jsuchome@suse.cz
+
+- merge proofread texts 
+
+-------------------------------------------------------------------
 Thu Oct 13 10:07:35 UTC 2011 - jsrain@site
 
 - add a possibility to restart a running service (bnc#723623)
