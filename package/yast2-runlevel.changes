@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Nov 15 16:35:41 UTC 2012 - locilka@suse.com
+
+- Starting enabled service if it fits the current runlevel
+  (BNC #769924)
+- 2.21.4
+
+-------------------------------------------------------------------
 Thu Mar 29 15:53:14 CEST 2012 - jsuchome@suse.cz
 
 - merge proofread texts 
