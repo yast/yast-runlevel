@@ -26,6 +26,7 @@
     import "ProductControl";
     import "ProductFeatures";
     import "Systemd";
+    import "Message";
 
     include "runlevel/toposort.ycp";
 
@@ -502,12 +503,36 @@ Further dependency checking will be disabled."));
 	return size (in) > 0 ? req : nil;
     }
 
+    global string GetCurrentRunlevel();
+
+    /**
+     * Starts service given as parameter if the current runlevel
+     * is listed within runlevels given as the second parameter.
+     *
+     * @param string service
+     * @param list service runlevels
+     */
+    define boolean StartIfNeeded(string service, list <string> service_runlevels) {
+        if (contains(service_runlevels, GetCurrentRunlevel())) {
+            if (Service::Start(service)) {
+                y2milestone ("Service %1 has been started", service);
+                return true;
+            } else {
+                y2error("Cannot start service %1", service);
+                Report::Error(Message::CannotStartService(service));
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /**
      * Save changed services into proper runlevels. Save also changed
      * default runlevel.
      * @return success
      */
-    global define boolean Write () ``{
+    global define boolean Write () {
 	integer prsize = size (services);
 	// progress caption
 	Progress::Simple (_("Saving changes to runlevels."), " ", prsize + 1, "");
@@ -541,11 +566,12 @@ Further dependency checking will be disabled."));
 		// progress item, %1 is a service (init script) name
 		Progress::Title (sformat (_("Service %1"), k));
 		// save!
-		list start = v["start"]:[];
+		list <string> start = v["start"]:[];
 		y2milestone ("Setting %1: %2", k, start);
 		string verbose = sformat(_("Setting %1: %2"), k, start);
 		CommandLine::PrintVerbose(verbose);
 		fail = ! Service::Finetune (k, start);
+		StartIfNeeded(k, start);
 	    }
 	    else
 		// progress item, %1 is a service (init script) name
