@@ -178,6 +178,21 @@
      */
     map<string, list<string> > system_requires = $[];
 
+    list <string> SystemRunlevels () {
+        runlevels = (list<string>) SCR::Read (.init.scripts.runlevel_list);
+
+        if (runlevels == nil || size (runlevels) == 0) {
+            runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+        }
+
+        if (GetRunlevel4Support() && ! contains (runlevels, "4")) {
+            y2milestone ("Adding runlevel 4");
+            runlevels = sort (add (runlevels, "4"));
+        }
+
+        return runlevels;
+    }
+
     /**
      * Read settings
      * @return success
@@ -186,21 +201,8 @@
 	// progress caption
 	Progress::Simple (_("Initializing system services (runlevel). Please wait..."), " ", 7, "");
 	Progress::NextStep ();
-	runlevels= (list<string>) SCR::Read (.init.scripts.runlevel_list);
-	if (0 == size (runlevels))
-	{
-	    if (GetRunlevel4Support()) {
-		runlevels = ["0", "1", "2", "3", "4", "5", "6", "S", ];
-	    } else {
-		runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
-	    }
-	}
 
-	if (GetRunlevel4Support() && ! contains (runlevels, "4")) {
-	    y2milestone ("Adding runlevel 4");
-	    runlevels = sort (add (runlevels, "4"));
-	}
-
+	runlevels = SystemRunlevels();
 	Progress::NextStep ();
 
 	current = (string) SCR::Read (.init.scripts.current_runlevel);
@@ -670,25 +672,25 @@ Service is not installed."), service));
 
 	map<string,map> failed = (map<string, map>)filter (string k, map v, services, ``{
 	    boolean fail = false;
-	    if (v["dirty"]:false)
-	    {
+	    if (v["dirty"]:false) {
 		// progress item, %1 is a service (init script) name
 		Progress::Title (sformat (_("Service %1"), k));
 		// save!
 		list <string> start = v["start"]:[];
 		y2milestone ("Setting %1: %2", k, start);
-		string verbose = sformat(_("Setting %1: %2"), k, start);
 		// this can also disable some services
-		CommandLine::PrintVerbose(verbose);
+		CommandLine::PrintVerbose(sformat(_("Setting %1: %2"), k, start));
 		fail = ! Service::Finetune (k, start);
-	    }
-	    else
+	    } else {
+		y2warning ("Skipping service %1", k);
 		// progress item, %1 is a service (init script) name
 		Progress::Title (sformat (_("Skipping service %1."), k));
+	    }
 	    Progress::NextStep ();
 	    return fail;
 	});
 	Progress::NextStep ();
+
 	string failed_s = mergestring ((list<string>) maplist (string k, any v, failed, ``(k)), ", ");
 	if (size (failed_s) > 0)
 	{
