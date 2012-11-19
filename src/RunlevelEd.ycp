@@ -510,6 +510,30 @@ Further dependency checking will be disabled."));
     global string GetDefaultRunlevel();
 
     /**
+     * Finds all service dependencies of services given as argument
+     *
+     * @param list <string> list of services
+     */
+    global list <string> ServicesDependencies(list <string> services_list) {
+        list <string> all_needed_services = [];
+
+        // Find all the services dependencies first
+        foreach (string service, services_list, {
+            list <string> needed_services = RunlevelEd::ServiceDependencies (service, true);
+
+            if (needed_services != nil && needed_services != []) {
+                y2milestone("Service dependencies for %1 are: %2", service, needed_services);
+                all_needed_services = (list <string>) union (all_needed_services, needed_services);
+            }
+        });
+
+        // Prepend services dependencies ...
+        all_needed_services = toset (all_needed_services);
+        // ... to list of services to enable
+        return (list <string>) union (all_needed_services, services_list);
+    }
+
+    /**
      * Returns list of services that should be running now().
      * On running system it's only those services that were changed during
      * configuration (so-called 'dirty'). In AutoYast it's all services.
@@ -563,7 +587,7 @@ Further dependency checking will be disabled."));
             return [];
         }
 
-        map start_service = services["service"]:$[];
+        map start_service = services[service]:$[];
 
         // user-defined values
         if (haskey(start_service, "start")) {
@@ -583,27 +607,12 @@ Further dependency checking will be disabled."));
      *
      * @param list <string> services to start
      */
-    global boolean EnableAndStartServices (list <string> services) {
+    global boolean StartServicesWithDependencies (list <string> services_list) {
         boolean ret = true;
 
-        list <string> all_needed_services = [];
+        list <string> all_needed_services = ServicesDependencies(services_list);
 
-        // Find all the services dependencies first
-        foreach (string service, services, {
-            list <string> needed_services = RunlevelEd::ServiceDependencies (service, true);
-
-            if (needed_services != nil && needed_services != []) {
-                y2milestone("Service dependencies for %1 are: %2", service, needed_services);
-                all_needed_services = (list <string>) union (all_needed_services, needed_services);
-            }
-        });
-
-        // Prepend services dependencies ...
-        all_needed_services = toset (all_needed_services);
-        // ... to list of services to enable
-        services = (list <string>) union (all_needed_services, services);
-
-        foreach (string service, services, {
+        foreach (string service, services_list, {
             list <string> runlevels_start = StartServiceInRunlevels(service);
 
             // Check and enable service
@@ -632,6 +641,66 @@ Service is not installed."), service));
                     Report::Error(Message::CannotStartService(service));
                     ret = false;
                 }
+            }
+        });
+
+        return ret;
+    }
+
+    /**
+     * Enables/disables all services according to the default settings
+     *
+     * @param map <string, map> services map
+     * @param boolean if progress is used
+     * @return boolean if successful
+     */
+    global define boolean AdaptServices(map <string, map> services_list, boolean uses_progress) {
+	map <string,map> failed = (map <string, map>) filter (string k, map v, services_list, {
+	    boolean fail = false;
+	    if (v["dirty"]:false) {
+		// progress item, %1 is a service (init script) name
+		if (uses_progress) Progress::Title (sformat (_("Service %1"), k));
+		// save!
+		list <string> start = v["start"]:[];
+		y2milestone ("Setting %1: %2", k, start);
+		// this can also disable some services
+		CommandLine::PrintVerbose(sformat(_("Setting %1: %2"), k, start));
+		fail = ! Service::Finetune (k, start);
+	    } else {
+		y2warning ("Skipping service %1", k);
+		// progress item, %1 is a service (init script) name
+		if (uses_progress) Progress::Title (sformat (_("Skipping service %1."), k));
+	    }
+
+	    if (uses_progress) Progress::NextStep ();
+	    return fail;
+	});
+
+	if (uses_progress) Progress::NextStep ();
+
+	string failed_s = mergestring ((list<string>) maplist (string k, any v, failed, ``(k)), ", ");
+	if (size (failed_s) > 0) {
+	    Report::Error (sformat (_("Failed services: %1."), failed_s));
+	    return false;
+	}
+
+        return true;
+    }
+
+    /**
+     * Enables services in their default runlevels
+     *
+     * @param list <string> list of services to enable
+     * @return boolean if successful
+     */
+    global boolean EnableServices(list <string> services_list) {
+        boolean ret = true;
+
+        y2milestone ("Enabling services %1", services_list);
+        foreach (string service, services_list, {
+            if (! Service::Enable(service)) {
+                Report::Error(sformat(_("Cannot enable service %1."), service));
+                ret = false;
             }
         });
 
@@ -669,37 +738,10 @@ Service is not installed."), service));
 	}
 
 	Progress::NextStep ();
-
-	map<string,map> failed = (map<string, map>)filter (string k, map v, services, ``{
-	    boolean fail = false;
-	    if (v["dirty"]:false) {
-		// progress item, %1 is a service (init script) name
-		Progress::Title (sformat (_("Service %1"), k));
-		// save!
-		list <string> start = v["start"]:[];
-		y2milestone ("Setting %1: %2", k, start);
-		// this can also disable some services
-		CommandLine::PrintVerbose(sformat(_("Setting %1: %2"), k, start));
-		fail = ! Service::Finetune (k, start);
-	    } else {
-		y2warning ("Skipping service %1", k);
-		// progress item, %1 is a service (init script) name
-		Progress::Title (sformat (_("Skipping service %1."), k));
-	    }
-	    Progress::NextStep ();
-	    return fail;
-	});
-	Progress::NextStep ();
-
-	string failed_s = mergestring ((list<string>) maplist (string k, any v, failed, ``(k)), ", ");
-	if (size (failed_s) > 0)
-	{
-	    Report::Error (sformat (_("Failed services: %1."), failed_s));
-	    return false;
-	}
+	if (! AdaptServices(services, true)) return false;
 
         // Enable and start all services that should be started
-        return EnableAndStartServices(ListOfServicesToStart());
+        return StartServicesWithDependencies(ListOfServicesToStart());
     }
 
     /**

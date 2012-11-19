@@ -375,7 +375,13 @@ enabling and starting the services may also fail."));
 	}
 
 	// Enabling services
-	if (RunlevelEd::EnableAndStartServices (services) != true) {
+	if (! RunlevelEd::EnableServices(services)) {
+	    ret = false;
+	    return;
+	}
+
+	// Starting services
+	if (! RunlevelEd::StartServicesWithDependencies(services)) {
 	    ret = false;
 	    // next service
 	    return;
