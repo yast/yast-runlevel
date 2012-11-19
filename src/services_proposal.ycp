@@ -273,62 +273,6 @@ void DisableAndStopServices (list <string> services) {
 }
 
 /**
- * Enables and starts services with their dependencies.
- */
-boolean EnableAndStartServices (list <string> services) {
-    boolean ret = true;
-
-    list <string> all_needed_services = [];
-
-    // Find all the services dependencies first
-    foreach (string service, services, {
-	list <string> needed_services = RunlevelEd::ServiceDependencies (service, true);
-
-	if (needed_services != nil && needed_services != []) {
-	    y2milestone("Service dependencies for %1 are: %2", service, needed_services);
-	    all_needed_services = (list <string>) union (all_needed_services, needed_services);
-	}
-    });
-
-    // Prepend services dependencies ...
-    all_needed_services = toset (all_needed_services);
-    // ... to list of services to enable
-    services = (list <string>) union (all_needed_services, services);
-
-    foreach (string service, services, {
-	// Check and enable service
-	if (Service::Enabled (service) != true && Service::Enable (service) != true) {
-	    y2error ("Unable to enable service %1", service);
-	    Report::Error (sformat(_("Cannot enable service %1"), service));
-	    ret = false;
-	}
-
-	// All boot.* scripts are skipped
-	// See BNC #583773
-	if (regexpmatch (service, "^boot\..*")) {
-	    y2warning ("Skipping service %1", service);
-	    return;
-	}
-
-	// Check and start service
-	if (Service::Status (service) == -1) {
-	    y2error ("Service name %1 is unknown", service);
-	    Report::Error (sformat (_("Unable to start and enable service %1.
-Service is not installed."), service));
-	    ret = false;
-	} else {
-	    if (Service::RunInitScriptWithTimeOut (service, "status") != 0 && Service::RunInitScriptWithTimeOut (service, "start") != 0) {
-		y2error ("Unable to start service %1", service);
-		Report::Error (sformat(_("Cannot start service %1"), service));
-		ret = false;
-	    }
-	}
-    });
-
-    return ret;
-}
-
-/**
  * Opens ports using firewall services got as parameter.
  * Services are actually in format "service_name", not
  * "service:service_name".
@@ -431,7 +375,7 @@ enabling and starting the services may also fail."));
 	}
 
 	// Enabling services
-	if (EnableAndStartServices (services) != true) {
+	if (RunlevelEd::EnableAndStartServices (services) != true) {
 	    ret = false;
 	    // next service
 	    return;
