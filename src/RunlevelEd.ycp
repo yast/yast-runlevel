@@ -1031,9 +1031,6 @@ global list<string> GetServiceCurrentStopRunlevels(string service_name)
 
 /*** LiMaL API PART III. - LSB Comments in Init Scripts ***/
 
-//string GetServiceLSBCommentValue(string service_name, string key); // return particular LSB comment
-//list_of_strings GetServiceLSBCommentKeys(string service_name); // return list of presented LSB comment keys
-
 global list<string> GetServiceDefaultStartRunlevels(string service_name)
 {
     return services[service_name,"defstart"]:[];
@@ -1055,12 +1052,6 @@ global string GetServiceDescription(string service_name)
 {
     return services[service_name, "description"]:"";
 }
-
-//list_of_strings GetServiceProvides(string service_name);
-//list_of_strings GetServiceRequiredStart(string service_name);
-//list_of_strings GetServiceRequiredStop(string service_name);
-//list_of_strings GetServiceShouldStart(string service_name);
-//list_of_strings GetServiceShouldStop(string service_name);
 
 /*** LiMaL API PART V. - Installation and Removal of init.d Files ***/
 
