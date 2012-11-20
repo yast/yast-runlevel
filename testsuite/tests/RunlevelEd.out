@@ -1,0 +1,9 @@
+Dump	SystemRunlevels
+Read	.init.scripts.runlevel_list ["A", "B", "C", "1", "2", "5"]
+Return	["1", "2", "5", "A", "B", "C"]
+Read	.init.scripts.runlevel_list ["A", "B", "C", "1", "2", "5"]
+Return	["1", "2", "4", "5", "A", "B", "C"]
+Dump	---------------------------------
+Dump	ServicesDependencies
+Return	["c-2", "c-1", "d-1", "boot.test", "boot.local_test", "d", "a-2", "a-1"]
+Dump	---------------------------------
