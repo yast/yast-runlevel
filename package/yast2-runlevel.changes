@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Nov 20 09:32:48 UTC 2012 - locilka@suse.com
+
+- Unified service handling in AutoYast and on a running system
+  (BNC #769924)
+- 2.21.5
+
+-------------------------------------------------------------------
 Thu Nov 15 16:35:41 UTC 2012 - locilka@suse.com
 
 - Starting enabled service if it fits the current runlevel
