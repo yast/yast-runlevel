@@ -10,6 +10,7 @@
         "init" : $[
             "scripts" : $[
                 "runlevel_list" : ["A", "B", "C", "1", "2", "5"],
+                "current_runlevel" : "3",
             ],
         ],
     ];
@@ -23,22 +24,29 @@
     TESTSUITE_INIT ([READ, WRITE, EXECUTE], nil);
 
     import "RunlevelEd";
+    import "Assert";
 
     string separator = "---------------------------------";
 
     RunlevelEd::services = $[
         "a" : $[
             "reqstart" : [ "a-1", "a-2", "d" ],
+            "start" : [ "B", "2", "3", "5" ],
+            "dirty" : true,
         ],
         "b" : $[
             "reqstart" : [ "b-1", "b-2" ],
+            "start" : [ "B" ],
         ],
         "c" : $[
             "reqstart" : [ "c-1", "c-2" ],
+            "start" : [ "3", "5" ],
         ],
         // service required by "a"
         "d" : $[
             "reqstart" : [ "boot.test", "boot.local_test", "d-1" ],
+            "start" : [ "B", "5" ],
+            "dirty" : true,
         ],
     ];
     // Usually done in Read() function
@@ -52,5 +60,22 @@
 
     DUMP ("ServicesDependencies");
     TEST (``(RunlevelEd::ServicesDependencies(["c", "a"])), [READ], nil);
+    DUMP (separator);
+
+    DUMP ("RemoveDuplicates");
+    DUMP (Assert::Equal(
+        ["x", "a", "c", "b"],
+        RunlevelEd::RemoveDuplicates(["x", "x", "a", "x", "c", "b", "a", "x"])
+    ));
+    DUMP (separator);
+
+    DUMP ("GetCurrentRunlevel");
+    TEST (``(RunlevelEd::GetCurrentRunlevel()), [READ], nil);
+    DUMP (separator);
+
+    DUMP ("ListOfServicesToStart");
+    // Returns only services that should be running in the current runlevel
+    // and have been changed (dirty flag)
+    TEST (``(RunlevelEd::ListOfServicesToStart()), [READ, WRITE, EXECUTE], nil);
     DUMP (separator);
 }

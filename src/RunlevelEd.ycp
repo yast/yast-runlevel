@@ -155,7 +155,7 @@
     /**
      * Current runlevel
      */
-    global string current = "";
+    global string current = nil;
 
     /* Dependency solving: */
     /**
@@ -177,6 +177,11 @@
      *   system_requires["$network"] == ["network", "+pcmcia", "+hotplug"];
      */
     map<string, list<string> > system_requires = $[];
+
+    global string GetCurrentRunlevel();
+
+    global string GetDefaultRunlevel();
+
 
     list <string> SystemRunlevels () {
         runlevels = (list<string>) SCR::Read (.init.scripts.runlevel_list);
@@ -213,7 +218,7 @@
 	runlevels = SystemRunlevels();
 	Progress::NextStep ();
 
-	current = (string) SCR::Read (.init.scripts.current_runlevel);
+	current = GetCurrentRunlevel();
 	Progress::NextStep ();
 
 	// read the default from the current init system (systemd or classic init)
@@ -512,10 +517,6 @@ Further dependency checking will be disabled."));
 	});
 	return size (in) > 0 ? req : nil;
     }
-
-    global string GetCurrentRunlevel();
-
-    global string GetDefaultRunlevel();
 
     /**
      * Works as List::toset but keeps the given sorting.
@@ -1008,7 +1009,7 @@ Service is not installed."), service));
 	}
 	return sum;
     }
-
+
     // visualization helper
 
     /**
@@ -1053,8 +1054,12 @@ Service is not installed."), service));
 /*** LiMaL API PART I. - Runlevels in /etc/inittab File ***/
 
 global string GetCurrentRunlevel() {
+    if (current == nil)
+        current = (string) SCR::Read (.init.scripts.current_runlevel);
+
     return current == "" ? "unknown" : current;
 }
+
 global string GetDefaultRunlevel() {
     return default_runlevel;
 }
@@ -1220,7 +1225,7 @@ global integer ServiceRemove(string service, list<string> rls)
             {
                 items[size(items)] = `item (`id (i),
                                            RunlevelEd::getRunlevelDescr (i),
-                                           i == RunlevelEd::default_runlevel);
+                                           i == default_runlevel);
             }
         });
         return items;

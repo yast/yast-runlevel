@@ -7,3 +7,13 @@ Dump	---------------------------------
 Dump	ServicesDependencies
 Return	["c-2", "c-1", "d-1", "boot.test", "boot.local_test", "d", "a-2", "a-1"]
 Dump	---------------------------------
+Dump	RemoveDuplicates
+Dump	true
+Dump	---------------------------------
+Dump	GetCurrentRunlevel
+Read	.init.scripts.current_runlevel "3"
+Return	3
+Dump	---------------------------------
+Dump	ListOfServicesToStart
+Return	["a"]
+Dump	---------------------------------
