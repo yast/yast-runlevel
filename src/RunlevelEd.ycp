@@ -534,10 +534,8 @@ Further dependency checking will be disabled."));
     }
 
     /**
-     * Returns list of services that should be running now().
-     * On running system it's only those services that were changed during
-     * configuration (so-called 'dirty'). In AutoYast it's all services.
-     * In all cases boot.* services are excluded.
+     * Returns list of services that were changed during
+     * configuration (so-called 'dirty'), boot.* services are excluded.
      */
     global list <string> ListOfServicesToStart () {
         boolean in_autoyast = Mode::autoinst() || Mode::config();
@@ -561,9 +559,8 @@ Further dependency checking will be disabled."));
             if (!contains(details["start"]:[], current_runlevel))
                 return;
 
-            // in_autoyast? -> all services
-            // otherwise only the 'dirty' ones
-            if (!in_autoyast && !details["dirty"]:false)
+            // only changed services
+            if (!details["dirty"]:false)
                 return;
 
             services_to_start = add(services_to_start, service);
