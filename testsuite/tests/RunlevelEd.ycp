@@ -110,4 +110,8 @@
     DUMP("AdaptServices");
     TEST (``(RunlevelEd::AdaptServices(RunlevelEd::services, false)), [READ, WRITE, EXECUTE], nil);
     DUMP (separator);
+
+    DUMP("EnableServices");
+    TEST (``(RunlevelEd::EnableServices(["a", "b", "d"])), [READ, WRITE, EXECUTE], nil);
+    DUMP (separator);
 }

@@ -26,3 +26,6 @@ Dump	---------------------------------
 Dump	AdaptServices
 Return	true
 Dump	---------------------------------
+Dump	EnableServices
+Return	true
+Dump	---------------------------------
