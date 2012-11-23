@@ -17,3 +17,6 @@ Dump	---------------------------------
 Dump	ListOfServicesToStart
 Return	["a"]
 Dump	---------------------------------
+Dump	StartServiceInRunlevels
+Return	["3", "5"]
+Dump	---------------------------------

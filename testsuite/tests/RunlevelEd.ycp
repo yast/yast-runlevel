@@ -78,4 +78,9 @@
     // and have been changed (dirty flag)
     TEST (``(RunlevelEd::ListOfServicesToStart()), [READ, WRITE, EXECUTE], nil);
     DUMP (separator);
+
+    DUMP("StartServiceInRunlevels");
+    // Should return [ "3", "5" ]
+    TEST (``(RunlevelEd::StartServiceInRunlevels("c")), [READ, WRITE, EXECUTE], nil);
+    DUMP (separator);
 }
