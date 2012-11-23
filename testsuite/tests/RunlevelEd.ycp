@@ -13,12 +13,24 @@
                 "current_runlevel" : "3",
             ],
         ],
+        "process" : $[
+            // always report that process has exited already
+            "running" : false,
+            // process exited with return code 0
+            "status" : 0,
+        ],
     ];
 
     map WRITE = $[
     ];
 
     map EXECUTE = $[
+        "process" : $[
+            // returns PID
+            "start_shell" : 1025,
+            // ok, released
+            "release" : true,
+        ],
     ];
 
     TESTSUITE_INIT ([READ, WRITE, EXECUTE], nil);
@@ -82,5 +94,9 @@
     DUMP("StartServiceInRunlevels");
     // Should return [ "3", "5" ]
     TEST (``(RunlevelEd::StartServiceInRunlevels("c")), [READ, WRITE, EXECUTE], nil);
+    DUMP (separator);
+
+    DUMP("StartServicesWithDependencies");
+    TEST (``(RunlevelEd::StartServicesWithDependencies(["a", "b"])), [READ, WRITE, EXECUTE], nil);
     DUMP (separator);
 }
