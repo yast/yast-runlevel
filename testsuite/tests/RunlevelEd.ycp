@@ -31,6 +31,13 @@
             // ok, released
             "release" : true,
         ],
+        "target" : $[
+            "bash_output" : $[
+                "exit"   : 0,
+                "stdout" : "OUT",
+                "stderr" : "ERR",
+            ],
+        ],
     ];
 
     TESTSUITE_INIT ([READ, WRITE, EXECUTE], nil);
@@ -98,5 +105,9 @@
 
     DUMP("StartServicesWithDependencies");
     TEST (``(RunlevelEd::StartServicesWithDependencies(["a", "b"])), [READ, WRITE, EXECUTE], nil);
+    DUMP (separator);
+
+    DUMP("AdaptServices");
+    TEST (``(RunlevelEd::AdaptServices(RunlevelEd::services, false)), [READ, WRITE, EXECUTE], nil);
     DUMP (separator);
 }

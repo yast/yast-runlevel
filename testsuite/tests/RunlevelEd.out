@@ -20,3 +20,9 @@ Dump	---------------------------------
 Dump	StartServiceInRunlevels
 Return	["3", "5"]
 Dump	---------------------------------
+Dump	StartServicesWithDependencies
+Return	true
+Dump	---------------------------------
+Dump	AdaptServices
+Return	true
+Dump	---------------------------------
