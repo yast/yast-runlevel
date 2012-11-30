@@ -1,4 +1,5 @@
 Execute	.target.bash "sed --in-place 's/^\\(l4:4:wait:\\/etc\\/init.d\\/rc 4\\)/#\\1/' /etc/inittab" 0
+Read	.init.scripts.current_runlevel "5"
 Return	true
 Execute	.target.bash "sed --in-place 's/^\\(l4:4:wait:\\/etc\\/init.d\\/rc 4\\)/#\\1/' /etc/inittab" 0
 Return	true

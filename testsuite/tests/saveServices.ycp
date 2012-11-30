@@ -12,6 +12,8 @@
 	"init": $[
 	    "scripts": $[
 		"exists": true,
+		"default_runlevel" : "5",
+		"current_runlevel" : "5",
 		],
 	    ],
     	    "target" : $[
