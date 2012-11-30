@@ -546,7 +546,7 @@ Further dependency checking will be disabled."));
 
             if (needed_services != nil && needed_services != []) {
                 y2milestone("Service dependencies for %1 are: %2", service, needed_services);
-                all_needed_services = (list <string>) flatten ([all_needed_services, needed_services]);
+                all_needed_services = (list <string>) merge (all_needed_services, needed_services);
             }
         });
 
@@ -630,8 +630,8 @@ Further dependency checking will be disabled."));
         boolean ret = true;
 
         // given services added to the list of all services
-        list <string> all_needed_services = (list <string>) flatten([
-            ServicesDependencies(services_list), services_list]);
+        list <string> all_needed_services = (list <string>) merge(
+            ServicesDependencies(services_list), services_list);
 
         foreach (string service, services_list, {
             list <string> runlevels_start = StartServiceInRunlevels(service);
