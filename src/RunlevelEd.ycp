@@ -10,6 +10,8 @@
  *   Martin Vidner <mvidner@suse.cz>
  *   Petr Blahos <pblahos@suse.cz>
  *   Martin Lazar <mlazar@suse.cz>
+ *   Lukas Ocilka <locilka@suse.com>
+ *   Ladislav Slezak <lslezak@suse.com>
  *
  * $Id$
  */
@@ -26,6 +28,8 @@
     import "ProductControl";
     import "ProductFeatures";
     import "Systemd";
+    import "Message";
+    import "Mode";
 
     include "runlevel/toposort.ycp";
 
@@ -89,40 +93,37 @@
     /**
      * @struct service
      * One service is described by such map: <pre>
-      "servicename" : $[
-	"defstart" : [ "2", "3", "5", ], // Default-Start comment
-	"defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
-
-	// "should" dependencies (+) are filtered by addRequires
-	"reqstart" : [ "$network", "portmap" ], // Required-Start comment
-	"reqstop"  : [ "$network", "portmap" ], // Required-Stop  comment
-
-	"shortdescription" : "text...",       // Description comment
-	"description" : "text...",       // Description comment
-
-	// which runlevels service is really started/stopped in
-	// read from /etc/init.d/{rc?,boot}.d/* links
-	//
-	// Note that the boot process (init.d/boot.d) is considered
-	// a "B" runlevel that is implicitly contained in the other runlevels.
-	// Using
-	//   list st = services ["boot.local", "start"]:[]
-	//   contains (st, "3") // DON'T
-	// results in false but that's probably not what you want.
-	// Use
-	//   StartContainsImplicitly (st, "3")
-	// which tests for "3" and "B".
-	"start" : [ "3", "5", ],
-	"stop"  : [ "3", "5", ],
-
-	"started" : 0, // return from rcservice status (integer)
-
-	"dirty" : false, // was the entry changed?
-      ]</pre>
+    "servicename" : $[
+        "defstart" : [ "2", "3", "5", ], // Default-Start comment
+        "defstop"  : [ "0", "1", "6", ], // Default-Stop  comment
+        
+        // "should" dependencies (+) are filtered by addRequires
+        "reqstart" : [ "$network", "portmap" ], // Required-Start comment
+        "reqstop"  : [ "$network", "portmap" ], // Required-Stop  comment
+        
+        "shortdescription" : "text...",       // Description comment
+        "description" : "text...",       // Description comment
+        
+        // which runlevels service is really started/stopped in
+        // read from /etc/init.d/{rc?,boot}.d/* links
+        //
+        // Note that the boot process (init.d/boot.d) is considered
+        // a "B" runlevel that is implicitly contained in the other runlevels.
+        // Using
+        //   list st = services ["boot.local", "start"]:[]
+        //   contains (st, "3") // DON'T
+        // results in false but that's probably not what you want.
+        // Use
+        //   StartContainsImplicitly (st, "3")
+        // which tests for "3" and "B".
+        "start" : [ "3", "5", ],
+        "stop"  : [ "3", "5", ],
+        
+        "started" : 0, // return from rcservice status (integer)
+        
+        "dirty" : false, // was the entry changed?
+    ]</pre>
      */
-    //
-    //
-
 
     /**
      * List of all services. Each item is a map described above.
@@ -154,7 +155,7 @@
     /**
      * Current runlevel
      */
-    global string current = "";
+    global string current = nil;
 
     /* Dependency solving: */
     /**
@@ -177,6 +178,34 @@
      */
     map<string, list<string> > system_requires = $[];
 
+    global string GetCurrentRunlevel();
+
+    global string GetDefaultRunlevel();
+
+
+    list <string> SystemRunlevels () {
+        runlevels = (list<string>) SCR::Read (.init.scripts.runlevel_list);
+
+        if (runlevels == nil || size (runlevels) == 0) {
+            runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
+        }
+
+        if (GetRunlevel4Support() && ! contains (runlevels, "4")) {
+            y2milestone ("Adding runlevel 4");
+            runlevels = add (runlevels, "4");
+        }
+
+        return sort(runlevels);
+    }
+
+    /**
+     * Goes throgh the services map and creates internal map of services dependencies.
+     */
+    define void BuildServicesRequirements () {
+        buildRequires ();
+        what_requires = ReverseGraph (requires);
+    }
+
     /**
      * Read settings
      * @return success
@@ -185,24 +214,11 @@
 	// progress caption
 	Progress::Simple (_("Initializing system services (runlevel). Please wait..."), " ", 7, "");
 	Progress::NextStep ();
-	runlevels= (list<string>) SCR::Read (.init.scripts.runlevel_list);
-	if (0 == size (runlevels))
-	{
-	    if (GetRunlevel4Support()) {
-		runlevels = ["0", "1", "2", "3", "4", "5", "6", "S", ];
-	    } else {
-		runlevels = ["0", "1", "2", "3", "5", "6", "S", ];
-	    }
-	}
 
-	if (GetRunlevel4Support() && ! contains (runlevels, "4")) {
-	    y2milestone ("Adding runlevel 4");
-	    runlevels = sort (add (runlevels, "4"));
-	}
-
+	runlevels = SystemRunlevels();
 	Progress::NextStep ();
 
-	current = (string) SCR::Read (.init.scripts.current_runlevel);
+	current = GetCurrentRunlevel();
 	Progress::NextStep ();
 
 	// read the default from the current init system (systemd or classic init)
@@ -247,8 +263,8 @@
 	    v["stop"] = second_service["stop"]:[];
 	    return $[ k: v ];
 	});
-	buildRequires ();
-	what_requires = ReverseGraph (requires);
+
+	BuildServicesRequirements();
 	Progress::NextStep ();
 	return true;
     }
@@ -503,11 +519,221 @@ Further dependency checking will be disabled."));
     }
 
     /**
+     * Works as List::toset but keeps the given sorting.
+     * First occurence of an element always wins.
+     */
+    define list RemoveDuplicates (list l) {
+        list new_l = [];
+
+        foreach (any l_item, l, {
+            if (! contains(new_l, l_item)) new_l = add(new_l, l_item);
+        });
+
+        return new_l;
+    }
+
+    /**
+     * Finds all service dependencies of services given as argument
+     *
+     * @param list <string> list of services
+     */
+    global list <string> ServicesDependencies(list <string> services_list) {
+        list <string> all_needed_services = [];
+
+        // Find all the services dependencies first
+        foreach (string service, services_list, {
+            list <string> needed_services = ServiceDependencies (service, true);
+
+            if (needed_services != nil && needed_services != []) {
+                y2milestone("Service dependencies for %1 are: %2", service, needed_services);
+                all_needed_services = (list <string>) merge (all_needed_services, needed_services);
+            }
+        });
+
+        // It's important that sorting of services is kept,
+        // dependencies list represents map of dependencies in 1-D
+        return (list <string>) RemoveDuplicates(all_needed_services);
+    }
+
+    /**
+     * Returns list of services that were changed during
+     * configuration (so-called 'dirty'), boot.* services are excluded.
+     */
+    global list <string> ListOfServicesToStart () {
+        boolean in_autoyast = Mode::autoinst() || Mode::config();
+        list <string> services_to_start = [];
+        string current_runlevel = GetCurrentRunlevel();
+
+        // In AutoYast the current runlevel doesn't matter
+        // the imported one (default_runlevel) does.
+        if (in_autoyast) {
+            current_runlevel = GetDefaultRunlevel();
+        }
+
+        y2milestone("Current runlevel: %1", current_runlevel);
+
+        foreach (string service, map details, services, {
+            // boot.* services are ignored
+            if (regexpmatch (service, "^boot\..*"))
+                return;
+
+            // these services should not be running now
+            if (!contains(details["start"]:[], current_runlevel))
+                return;
+
+            // only changed services
+            if (!details["dirty"]:false)
+                return;
+
+            services_to_start = add(services_to_start, service);
+        });
+
+        y2milestone("Services to start: %1", services_to_start);
+
+        return services_to_start;
+    }
+
+    /**
+     * Returns list of runlevels in which the service given as argument
+     * should start
+     *
+     * @param string service name
+     * @param list <string> list of runlevels
+     */
+    list <string> StartServiceInRunlevels(string service) {
+        if (!haskey(services, service)) {
+            y2error("Unknown service %1", service);
+            return [];
+        }
+
+        map start_service = services[service]:$[];
+
+        // user-defined values
+        if (haskey(start_service, "start")) {
+            return (list <string>) start_service["start"]:[];
+        // default values
+        } else if (haskey(start_service, "defstart")) {
+            return (list <string>) start_service["defstart"]:[];
+        } else {
+            y2error ("No 'start' or 'defstart' key in %1", start_service);
+            return [];
+        }
+    }
+
+    /**
+     * Enables and starts services with their dependencies.
+     * Already running services are kept untouched.
+     *
+     * @param list <string> services to start
+     */
+    global boolean StartServicesWithDependencies (list <string> services_list) {
+        boolean ret = true;
+
+        // given services added to the list of all services
+        list <string> all_needed_services = (list <string>) merge(
+            ServicesDependencies(services_list), services_list);
+
+        foreach (string service, services_list, {
+            list <string> runlevels_start = StartServiceInRunlevels(service);
+
+            // Check and enable service
+            if (Service::Enabled (service) != true && Service::Finetune (service, runlevels_start) != true) {
+                y2error ("Unable to enable service %1", service);
+                Report::Error (sformat(_("Cannot enable service %1"), service));
+                ret = false;
+            }
+
+            // All boot.* scripts are skipped
+            // See BNC #583773
+            if (regexpmatch (service, "^boot\..*")) {
+                y2warning ("Skipping service %1", service);
+                return;
+            }
+
+            // Check and start service
+            if (Service::Status (service) == -1) {
+                y2error ("Service name %1 is unknown", service);
+                Report::Error (sformat (_("Unable to start and enable service %1.
+Service is not installed."), service));
+                ret = false;
+            } else {
+                if (Service::RunInitScriptWithTimeOut (service, "status") != 0 && Service::RunInitScriptWithTimeOut (service, "start") != 0) {
+                    y2error ("Unable to start service %1", service);
+                    Report::Error(Message::CannotStartService(service));
+                    ret = false;
+                }
+            }
+        });
+
+        return ret;
+    }
+
+    /**
+     * Enables/disables all services according to the default settings
+     *
+     * @param map <string, map> services map
+     * @param boolean if progress is used
+     * @return boolean if successful
+     */
+    global define boolean AdaptServices(map <string, map> services_list, boolean uses_progress) {
+	map <string,map> failed = (map <string, map>) filter (string k, map v, services_list, {
+	    boolean fail = false;
+	    if (v["dirty"]:false) {
+		// progress item, %1 is a service (init script) name
+		if (uses_progress) Progress::Title (sformat (_("Service %1"), k));
+		// save!
+		list <string> start = v["start"]:[];
+		y2milestone ("Setting %1: %2", k, start);
+		// this can also disable some services
+		CommandLine::PrintVerbose(sformat(_("Setting %1: %2"), k, start));
+		fail = ! Service::Finetune (k, start);
+	    } else {
+		y2milestone ("Skipping service %1 (not changed)", k);
+		// progress item, %1 is a service (init script) name
+		if (uses_progress) Progress::Title (sformat (_("Skipping service %1."), k));
+	    }
+
+	    if (uses_progress) Progress::NextStep ();
+	    return fail;
+	});
+
+	if (uses_progress) Progress::NextStep ();
+
+	string failed_s = mergestring ((list<string>) maplist (string k, any v, failed, ``(k)), ", ");
+	if (size (failed_s) > 0) {
+	    Report::Error (sformat (_("Failed services: %1."), failed_s));
+	    return false;
+	}
+
+        return true;
+    }
+
+    /**
+     * Enables services in their default runlevels
+     *
+     * @param list <string> list of services to enable
+     * @return boolean if successful
+     */
+    global boolean EnableServices(list <string> services_list) {
+        boolean ret = true;
+
+        y2milestone ("Enabling services %1", services_list);
+        foreach (string service, services_list, {
+            if (! Service::Enable(service)) {
+                Report::Error(sformat(_("Cannot enable service %1."), service));
+                ret = false;
+            }
+        });
+
+        return ret;
+    }
+
+    /**
      * Save changed services into proper runlevels. Save also changed
      * default runlevel.
      * @return success
      */
-    global define boolean Write () ``{
+    global define boolean Write () {
 	integer prsize = size (services);
 	// progress caption
 	Progress::Simple (_("Saving changes to runlevels."), " ", prsize + 1, "");
@@ -533,34 +759,10 @@ Further dependency checking will be disabled."));
 	}
 
 	Progress::NextStep ();
+	if (! AdaptServices(services, true)) return false;
 
-	map<string,map> failed = (map<string, map>)filter (string k, map v, services, ``{
-	    boolean fail = false;
-	    if (v["dirty"]:false)
-	    {
-		// progress item, %1 is a service (init script) name
-		Progress::Title (sformat (_("Service %1"), k));
-		// save!
-		list start = v["start"]:[];
-		y2milestone ("Setting %1: %2", k, start);
-		string verbose = sformat(_("Setting %1: %2"), k, start);
-		CommandLine::PrintVerbose(verbose);
-		fail = ! Service::Finetune (k, start);
-	    }
-	    else
-		// progress item, %1 is a service (init script) name
-		Progress::Title (sformat (_("Skipping service %1."), k));
-	    Progress::NextStep ();
-	    return fail;
-	});
-	Progress::NextStep ();
-	string failed_s = mergestring ((list<string>) maplist (string k, any v, failed, ``(k)), ", ");
-	if (size (failed_s) > 0)
-	{
-	    Report::Error (sformat (_("Failed services: %1."), failed_s));
-	    return false;
-	}
-	return true;
+        // Enable and start all services that should be started
+        return StartServicesWithDependencies(ListOfServicesToStart());
     }
 
     /**
@@ -807,7 +1009,7 @@ Further dependency checking will be disabled."));
 	}
 	return sum;
     }
-
+
     // visualization helper
 
     /**
@@ -852,8 +1054,12 @@ Further dependency checking will be disabled."));
 /*** LiMaL API PART I. - Runlevels in /etc/inittab File ***/
 
 global string GetCurrentRunlevel() {
+    if (current == nil)
+        current = (string) SCR::Read (.init.scripts.current_runlevel);
+
     return current == "" ? "unknown" : current;
 }
+
 global string GetDefaultRunlevel() {
     return default_runlevel;
 }
@@ -894,9 +1100,6 @@ global list<string> GetServiceCurrentStopRunlevels(string service_name)
 
 /*** LiMaL API PART III. - LSB Comments in Init Scripts ***/
 
-//string GetServiceLSBCommentValue(string service_name, string key); // return particular LSB comment
-//list_of_strings GetServiceLSBCommentKeys(string service_name); // return list of presented LSB comment keys
-
 global list<string> GetServiceDefaultStartRunlevels(string service_name)
 {
     return services[service_name,"defstart"]:[];
@@ -918,12 +1121,6 @@ global string GetServiceDescription(string service_name)
 {
     return services[service_name, "description"]:"";
 }
-
-//list_of_strings GetServiceProvides(string service_name);
-//list_of_strings GetServiceRequiredStart(string service_name);
-//list_of_strings GetServiceRequiredStop(string service_name);
-//list_of_strings GetServiceShouldStart(string service_name);
-//list_of_strings GetServiceShouldStop(string service_name);
 
 /*** LiMaL API PART V. - Installation and Removal of init.d Files ***/
 
@@ -1028,7 +1225,7 @@ global integer ServiceRemove(string service, list<string> rls)
             {
                 items[size(items)] = `item (`id (i),
                                            RunlevelEd::getRunlevelDescr (i),
-                                           i == RunlevelEd::default_runlevel);
+                                           i == default_runlevel);
             }
         });
         return items;
