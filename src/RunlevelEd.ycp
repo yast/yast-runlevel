@@ -555,20 +555,21 @@ Further dependency checking will be disabled."));
         return (list <string>) RemoveDuplicates(all_needed_services);
     }
 
+    boolean InAutoYast () {
+        return (Mode::autoinst() || Mode::config());
+    }
+
     /**
      * Returns list of services that were changed during
      * configuration (so-called 'dirty'), boot.* services are excluded.
      */
     global list <string> ListOfServicesToStart () {
-        boolean in_autoyast = Mode::autoinst() || Mode::config();
         list <string> services_to_start = [];
         string current_runlevel = GetCurrentRunlevel();
 
         // In AutoYast the current runlevel doesn't matter
         // the imported one (default_runlevel) does.
-        if (in_autoyast) {
-            current_runlevel = GetDefaultRunlevel();
-        }
+        if (InAutoYast()) current_runlevel = GetDefaultRunlevel();
 
         y2milestone("Current runlevel: %1", current_runlevel);
 
@@ -760,6 +761,13 @@ Service is not installed."), service));
 
 	Progress::NextStep ();
 	if (! AdaptServices(services, true)) return false;
+
+        // All services need to be started at the end by systemd,
+        // not here and now. See BNC #769924
+        if (InAutoYast()) {
+            y2milestone("All services will be started at the end, skipping for now...");
+            return true;
+        }
 
         // Enable and start all services that should be started
         return StartServicesWithDependencies(ListOfServicesToStart());
