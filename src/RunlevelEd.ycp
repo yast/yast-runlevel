@@ -564,15 +564,12 @@ Further dependency checking will be disabled."));
      * configuration (so-called 'dirty'), boot.* services are excluded.
      */
     global list <string> ListOfServicesToStart () {
-        boolean in_autoyast = InAutoYast();
         list <string> services_to_start = [];
         string current_runlevel = GetCurrentRunlevel();
 
         // In AutoYast the current runlevel doesn't matter
         // the imported one (default_runlevel) does.
-        if (in_autoyast) {
-            current_runlevel = GetDefaultRunlevel();
-        }
+        if (InAutoYast()) current_runlevel = GetDefaultRunlevel();
 
         y2milestone("Current runlevel: %1", current_runlevel);
 
