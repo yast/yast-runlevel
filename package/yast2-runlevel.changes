@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Dec 14 12:46:37 UTC 2012 - locilka@suse.com
+
+- Services are just enabled but not started when called from
+  AutoYast - that needs to be done by AutoYast at the end
+  (BNC #769924)
+- 2.21.6
+
+-------------------------------------------------------------------
 Tue Nov 20 09:32:48 UTC 2012 - locilka@suse.com
 
 - Unified service handling in AutoYast and on a running system
