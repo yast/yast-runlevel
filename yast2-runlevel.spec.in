@@ -6,9 +6,9 @@ Group:	System/YaST
 License: GPL-2.0+
 BuildRequires:	perl-XML-Writer update-desktop-files yast2 yast2-devtools yast2-testsuite
 
-# systemd support in Service.ycp
+# Service module switched to systemd
+BuildRequires:	yast2 >= 2.23.15
 # Wizard::SetDesktopTitleAndIcon
-BuildRequires:	yast2 >= 2.21.22
 Requires:	yast2 >= 2.21.22
 
 Provides:	yast2-config-runlevel
