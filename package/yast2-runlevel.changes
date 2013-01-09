@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Jan  9 16:04:23 UTC 2013 - locilka@suse.com
+
+- Fixed message reporting wrong service handler after switching
+  to systemd (FATE #312568)
+
+-------------------------------------------------------------------
 Tue Jan  8 15:51:03 UTC 2013 - locilka@suse.com
 
 - Used standard ButtonBox widget for pop-up dialogs (bnc#701268)
