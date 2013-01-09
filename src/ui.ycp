@@ -1525,11 +1525,11 @@ and disables their start at system boot time.</p>
 		    // text entry
 		    `TextEntry (`id (`des), _("&Description (optional)"), ""),
 		    `VSpacing (1),
-		    `HBox (`PushButton (`id (`ok), `opt (`default, `key_F10),
-					Label::OKButton ()),
-			   `PushButton (`id (`cancel), `opt (`key_F9),
-					Label::CancelButton ()))
-		    ));
+		    `ButtonBox(
+			`PushButton (`id (`ok), `opt (`default), Label::OKButton()),
+			`PushButton (`id (`cancel), Label::CancelButton())
+		    )
+	));
 	UI::SetFocus (`id (`name));
 
 	any ret = nil; // (symbol|string)
@@ -1767,19 +1767,13 @@ disabled?\n"), nfs_adj)))
 		    `Left (`Heading (headline)),
 		    `VSpacing (0.2),
 		    richtext,	// scrolled text
-		    `HBox (
-			`PushButton (
-			    `id (`continue),
-			    `opt (`default, `key_F10),
-			    Label::ContinueButton ()),
-			`PushButton (
-			    `id (`cancel),
-			    `opt (`key_F9),
-			    Label::CancelButton ())
-			)
+		    `ButtonBox(
+			`PushButton (`id (`continue), `opt (`default), Label::ContinueButton()),
+			`PushButton (`id (`cancel), Label::CancelButton())
 		    )
 		)
-	    );
+	    )
+	);
 
 	UI::SetFocus (`id (`continue));
 
