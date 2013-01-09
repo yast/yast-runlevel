@@ -1526,8 +1526,8 @@ and disables their start at system boot time.</p>
 		    `TextEntry (`id (`des), _("&Description (optional)"), ""),
 		    `VSpacing (1),
 		    `ButtonBox(
-			`PushButton (`id (`ok),     `opt (`okButton, `default, `key_F10), Label::OKButton()),
-			`PushButton (`id (`cancel), `opt (`cancelButton, `key_F9),        Label::CancelButton())
+			`PushButton (`id (`ok), `opt (`default), Label::OKButton()),
+			`PushButton (`id (`cancel), Label::CancelButton())
 		    )
 	));
 	UI::SetFocus (`id (`name));
@@ -1768,8 +1768,8 @@ disabled?\n"), nfs_adj)))
 		    `VSpacing (0.2),
 		    richtext,	// scrolled text
 		    `ButtonBox(
-			`PushButton (`id (`continue), `opt (`okButton, `default, `key_F10), Label::ContinueButton()),
-			`PushButton (`id (`cancel),   `opt (`cancelButton, `key_F9),        Label::CancelButton())
+			`PushButton (`id (`continue), `opt (`default), Label::ContinueButton()),
+			`PushButton (`id (`cancel), Label::CancelButton())
 		    )
 		)
 	    )
