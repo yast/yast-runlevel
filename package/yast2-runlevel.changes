@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jan  8 15:51:03 UTC 2013 - locilka@suse.com
+
+- Used standard ButtonBox widget for pop-up dialogs (bnc#701268)
+- 2.21.8
+
+-------------------------------------------------------------------
 Fri Jan  4 11:45:45 UTC 2013 - locilka@suse.com
 
 - Testsuites adapted to switching Service module to systemd
