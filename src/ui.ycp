@@ -907,8 +907,8 @@ and enabled, because it depends on them:
 	    // %1 service, %2 command,
 	    // %3 exit status, %4 status description, %5 stdout
 	    // added a colon
-	    _("<p><b>/etc/init.d/%1 %2</b> returned %3 (%4):<br>%5</p>"),
-	    service_name, command, exit,
+	    _("<p><b>/bin/systemctl %1 %2.service</b> returned %3 (%4):<br>%5</p>"),
+	    command, service_name, exit,
 	    (command == "status" ?
 	     getStatusReturnHelp (exit) :
 	     getActionReturnHelp (exit)),
