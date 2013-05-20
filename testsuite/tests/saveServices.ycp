@@ -14,27 +14,12 @@
 		"exists": true,
 		"default_runlevel" : "5",
 		"current_runlevel" : "5",
-		"runlevel" : $[
-		    "service" : $[
-			"start" : [ "0", "1", "3" ],
-			"stop" : [ "4", "5", "6" ],
-		    ],
-		],
-		"comment" : $[
-		    "service" : $[
-			"defstart" : [ "0", "1", "3" ],
-			"defstop" : [ "4", "5", "6" ],
-		    ],
-		],
 		],
 	    ],
-    	    "target" : $[
-        	"size" : -1,
-    	    ],
 	"target" : $[
 	    "stat" : $[	"isreg" : true ],
             "size" : 0,
-	]
+	    ]
 	];
     TESTSUITE_INIT ([READ, $[], $[]], nil);
 

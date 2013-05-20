@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon May 20 16:23:13 CEST 2013 - locilka@suse.com
+
+- Testsuites adapted to changes in Service module (bnc#807507)
+- 2.24.0
+
+-------------------------------------------------------------------
 Wed Jan  9 16:04:23 UTC 2013 - locilka@suse.com
 
 - Fixed message reporting wrong service handler after switching
