@@ -13,26 +13,19 @@
             "size" : -1,
         ],
     ];
-    TESTSUITE_INIT ([READ, $[], $[]], nil);
+
+    map EXECUTE = $[
+        "target" : $[
+            "bash" : 3,
+        ],
+    ];
+
+    TESTSUITE_INIT ([READ, $[], EXECUTE], nil);
 
     import "RunlevelEd";
 
-    DUMP (RunlevelEd::isDisabled ($[]));
-    DUMP (RunlevelEd::isDisabled (
-        $[
-            "start" : [],
-	    "defstart" : ["1",],
-        ]
-        ));
-    DUMP (RunlevelEd::isDisabled (
-        $[
-            "start" : [],
-            "defstart" : [],
-        ]
-        ));
-    DUMP (RunlevelEd::isDisabled (
-        $[
-            "start" : [ "1", ],
-        ]
-        ));
+    DUMP(RunlevelEd::isDisabled(""));
+    DUMP(RunlevelEd::isDisabled("service"));
+    DUMP(RunlevelEd::isDisabled("another-service"));
+    DUMP(RunlevelEd::isDisabled("yet-another-service"));
 }
