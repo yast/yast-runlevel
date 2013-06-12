@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Jun 12 13:39:07 CEST 2013 - locilka@suse.com
+
+- Showing the current service status using Service module instead
+  of reading from /etc/init.d/ which doesn't work (bnc#808317)
+- 2.24.1
+
+-------------------------------------------------------------------
 Mon May 20 16:23:13 CEST 2013 - locilka@suse.com
 
 - Testsuites adapted to changes in Service module (bnc#807507)
