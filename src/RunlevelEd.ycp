@@ -490,11 +490,11 @@ Further dependency checking will be disabled."));
     /**
      * Is a service disabled?
      * Checks whether the default runlevel is in the list of runlevels
-     * @param service service to check
+     * @param string service name to check
      * @return boolean true if service is disabled
      */
-    global define boolean isDisabled (map service) ``{
-	return !contains(service["start"]:[], default_runlevel);
+    global define boolean isDisabled (string service) {
+        return !Service::Enabled(service);
     }
 
     /**
@@ -503,7 +503,7 @@ Further dependency checking will be disabled."));
      * @return string name of the first enabled service that requires portmap
      */
     global define string CheckPortmap () ``{
-	if (!isDisabled (services["portmap"]:$[]))  // if portmap is enabled, there is no problem
+	if (!isDisabled ("portmap"))  // if portmap is enabled, there is no problem
 	    return nil;
 	string req = nil;
 	list in = [];

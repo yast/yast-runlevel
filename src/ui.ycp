@@ -160,7 +160,7 @@
 	    
 	    // cannot change item which is not listed in the table
 	    if (ServiceListedInTable(service_name)) {
-		boolean disabled = RunlevelEd::isDisabled(RunlevelEd::services[service_name]:$[]);
+		boolean disabled = RunlevelEd::isDisabled(service_name);
 		UI::ChangeWidget(`id(`table), `Item(service_name, c_bstatus), BstatusText(disabled, started));
 	    }
 	}
@@ -428,7 +428,7 @@
 	    {
 		// boot status
 		service_ids_listed_in_table[k] = true;
-		boolean disabled = RunlevelEd::isDisabled(v);
+		boolean disabled = RunlevelEd::isDisabled(k);
 		integer started = v["started"]:-1;
 		c_bstatus = col;
 		item = add (item, BstatusText(disabled, started));
