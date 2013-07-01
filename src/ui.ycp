@@ -225,7 +225,7 @@
 	}
 	return service;
     }
-
+
     // mapping numbers to descriptions
     /**
      * Get help text for rcscript start|stop command exit value.
