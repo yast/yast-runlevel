@@ -346,7 +346,7 @@
 	return state;
     }
 
-
+
     //start unsorted
     /**
      * Ask if really abort. Uses boolean changed_settings. Sets boolean do_abort_now.
@@ -1323,7 +1323,7 @@ Select runlevels in which to run the currently selected service.<ul>
 	Wizard::RestoreScreenShotName ();
 	return (symbol) ret;
     }
-
+
     // simple mode
     /**
      * Main dialog for changing services.
@@ -1745,7 +1745,7 @@ disabled?\n"), nfs_adj)))
 	Wizard::RestoreScreenShotName ();
 	return (symbol) ret;
     }
-
+
     // generic ui helpers
     /**
      * Like Popup::LongText
@@ -1781,7 +1781,7 @@ disabled?\n"), nfs_adj)))
 	UI::CloseDialog();
 	return ret;
     }
-
+
     // move them to the module
     // (no ui interaction)
     /**
