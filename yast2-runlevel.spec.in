@@ -16,6 +16,8 @@ Obsoletes:	yast2-config-runlevel
 Provides:	yast2-trans-runlevel
 Obsoletes:	yast2-trans-runlevel
 BuildArchitectures:     noarch
+Requires:       yast2-ruby-bindings >= 1.0.0
+
 Summary:	YaST2 - Runlevel Editor
 
 %description
@@ -37,11 +39,10 @@ boot.
 %dir @scrconfdir@
 @scrconfdir@/*.scr
 %dir @clientdir@
-@clientdir@/*.ycp
+@clientdir@/*.rb
 %dir @yncludedir@/runlevel
-@yncludedir@/runlevel/*.ycp
+@yncludedir@/runlevel/*.rb
 %dir @moduledir@
-@moduledir@/*.ycp
-@moduledir@/*.ybc
+@moduledir@/*.rb
 @schemadir@/autoyast/rnc/*.rnc
 %doc @docdir@
