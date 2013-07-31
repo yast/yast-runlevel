@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Jul 31 08:38:43 UTC 2013 - yast-devel@opensuse.org
+
+- converted from YCP to Ruby by YCP Killer
+  (https://github.com/yast/ycp-killer)
+- version 3.0.0
+
+-------------------------------------------------------------------
 Wed Jun 12 13:39:07 CEST 2013 - locilka@suse.com
 
 - Showing the current service status using Service module instead
