@@ -1,40 +1,31 @@
-#
-# Makefile.am for runlevel/src
-#
+# Sources for runlevel
 
-#crude:
-TAGS_DEPENDENCIES = *.ycp
-ETAGS_ARGS = $(TAGS_DEPENDENCIES)
+module_DATA = \
+  modules/RunlevelEd.rb
 
-YCPCFLAGS = -I.
+client_DATA = \
+  clients/runlevel_proposal.rb \
+  clients/runlevel_auto.rb \
+  clients/runlevel_finish.rb \
+  clients/services_proposal.rb \
+  clients/runlevel.rb
 
-myyncludedir = @yncludedir@/runlevel
+yncludedir = @yncludedir@/runlevel
+ynclude_DATA = \
+  include/runlevel/ui.rb \
+  include/runlevel/toposort.rb \
+  include/runlevel/wizard.rb
 
-agent_SCRIPTS =
+scrconf_DATA = \
+  scrconf/insserv_conf.scr
 
-scrconf_DATA = insserv_conf.scr
+schemafilesdir = $(schemadir)/autoyast/rnc
+schemafiles_DATA = \
+  autoyast-rnc/runlevels.rnc
 
-client_DATA =			\
-	runlevel.ycp		\
-	runlevel_auto.ycp	\
-	runlevel_finish.ycp	\
-	runlevel_proposal.ycp	\
-	services_proposal.ycp
+desktop_DATA = \
+  desktop/runlevel.desktop
 
-myynclude_DATA =		\
-	wizard.ycp		\
-	toposort.ycp		\
-	ui.ycp
-
-module_DATA = RunlevelEd.ycp
-
-desktop_DATA = runlevel.desktop
-
-runlevel:
-	ln -sf . runlevel
-
-ycpchook = runlevel
-
-EXTRA_DIST = $(client_DATA) $(myynclude_DATA) $(agent_SCRIPTS) $(scrconf_DATA) $(module_DATA) $(desktop_DATA)
+EXTRA_DIST = $(module_DATA) $(client_DATA) $(ynclude_DATA) $(scrconf_DATA) $(schemafiles_DATA) $(desktop_DATA)
 
 include $(top_srcdir)/Makefile.am.common
