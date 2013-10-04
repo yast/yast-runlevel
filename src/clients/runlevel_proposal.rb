@@ -44,7 +44,7 @@ module Yast
         # find out proposal parameters, ie. what it depends on
         # some architectures don't have X at all
         @x11_needed = Arch.x11_setup_needed # constant
-        @x11_selected = Pkg.IsSelected("xorg-x11") # variable
+        @x11_selected = Pkg.IsSelected("xorg-x11-server") # variable
         @live_medium = Mode.live_installation
         # But if we install over VNC, we want RL 5 (and kdm) even though
         # there's no X.

@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Oct  4 13:46:32 UTC 2013 - jreidinger@suse.com
+
+- Fix runlevel proposal for minimal X (BNC#837450) 
+- 3.0.1
+
+-------------------------------------------------------------------
 Wed Jul 31 08:38:43 UTC 2013 - yast-devel@opensuse.org
 
 - converted from YCP to Ruby by YCP Killer
