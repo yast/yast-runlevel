@@ -1,9 +1,0 @@
-Dump	Unchanged
-Dump	0: System halt
-Dump	1: Single user mode
-Dump	2: Local multiuser without remote network
-Dump	3: Full multiuser with network
-Dump	4: User defined
-Dump	5: Full multiuser with network and display manager
-Dump	6: System reboot
-Dump	7
