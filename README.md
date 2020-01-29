@@ -1,7 +1,8 @@
 Obsoleted Module
 ================
 
-**This module is obsoleted and is not developed anymore.**
+**This module is obsoleted and is not developed anymore. **
+Replaced by [yast-services-manager](https://github.com/yast/yast-services-manager)
 
 GIT
 ---
